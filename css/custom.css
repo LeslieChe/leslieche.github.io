@@ -1,0 +1,11 @@
+/* 全局设置：建议字号设为 18px 或 19px，文楷偏细，大一点更好看 */
+html, body, .markdown-body {
+  font-family: 'LXGW WenKai Screen', sans-serif !important;
+  font-size: 19px !important; 
+  line-height: 1.8 !important;
+}
+
+/* 标题加粗一点更醒目 */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600 !important;
+}
