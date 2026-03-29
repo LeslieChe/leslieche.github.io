@@ -19,21 +19,23 @@
   <meta name="author" content="Che">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+    <meta name="description" content="想要入门编译原理的同学，如果你一头扎进龙书、虎叔、鲸书......恐怕要失望。希望本文可以帮到你！">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World  你好啊！">
-<meta property="og:url" content="https://leslieche.github.io/2026/03/28/hello-world/index.html">
+<meta property="og:title" content="第0天：前言">
+<meta property="og:url" content="https://leslieche.github.io/2026/03/29/%E7%AC%AC0%E5%A4%A9%EF%BC%9A%E5%89%8D%E8%A8%80/index.html">
 <meta property="og:site_name" content="49天自制编译器">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta property="og:description" content="想要入门编译原理的同学，如果你一头扎进龙书、虎叔、鲸书......恐怕要失望。希望本文可以帮到你！">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2026-03-28T09:27:45.977Z">
-<meta property="article:modified_time" content="2026-03-28T10:44:02.964Z">
+<meta property="article:published_time" content="2026-03-29T09:04:44.000Z">
+<meta property="article:modified_time" content="2026-03-29T09:30:47.238Z">
 <meta property="article:author" content="Che">
 <meta name="twitter:card" content="summary_large_image">
   
   
+    <meta name="referrer" content="no-referrer-when-downgrade">
   
-  <title>Hello World  你好啊！ - 49天自制编译器</title>
+  
+  <title>第0天：前言 - 49天自制编译器</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -75,7 +77,7 @@
   <script id="fluid-configs">
     var Fluid = window.Fluid || {};
     Fluid.ctx = Object.assign({}, Fluid.ctx)
-    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
 
     if (CONFIG.web_analytics.follow_dnt) {
       var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
@@ -85,6 +87,22 @@
   <script  src="/js/utils.js" ></script>
   <script  src="/js/color-schema.js" ></script>
   
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
 
 
   
@@ -101,7 +119,7 @@
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>49天自制编译器</strong>
+      <strong>49 天自制编译器</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -134,30 +152,6 @@
               <a class="nav-link" href="/archives/" target="_self">
                 <i class="iconfont icon-archive-fill"></i>
                 <span>归档</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/categories/" target="_self">
-                <i class="iconfont icon-category-fill"></i>
-                <span>分类</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tags/" target="_self">
-                <i class="iconfont icon-tags-fill"></i>
-                <span>标签</span>
               </a>
             </li>
           
@@ -233,34 +227,6 @@
           
           
             <div class="col-4 mobile-grid-cell">
-              <a href="/categories/" target="_self">
-                <div class="mobile-grid-item">
-                  <i class="iconfont icon-category-fill"></i>
-                  <span>分类</span>
-                </div>
-              </a>
-            </div>
-          
-        
-          
-          
-          
-          
-            <div class="col-4 mobile-grid-cell">
-              <a href="/tags/" target="_self">
-                <div class="mobile-grid-item">
-                  <i class="iconfont icon-tags-fill"></i>
-                  <span>标签</span>
-                </div>
-              </a>
-            </div>
-          
-        
-          
-          
-          
-          
-            <div class="col-4 mobile-grid-cell">
               <a href="/about/" target="_self">
                 <div class="mobile-grid-item">
                   <i class="iconfont icon-user-fill"></i>
@@ -306,7 +272,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Hello World  你好啊！"></span>
+            <span id="subtitle" data-typed-text="第0天：前言"></span>
           
         </div>
 
@@ -317,8 +283,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2026-03-28 17:27" pubdate>
-          2026年3月28日 下午
+        <time datetime="2026-03-29 17:04" pubdate>
+          2026年3月29日 下午
         </time>
       </span>
     
@@ -329,7 +295,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          367 字
+          652 字
         
       </span>
     
@@ -340,7 +306,7 @@
         
         
         
-          4 分钟
+          6 分钟
         
       </span>
     
@@ -379,24 +345,21 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Hello World  你好啊！</h1>
+            <h1 id="seo-header">第0天：前言</h1>
             
             
               <div class="markdown-body">
                 
-                <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+                <h1 id="第0天：前言"><a href="#第0天：前言" class="headerlink" title="第0天：前言"></a>第0天：前言</h1><p>大家好，我是车子。</p>
+<p>我大学读的是电子信息工程专业，虽然学校没有开设编译原理这门课程，但是我对编译原理一直很好奇。</p>
+<p>例如我写了一个 main.c 源文件，当我输入 gcc main.c 后，怎么就生成了一个可执行文件呢？这背后的奥秘是什么？我想很多读者都和我一样好奇。如何弄清楚这些奥秘？</p>
+<p>首先能想到的就是买来各种教程学习，什么龙书、虎叔、鲸书……统统买来。可是翻开书本一看，我傻眼了：里面的概念好抽象啊！例如“推导”、“产生式”、“左递归”……</p>
+<p>李忠老师给我转发过一封邮件，内容如下：</p>
+<blockquote>
+<p>我想全面学习编译原理。我想知道我应该学习哪些基础知识。有人说要先学习形式语言与自动机，但是有人说不需要学。到底需要学吗？是不是还要学习必要的数学知识？我之前看的是《编译原理》（龙书）。但是我发现这本书内容很抽象，概念很难理解。我希望您能给我推荐一些适合自学的编译原理教材。感谢您的帮助！盼复！</p>
+</blockquote>
+<p>我想在此回复这位读者：对于初学者，我是不建议天天抱着书本死磕的。不管是形式语言与自动机还是各种编译原理的教材，都不用从第 1 页开始啃，甚至可以不买这些书。这些书的特点是理论太强，实践不足。即使你把这些书都看完，也不一定能写出一个小编译器。我并不是否认这些书的价值，恰恰相反，他们都是好书，只是对初学者不友好。</p>
+<p>从 2024.6 开始到现在，我写出了一个小编译器（起名叫 csub）。它的功能虽然不多，但是包含编译、汇编和链接的整个过程。只要读者会 C 语言，就可以看懂我的代码。我非常愿意结合 csub 来为读者揭开编译器（或者说编译系统）背后的奥秘。</p>
 
                 
               </div>
@@ -414,8 +377,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Hello World  你好啊！</div>
-      <div>https://leslieche.github.io/2026/03/28/hello-world/</div>
+      <div>第0天：前言</div>
+      <div>https://leslieche.github.io/2026/03/29/第0天：前言/</div>
     </div>
     <div class="license-meta">
       
@@ -427,7 +390,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2026年3月28日</div>
+          <div>2026年3月29日</div>
         </div>
       
       
@@ -471,15 +434,21 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/" title="最终成果展示">
+                      <a href="/2026/03/29/%E7%AC%AC1%E5%A4%A9%EF%BC%9A%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E6%89%AB%E6%8F%8F%E5%99%A8/" title="第1天：词法分析之扫描器">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">最终成果展示</span>
+                        <span class="hidden-mobile">第1天：词法分析之扫描器</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
                   </article>
                   <article class="post-next col-6">
                     
+                    
+                      <a href="/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/" title="最终成果展示">
+                        <span class="hidden-mobile">最终成果展示</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
                     
                   </article>
                 </div>
@@ -522,9 +491,6 @@
 
   
 
-
-
-  
 
 
 
@@ -582,6 +548,32 @@
        <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
     </div>
   
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
   
   
 </div>
@@ -744,44 +736,6 @@
 
   
 <script>
-  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
-    window.anchors.options = {
-      placement: CONFIG.anchorjs.placement,
-      visible  : CONFIG.anchorjs.visible
-    };
-    if (CONFIG.anchorjs.icon) {
-      window.anchors.options.icon = CONFIG.anchorjs.icon;
-    }
-    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
-    var res = [];
-    for (var item of el) {
-      res.push('.markdown-body > ' + item.trim());
-    }
-    if (CONFIG.anchorjs.placement === 'left') {
-      window.anchors.options.class = 'anchorjs-link-left';
-    }
-    window.anchors.add(res.join(', '));
-
-    Fluid.events.registerRefreshCallback(function() {
-      if ('anchors' in window) {
-        anchors.removeAll();
-        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
-        var res = [];
-        for (var item of el) {
-          res.push('.markdown-body > ' + item.trim());
-        }
-        if (CONFIG.anchorjs.placement === 'left') {
-          anchors.options.class = 'anchorjs-link-left';
-        }
-        anchors.add(res.join(', '));
-      }
-    });
-  });
-</script>
-
-
-  
-<script>
   Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
     Fluid.plugins.fancyBox();
   });
@@ -790,7 +744,11 @@
 
   <script>Fluid.plugins.imageCaption();</script>
 
+  <script defer src="/js/openkounter.js" ></script>
+
   <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
 
 
 
