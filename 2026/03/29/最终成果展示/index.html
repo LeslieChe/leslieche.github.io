@@ -362,8 +362,10 @@
             
               <div class="markdown-body">
                 
-                <h1 id="最终成果展示"><a href="#最终成果展示" class="headerlink" title="最终成果展示"></a>最终成果展示</h1><p>这节课，也是最后一节课，我们用 csub 支持的语法实现一个小游戏——汉诺塔。</p>
-<h2 id="1-游戏起源与传说"><a href="#1-游戏起源与传说" class="headerlink" title="1. 游戏起源与传说"></a>1. 游戏起源与传说</h2><p><strong>汉诺塔</strong>（Tower of Hanoi），又称<strong>河内塔</strong>，是一个经典的数学益智游戏，也是计算机科学中讲解<strong>递归算法</strong>（Recursion）最著名的案例。</p>
+                <h1 id="最终成果展示">最终成果展示</h1>
+<p>这节课，也是最后一节课，我们用 csub 支持的语法实现一个小游戏——汉诺塔。</p>
+<h2 id="1-游戏起源与传说">1. 游戏起源与传说</h2>
+<p><strong>汉诺塔</strong>（Tower of Hanoi），又称<strong>河内塔</strong>，是一个经典的数学益智游戏，也是计算机科学中讲解<strong>递归算法</strong>（Recursion）最著名的案例。</p>
 <p>这个故事由法国数学家爱德华·卢卡斯（Édouard Lucas）于 1883 年提出。传说在印度贝拿勒斯（今瓦拉纳西）的一座神庙里，有三根金刚石柱子，其中一根柱子上从下往上按大小顺序摞着 <strong>64 片黄金圆盘</strong>。</p>
 <ul>
 <li><strong>任务</strong>：僧侣们需要将所有圆盘从第一根柱子移动到第三根柱子。</li>
@@ -371,18 +373,21 @@
 <li><strong>预言</strong>：传说当这64个圆盘全部移动完毕时，世界就会毁灭。</li>
 <li><strong>数学真相</strong>：移动 64 个圆盘所需的最少步数是 2 的 64 次方再减 1 （约1844亿亿次）。如果每秒移动一次，大约需要<strong>5800 亿年</strong>（根据主流宇宙学模型和多种卫星探测数据的综合估算，宇宙目前的年龄约为 138 亿年）。</li>
 </ul>
-<h2 id="2-游戏规则"><a href="#2-游戏规则" class="headerlink" title="2. 游戏规则"></a>2. 游戏规则</h2><p>现代版的汉诺塔玩具通常由三根柱子（记为 <strong>A、B、C</strong>）和若干个大小不一的圆盘组成。</p>
-<p><img src="image-20260308160347492.png" srcset="/img/loading.gif" lazyload alt="image-20260308160347492" style="zoom:70%;" /></p>
+<h2 id="2-游戏规则">2. 游戏规则</h2>
+<p>现代版的汉诺塔玩具通常由三根柱子（记为 <strong>A、B、C</strong>）和若干个大小不一的圆盘组成。</p>
+<img src="image-20260308160347492.png" srcset="/img/loading.gif" lazyload alt="image-20260308160347492" style="zoom:70%;" />
 <ul>
 <li><strong>初始状态</strong>：所有圆盘按大小顺序（大盘在下，小盘在上）叠放在柱子 <strong>A</strong> 上。</li>
 <li><strong>目标状态</strong>：将所有圆盘移动到柱子 <strong>C</strong> 上，保持原有的大小顺序。</li>
-<li><strong>两大铁律</strong>：<ol>
+<li><strong>两大铁律</strong>：
+<ol>
 <li><strong>一次只能移动一个圆盘</strong>：每次必须从某根柱子的最顶端取出一个圆盘，放到另一根柱子的最顶端。</li>
 <li><strong>大不压小</strong>：在任何时候，都不能将较大的圆盘放在较小的圆盘上面。</li>
 </ol>
 </li>
 </ul>
-<h2 id="3-核心逻辑：递归思想"><a href="#3-核心逻辑：递归思想" class="headerlink" title="3. 核心逻辑：递归思想"></a>3. 核心逻辑：递归思想</h2><p>假设我们要把 <em>n</em> 个盘子从 A 移到 C（借助 B）</p>
+<h2 id="3-核心逻辑：递归思想">3. 核心逻辑：递归思想</h2>
+<p>假设我们要把 <em>n</em> 个盘子从 A 移到 C（借助 B）</p>
 <p>可以拆解为三步：</p>
 <ol>
 <li>将上面的 n-1 个盘子从 A 移到 B（借助 C)</li>
@@ -390,7 +395,8 @@
 <li>将 B 上的个盘子移到 C（借助 A)</li>
 </ol>
 <p>移动 n 个盘子所需的最少步骤数为 2 的 n 次方再减去 1</p>
-<h2 id="4-代码"><a href="#4-代码" class="headerlink" title="4. 代码"></a>4. 代码</h2><p>先看看有哪些全局变量</p>
+<h2 id="4-代码">4. 代码</h2>
+<p>先看看有哪些全局变量</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> step_cnt = <span class="hljs-number">0</span>; <span class="hljs-comment">// 移动的步数</span><br><span class="hljs-type">int</span> disk_min_width = <span class="hljs-number">3</span>; <span class="hljs-comment">// 盘子最小的宽度</span><br><span class="hljs-type">int</span> disk_delta_width = <span class="hljs-number">4</span>; <span class="hljs-comment">// 宽度的间隔</span><br><span class="hljs-type">int</span> disk_num = <span class="hljs-number">0</span>;<br><span class="hljs-type">int</span> total_width = <span class="hljs-number">0</span>;<br><span class="hljs-type">int</span> demo_mode = <span class="hljs-number">1</span>;  <span class="hljs-comment">// 1:演示模式  0:用户模式</span><br><span class="hljs-type">int</span> one_step = <span class="hljs-number">0</span>; <span class="hljs-comment">// 1:每一步都停下来等待用户输入换行</span><br><br><span class="hljs-comment">// 定义三根柱子，每根最多放 9 个盘子</span><br><span class="hljs-type">int</span> p1[<span class="hljs-number">12</span>] = &#123;<span class="hljs-number">0</span>&#125;;  <span class="hljs-comment">// 元素是盘子宽度，0 代表没有盘子； 12 是为了方便显示空行</span><br><span class="hljs-type">int</span> p2[<span class="hljs-number">12</span>] = &#123;<span class="hljs-number">0</span>&#125;;<br><span class="hljs-type">int</span> p3[<span class="hljs-number">12</span>] = &#123;<span class="hljs-number">0</span>&#125;;<br><span class="hljs-type">int</span> c1 = <span class="hljs-number">0</span>;<br><span class="hljs-type">int</span> c2 = <span class="hljs-number">0</span>;<br><span class="hljs-type">int</span> c3 = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 每根柱子当前的盘子数量</span><br></code></pre></td></tr></table></figure>
 <p>第 2 行，disk_min_width 表示盘子最小宽度是 3，然后以变量 disk_delta_width 为间隔递增。</p>
 <p>第 10~12 行，定义了 3 个数组，分别对应 3 根柱子。</p>
@@ -400,19 +406,19 @@
 <p>数组 p2 和 p3 的元素都是 0，表示一个盘子都没有。</p>
 <p>c1、c2、c3 分别表示三根柱子上有几个盘子。</p>
 <p>虽然可以通过遍历数组得知柱子上有几个盘子，但是用一个变量来记录盘子数更方便。</p>
-<p><img src="image-20260308142815541.png" srcset="/img/loading.gif" lazyload alt="image-20260308142815541" style="zoom:70%;" /></p>
+<img src="image-20260308142815541.png" srcset="/img/loading.gif" lazyload alt="image-20260308142815541" style="zoom:70%;" />
 <p>以上三个函数调用了我们自己的 C 运行时库。</p>
 <p>第 34 行的 set_disk_color 函数用来设置盘子的颜色，可以改成你喜欢的颜色，总之和终端的背景色不一样就行。</p>
 <p>第 40 行的 close_color 用来恢复之前的颜色。</p>
 <p>第 46 行的 print_space 用来打印 n 个空格。</p>
 <p>打印盘子的原理很简单，就是修改背景色，然后打印若干个空格，再恢复背景色，这样屏幕上就会出现一个带颜色的矩形，表示盘子。</p>
 <p>下面是盘子的初始化函数。</p>
-<p><img src="image-20260308161114919.png" srcset="/img/loading.gif" lazyload alt="image-20260308161114919" style="zoom:70%;" /></p>
+<img src="image-20260308161114919.png" srcset="/img/loading.gif" lazyload alt="image-20260308161114919" style="zoom:70%;" />
 <p>我们规定，盘子的个数从 2 到 9；</p>
 <p>第 168 ~ 169，设置全局变量 disk_num 和 c1，因为初始状态是所有盘子都在第一个柱子上</p>
 <p>第 170 ~174，设置 p1 数组，下标越小，盘子的宽度越大。</p>
 <p>下面看最关键的函数 move</p>
-<p><img src="image-20260308143339888.png" srcset="/img/loading.gif" lazyload alt="image-20260308143339888" style="zoom:70%;" /></p>
+<img src="image-20260308143339888.png" srcset="/img/loading.gif" lazyload alt="image-20260308143339888" style="zoom:70%;" />
 <p>此函数有 7 个参数，分别是</p>
 <p>1）n：要移动的盘子数(只能移动最上面的 n 个盘子)</p>
 <p>2）src：要移动的盘子在哪个柱子上（下面简称源柱）</p>
@@ -426,7 +432,7 @@
 <p>第 148 行，不是要移动 n 个盘子吗？我先调用我自己，把最上面 n-1 个盘子通过目标柱移动到辅助柱上，然后，第 154 行，此时源柱上就一个盘子了，我把这个盘子移动到目标柱。</p>
 <p>第 162 行，我再调用我自己，把辅助柱上的 n-1 个盘子通过源柱移动到目标柱。</p>
 <p>第 154 行，是真正的移动</p>
-<p><img src="image-20260308152238314.png" srcset="/img/loading.gif" lazyload alt="image-20260308152238314" style="zoom:70%;" /></p>
+<img src="image-20260308152238314.png" srcset="/img/loading.gif" lazyload alt="image-20260308152238314" style="zoom:70%;" />
 <p>这次移动不需要辅助柱。</p>
 <p>第 133 行，找到 src 最上面的盘子，把宽度保存到 disk</p>
 <p>第 134，让这个盘子从 src 上消失</p>
@@ -438,25 +444,25 @@
 <p>当前目录下有 3 个文件。</p>
 <p>hanoi.c  Makefile  start.asm</p>
 <p>Makefile 内容如下</p>
-<p><img src="image-20260308154235342.png" srcset="/img/loading.gif" lazyload alt="image-20260308154235342" style="zoom:70%;" /></p>
+<img src="image-20260308154235342.png" srcset="/img/loading.gif" lazyload alt="image-20260308154235342" style="zoom:70%;" />
 <p>要编译的目标是 b.out</p>
 <p>第 20 行，它依赖当前目录下的 .asm 和 .c</p>
-<p>第 14 行，用 csub 编译 hanoi.c  </p>
+<p>第 14 行，用 csub 编译 hanoi.c</p>
 <p>第 17 行，用 csub 编译 start.asm</p>
 <p>第 21 行，用 csub 链接 hanoi.o 和 start.o，最终生成 b.out</p>
 <p>敲入 make 命令</p>
-<p><img src="image-20260308154702300.png" srcset="/img/loading.gif" lazyload alt="image-20260308154702300" style="zoom:70%;" /></p>
+<img src="image-20260308154702300.png" srcset="/img/loading.gif" lazyload alt="image-20260308154702300" style="zoom:70%;" />
 <p>运行 b.out</p>
 <p>会让你选择盘子的数目</p>
 <p>假设是 4</p>
-<p><img src="image-20260308154951862.png" srcset="/img/loading.gif" lazyload alt="image-20260308154951862" style="zoom:70%;" /></p>
+<img src="image-20260308154951862.png" srcset="/img/loading.gif" lazyload alt="image-20260308154951862" style="zoom:70%;" />
 <p>这时候会等待用户输入命令</p>
 <p>例如从柱子 1 移动到柱子 2，就输入 12[回车]</p>
-<p><img src="image-20260308155054705.png" srcset="/img/loading.gif" lazyload alt="image-20260308155054705" style="zoom:70%;" /></p>
+<img src="image-20260308155054705.png" srcset="/img/loading.gif" lazyload alt="image-20260308155054705" style="zoom:70%;" />
 <p>如果不符合规则，也会提示</p>
-<p><img src="image-20260308155224860.png" srcset="/img/loading.gif" lazyload alt="image-20260308155224860" style="zoom:70%;" /></p>
+<img src="image-20260308155224860.png" srcset="/img/loading.gif" lazyload alt="image-20260308155224860" style="zoom:70%;" />
 <p>下图是 9 个盘子的截图</p>
-<p><img src="image-20260308155835859.png" srcset="/img/loading.gif" lazyload alt="image-20260308155835859" style="zoom:100%;" /></p>
+<img src="image-20260308155835859.png" srcset="/img/loading.gif" lazyload alt="image-20260308155835859" style="zoom:100%;" />
 <p>本文到这里就结束了。</p>
 <p>同时，整个教程也结束了。</p>
 <p>如果读者能在我的帮助下走进编译原理的大门并找到未来的路，就是对我最大的褒奖。</p>
