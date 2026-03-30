@@ -1,0 +1,1121 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="这节课我们学习语法分析。不要害怕，我们仅学习必要的理论知识，而且我会结合具体的例子为你讲解。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第3天：语法分析之理论篇">
+<meta property="og:url" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="这节课我们学习语法分析。不要害怕，我们仅学习必要的理论知识，而且我会结合具体的例子为你讲解。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20250831163420509.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20250831163515144.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20250831163637177.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20250831163727509.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20250831161835733.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20250831224323723.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20250901104616324.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20250901131428106.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20250912112929874.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20250829210936956.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20250829211513356.png">
+<meta property="article:published_time" content="2026-03-30T07:08:37.000Z">
+<meta property="article:modified_time" content="2026-03-30T08:48:38.572Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC3%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20250831163420509.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第3天：语法分析之理论篇 - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/KaTeX/0.16.2/katex.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第3天：语法分析之理论篇"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-03-30 15:08" pubdate>
+          2026年3月30日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          12k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          103 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第3天：语法分析之理论篇</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第3天：语法分析之理论篇">第3天：语法分析之理论篇</h1>
+<p>什么是语法分析？</p>
+<p>有一句 C 语言代码：</p>
+<p>a = b + c;</p>
+<p>从语法角度说，这句代码没有问题。（有的读者会问这些变量都声明了吗？这是语义分析要解决的问题。在语法分析阶段，不考虑这个。）</p>
+<p>但是，如果代码写的是  a = b + ; 这就不符合语法了。再比如写成 a = b + c（没有分号）这也不合语法。</p>
+<p>通俗讲，语法分析就是分析代码是否符合语法规则。</p>
+<p>语法规则用什么来描述？这就需要了解“形式化文法”。</p>
+<h2 id="形式化文法">形式化文法</h2>
+<p><strong>形式化文法</strong>是一个用于精确、无歧义地定义<strong>形式语言</strong>（一组字符串的集合）的数学系统。它通过一套有限的规则，描述了如何从初始符号开始，通过一系列推导步骤，生成该语言中的所有合法句子。</p>
+<p>一个形式化文法通常由一个四元组定义：</p>
+<p class="katex-block "><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>G</mi><mo>=</mo><mo stretchy="false">(</mo><mi>N</mi><mo separator="true">,</mo><mi>T</mi><mo separator="true">,</mo><mi>P</mi><mo separator="true">,</mo><mi>S</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">G = (N, T, P, S)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">G</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mclose">)</span></span></span></span></span></p>
+<p>N：非终结符集合。表示语法结构的中间变量，用尖括号或大写字母表示。</p>
+<p>T：终结符集合：语言的基本符号，无法再分解，比如前面词法分析得到的各种 token。</p>
+<p>注意：非终结符和终结符没有交集。</p>
+<p>P：产生式集合。描述替换规则，定义了如何从非终结符出发，逐步推导出合法的终结符号串。</p>
+<pre><code class="hljs">形式：α -&gt; β（读作：α 能推导出 β）。
+α 是一个包含至少一个非终结符的符号串。
+β 是由终结符和非终结符组成的任意符号串（包括空串 ε）。
+</code></pre>
+<p><code>α</code>称为产生式头或左部；<code>β</code>称为产生式体或右部。如果一个产生式头可以推出多个产生式体，那么这些体可以放在一起表示，不同体之间用“|”（读“或”）分隔。</p>
+<p>S：开始符号。指定一个非终结符号为开始符号，是整个推导过程的起点。</p>
+<p>为了帮助读者理解，下面举几个例子。</p>
+<h3 id="例1-理解终结符和非终结符">例1 理解终结符和非终结符</h3>
+<p>英文句子有多种句型，其中一个句型是 “主语 + 及物动词 + 直接宾语”</p>
+<p>如果用产生式来表示，就是：</p>
+<p>&lt;句子&gt;  -&gt;  &lt;主句&gt; &lt;及物动词&gt; &lt;直接宾语&gt;</p>
+<p>这里的 &lt;句子&gt;、 &lt;主句&gt;、&lt;及物动词&gt;、 &lt;直接宾语&gt; 都是非终结符，它们都是抽象的概念。</p>
+<p>主语可以继续往下分解，例如：</p>
+<p>&lt;主语&gt;  -&gt;  &lt;名词&gt; | &lt;代词&gt; | &lt;动名词&gt;</p>
+<p>&lt;名词&gt; 、 &lt;代词&gt;、&lt;动名词&gt; 也是非终结符。</p>
+<p>&lt;名词&gt; 也是抽象的概念，还可以再分解。</p>
+<p>如果我写出一个产生式：</p>
+<p>&lt;名词&gt;  -&gt;  Tom</p>
+<p>这里的 Tom 就是终结符，因为它不是抽象的概念，是实际出现在句子里的符号。</p>
+<p>&lt;句子&gt;、 &lt;主句&gt;、&lt;及物动词&gt; 等非终结符，不会直接出现在最终的句子里，它们只是用来描述句子结构的。</p>
+<p>可以说，无论是计算机语言还是自然语言，都是终结符的集合。</p>
+<p>为了分析语言或者总结语言的规律，我们把终结符归类、排列、层层抽象，得到各种非终结符。</p>
+<h3 id="例2-理解产生式和推导">例2 理解产生式和推导</h3>
+<p>先看看什么是“推导”。</p>
+<p>所谓推导，就是从开始符号出发，不断将某个非终结符替换为该非终结符的某个产生式的体。一直推导下去，直到所有非终结符都变成了终结符，就得到了这个文法的一个句子。所谓语言就是由文法 <em>G</em> 产生的<strong>所有句子的集合</strong>。</p>
+<p>假设你开了一家早餐店，并且有两个机器人帮你把餐品送到客户手中。</p>
+<p>机器人只能听懂一种非常格式化的语言，这样它就可以 100% 准确理解，不会出错。你为这种“点餐语言”制定了一种文法。</p>
+<p>这个文法包含 4 部分:</p>
+<ol>
+<li>
+<p><strong>基本单词 (终结符)</strong>：规定顾客可以使用哪些<strong>最基本的词</strong>。这些词是最小单元，不能再拆分。</p>
+<p>包括：“汉堡”、“咖啡”、“一号餐”、“二号餐”、“和”；</p>
+</li>
+<li>
+<p><strong>语法概念 (非终结符)</strong>：定义一些抽象概念，用来把基本单词组成更大的单元。</p>
+<p>包括：&lt;订单&gt; 、&lt;套餐&gt;、 &lt;物品&gt;</p>
+<p>这些概念都是什么意思，就蕴含在规则（产生式）中。</p>
+</li>
+<li>
+<p>规则（产生式）</p>
+<p><strong>规则1:</strong> <code>&lt;订单&gt; -&gt; &lt;物品&gt; | &lt;物品&gt; 和 &lt;订单&gt;</code></p>
+<p>​	一个订单可以是一个物品，或者是一个物品后跟“和”，再接一个订单；</p>
+<p><strong>规则2:</strong> <code>&lt;物品&gt; -&gt; &lt;套餐&gt; | 汉堡 | 咖啡</code></p>
+<p>​	一个物品可以是套餐，或者单点汉堡，或者单点咖啡；</p>
+<p><strong>规则3:</strong> <code>&lt;套餐&gt; -&gt; 一号餐 | 二号餐</code></p>
+<p>​	套餐有两种选择，要么一号餐，要么二号餐；</p>
+</li>
+<li>
+<p>开始符号： &lt;订单&gt;</p>
+<p>机器人总是从<code>&lt;订单&gt;</code>开始推导。</p>
+</li>
+</ol>
+<p><strong>场景一：处理一个合法订单</strong></p>
+<p>顾客说：<strong><code>一号餐和咖啡</code></strong></p>
+<p>机器人拿到这句话，开始规则解析：</p>
+<ol>
+<li>
+<p>解析从<code>&lt;订单&gt;</code>开始。根据规则 1，&lt;订单&gt;可以推导出 &lt;物品&gt;或者 &lt;物品&gt; 和 &lt;订单&gt;</p>
+<p>因为顾客说“一号餐<strong>和</strong>咖啡”，所以匹配后者。&lt;物品&gt; 应该能对上“一号餐”，&lt;订单&gt; 应该能对上“咖啡”；</p>
+</li>
+<li>
+<p>根据规则 2，&lt;物品&gt; -&gt; &lt;套餐&gt;，再根据规则 3， &lt;套餐&gt; -&gt; 一号餐，所以&lt;物品&gt;可以推导出“一号餐”，至此，&lt;物品&gt; 和“一号餐”对上了；</p>
+</li>
+<li>
+<p>下面检查&lt;订单&gt; 能否推导出“咖啡”：根据规则 1，&lt;订单&gt; -&gt; &lt;物品&gt;，再根据规则 2，&lt;物品&gt;-&gt;咖啡，所以&lt;订单&gt; 可以推导出“咖啡”</p>
+</li>
+<li>
+<p>至此，全部都匹配上了，所以这是一个合法的&lt;订单&gt;</p>
+</li>
+</ol>
+<p><strong>场景二：处理一个非法订单</strong></p>
+<p>顾客说：<strong><code>和咖啡</code></strong></p>
+<ol>
+<li>
+<p>解析从<code>&lt;订单&gt;</code>开始。根据规则 1，&lt;订单&gt;可以推出 &lt;物品&gt;或者 &lt;物品&gt; 和 &lt;订单&gt;</p>
+</li>
+<li>
+<p>不管是前者还是后者，第一个符号都是 &lt;物品&gt;，根据规则 2，&lt;物品&gt; -&gt; &lt;套餐&gt; | 汉堡 | 咖啡；</p>
+</li>
+<li>
+<p>根据规则3， &lt;套餐&gt; -&gt; 一号餐 | 二号餐；于是得出结论，第一个单词必须是“ 一号餐 | 二号餐 | 汉堡 | 咖啡”，不能是 “和”</p>
+</li>
+<li>
+<p>机器人回复：“语法错误！订单必须以‘一号餐’、‘二套餐’、‘汉堡’或‘咖啡’开头。”</p>
+</li>
+</ol>
+<h2 id="语法分析树">语法分析树</h2>
+<p>先介绍两个概念，终结符号串和 ε（epsilon，直接音译为 “艾普西隆”）。</p>
+<ul>
+<li>终结符号串：由零个或多个终结符号组成的序列。</li>
+<li>ε 表示空串，就是由零个终结符号组成的串，可类比字符串中的空串<code>“”</code></li>
+</ul>
+<p>语法分析的任务是：接受一个终结符号串作为输入，找出从文法的开始符号推导出这个串的方法。如果不能从文法的开始符号推导得到该终结符号串，则报告该终结符号串中包含的语法错误。</p>
+<p>语法分析树是推导的图形表示。</p>
+<ol>
+<li>树根就是开始符号；</li>
+<li>每个叶结点由终结符或者 **ε **标记；</li>
+<li>每个内结点由一个非终结符标记。</li>
+</ol>
+<p><strong>语法树的叶结点从左到右的排列，刚好是这个文法所产生的语言的一个句子</strong>；</p>
+<p><strong>为给定的终结符号串（句子）构造一棵分析树的过程称为这个串（句子）的语法分析（parsing)</strong>。</p>
+<p>前文关于合法订单的例子，机器人的分析过程可以对应到树的构造过程。如下图：</p>
+<img src="image-20250831163420509.png" srcset="/img/loading.gif" lazyload alt="image-20250831163420509" style="zoom:50%;" />
+<img src="image-20250831163515144.png" srcset="/img/loading.gif" lazyload alt="image-20250831163515144" style="zoom:50%;" />
+<img src="image-20250831163637177.png" srcset="/img/loading.gif" lazyload alt="image-20250831163637177" style="zoom:50%;" />
+<img src="image-20250831163727509.png" srcset="/img/loading.gif" lazyload alt="image-20250831163727509" style="zoom:50%;" />
+<img src="image-20250831161835733.png" srcset="/img/loading.gif" lazyload alt="image-20250831161835733" style="zoom:50%;" />
+<p>如果可以构造出一棵树，说明句子是合法的，否则说明有语法错误。</p>
+<p>理解开始符号。前文提过，为了分析语言或者总结语言的规律，我们把终结符归类、排列、层层抽象，得到各种非终结符。</p>
+<p>非终结符是有层次的，低层次的非终结符可以组成高层次的非终结符，高层次的非终结符再组成更高层次的非终结符，…, 最后就聚集到一个非终结符上，也就是树根，它就是开始符号。</p>
+<p>开始符号最大的作用就是告诉编译器从哪条规则开始解析代码。</p>
+<p>还是以机器人送餐为例，因为 <code>&lt;订单&gt;</code> 是开始符号，所以解析从<code>&lt;订单&gt;</code>开始；如果没有指定开始符号，机器人就不知道从哪个产生式开始推导。</p>
+<h2 id="递归下降的语法分析">递归下降的语法分析</h2>
+<p>递归下降是一种语法分析方法：</p>
+<ol>
+<li>
+<p>为每一个非终结符编写一个函数，函数内部则按照这个非终结符的产生式的右部符号顺序编写。</p>
+</li>
+<li>
+<p>假设这个非终结符的产生式为：</p>
+</li>
+</ol>
+<p class="katex-block "><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>A</mi><mo>→</mo><msub><mi>X</mi><mn>1</mn></msub><msub><mi>X</mi><mn>2</mn></msub><msub><mi>X</mi><mn>3</mn></msub><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><msub><mi>X</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">A \rightarrow X_1X_2X_3...X_k
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">...</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></p>
+<p>那么 A() 函数内部应该这样处理：</p>
+<p class="katex-block "><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mi>f</mi><mi>o</mi><mi>r</mi><mtext>  </mtext><mo stretchy="false">(</mo><mi>i</mi><mo>=</mo><mn>1</mn><mtext> </mtext><mi>t</mi><mi>o</mi><mtext> </mtext><mi>k</mi><mo stretchy="false">)</mo><mtext>  </mtext><mo stretchy="false">{</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mspace width="1em"/><mi>i</mi><mi>f</mi><mtext>  </mtext><mo stretchy="false">(</mo><msub><mi>X</mi><mi>i</mi></msub><mtext>是非终结符</mtext><mo stretchy="false">)</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mspace width="1em"/><mspace width="1em"/><mtext>调用函数</mtext><msub><mi>X</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mo stretchy="false">)</mo><mo separator="true">;</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mspace width="1em"/><mi>e</mi><mi>l</mi><mi>s</mi><mi>e</mi><mtext>  </mtext><mi>i</mi><mi>f</mi><mtext>  </mtext><mo stretchy="false">(</mo><msub><mi>X</mi><mi>i</mi></msub><mtext>等于当前的输入符号</mtext><mo stretchy="false">)</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mspace width="1em"/><mspace width="1em"/><mtext>读入下一个输入符号</mtext><mo separator="true">;</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mspace width="1em"/><mi>e</mi><mi>l</mi><mi>s</mi><mi>e</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mspace width="1em"/><mspace width="1em"/><mi mathvariant="normal">/</mi><mo>∗</mo><mtext>发生了一个错误</mtext><mo>∗</mo><mi mathvariant="normal">/</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo stretchy="false">}</mo></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+&amp; for\;(i = 1  \ to \   k)\;\{ \\
+&amp; \quad if\;(X_i 是非终结符 ) \\
+&amp; \quad\quad调用函数 X_i();\\
+&amp; \quad else\; if \;(X_i 等于当前的输入符号 )\\
+&amp; \quad\quad读入下一个输入符号;\\
+&amp; \quad else \\
+&amp; \quad\quad/* 发生了一个错误*/\\
+&amp;\}
+\end{aligned}
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:11.7em;vertical-align:-5.6em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:6.1em;"><span style="top:-8.1em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:-6.6em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:-5.1em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:-3.6em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:-2.1em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:-0.6em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:0.9em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:2.4em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:5.6em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:6.1em;"><span style="top:-8.26em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mord mathnormal" style="margin-right:0.0278em;">or</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mopen">(</span><span class="mord mathnormal">i</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">1</span><span class="mspace"> </span><span class="mord mathnormal">t</span><span class="mord mathnormal">o</span><span class="mspace"> </span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mopen">{</span></span></span><span style="top:-6.76em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:1em;"></span><span class="mord mathnormal">i</span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord cjk_fallback">是非终结符</span><span class="mclose">)</span></span></span><span style="top:-5.26em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:1em;"></span><span class="mord cjk_fallback">调用函数</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mclose">)</span><span class="mpunct">;</span></span></span><span style="top:-3.76em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:1em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal" style="margin-right:0.0197em;">l</span><span class="mord mathnormal">se</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal">i</span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord cjk_fallback">等于当前的输入符号</span><span class="mclose">)</span></span></span><span style="top:-2.26em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:1em;"></span><span class="mord cjk_fallback">读入下一个输入符号</span><span class="mpunct">;</span></span></span><span style="top:-0.76em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:1em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal" style="margin-right:0.0197em;">l</span><span class="mord mathnormal">se</span></span></span><span style="top:0.74em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:1em;"></span><span class="mord">/</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord cjk_fallback">发生了一个错误</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">/</span></span></span><span style="top:2.24em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mclose">}</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:5.6em;"><span></span></span></span></span></span></span></span></span></span></span></span></p>
+<ol start="3">
+<li>整个程序的入口是开始符号对应的函数。</li>
+</ol>
+<p>说“递归”是因为整个程序往往包含递归，包含递归的原因是有的产生式就是递归定义的；</p>
+<p>说“下降”是因为整个程序的入口是开始符号对应的函数，也就是语法分析树的树根，随着函数的层层调用，这棵树从上往下生长，是一个自顶向下的过程。</p>
+<p>如果读者不理解上面的话也没有关系，后面还有实战环节帮助读者理解。</p>
+<h2 id="消除左递归">消除左递归</h2>
+<p>我们看一个产生式:</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mi>x</mi><mi>p</mi><mi>r</mi><mo>→</mo><mi>e</mi><mi>x</mi><mi>p</mi><mi>r</mi><mo>+</mo><mi>t</mi><mi>e</mi><mi>r</mi><mi>m</mi><mtext> </mtext><mi mathvariant="normal">∣</mi><mtext> </mtext><mi>t</mi><mi>e</mi><mi>r</mi><mi>m</mi></mrow><annotation encoding="application/x-tex">expr \rightarrow expr + term\  |\  term</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">t</span><span class="mord mathnormal" style="margin-right:0.0278em;">er</span><span class="mord mathnormal">m</span><span class="mspace"> </span><span class="mord">∣</span><span class="mspace"> </span><span class="mord mathnormal">t</span><span class="mord mathnormal" style="margin-right:0.0278em;">er</span><span class="mord mathnormal">m</span></span></span></span></p>
+<p>对于产生式  <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mi>x</mi><mi>p</mi><mi>r</mi><mo>→</mo><mi>e</mi><mi>x</mi><mi>p</mi><mi>r</mi><mo>+</mo><mi>t</mi><mi>e</mi><mi>r</mi><mi>m</mi></mrow><annotation encoding="application/x-tex">expr \rightarrow expr + term</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span><span class="mord mathnormal" style="margin-right:0.0278em;">er</span><span class="mord mathnormal">m</span></span></span></span></p>
+<p>产生式体最左边的符号和产生式头部的非终结符相同，都是 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mi>x</mi><mi>p</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">expr</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span></span></span></span>，这种情况就称非终结 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mi>x</mi><mi>p</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">expr</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span></span></span></span> 和它的产生式是左递归的（left recursive）；</p>
+<p>如果采用递归下降分析法，程序就会陷入无限循环。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">expr</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-keyword">if</span>(...) &#123;<br>        term();<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        expr();<br>    	match(ADD); <span class="hljs-comment">// 匹配 &#x27;+&#x27;，匹配成功会调用 get_token() 读入新的符号</span><br>    	term();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>因为 expr 有 2 个产生式，所以要么执行第 4 行，要么执行 6~8 行。</p>
+<p>第一次调用 expr():假设读入的符号无法和 term 的首个终结符匹配，则执行 else 部分，第 6 行会再次调用 expr()；</p>
+<p>第二次调用 expr()：因为程序并没有读入新的符号，所以还要执行 else 部分；</p>
+<p>第三次调用 expr()：同理，还要执行 else 部分；</p>
+<p>…</p>
+<p>这样就无穷执行 expr()…</p>
+<p>那怎么办呢？通过改写产生式就可以消除左递归。</p>
+<p>考虑两个产生式：</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>→</mo><mi>A</mi><mi>α</mi><mtext> </mtext><mi mathvariant="normal">∣</mi><mtext> </mtext><mi>β</mi></mrow><annotation encoding="application/x-tex">A \rightarrow A \alpha\ | \ \beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">A</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace"> </span><span class="mord">∣</span><span class="mspace"> </span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span></span></span></span></p>
+<p>A 是非终结符， <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span> 和 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span></span></span></span> 是不以 A 开头的终结符/非终结符序列。</p>
+<p>例如，在产生式 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mi>x</mi><mi>p</mi><mi>r</mi><mo>→</mo><mi>e</mi><mi>x</mi><mi>p</mi><mi>r</mi><mo>+</mo><mi>t</mi><mi>e</mi><mi>r</mi><mi>m</mi><mtext> </mtext><mi mathvariant="normal">∣</mi><mtext> </mtext><mi>t</mi><mi>e</mi><mi>r</mi><mi>m</mi></mrow><annotation encoding="application/x-tex">expr \rightarrow expr + term\  |\  term</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">t</span><span class="mord mathnormal" style="margin-right:0.0278em;">er</span><span class="mord mathnormal">m</span><span class="mspace"> </span><span class="mord">∣</span><span class="mspace"> </span><span class="mord mathnormal">t</span><span class="mord mathnormal" style="margin-right:0.0278em;">er</span><span class="mord mathnormal">m</span></span></span></span> 中，非终结符 A = expr, 串 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span> = + term, 串 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span></span></span></span> = term；</p>
+<p>从 A 开始，不断用 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>α</mi></mrow><annotation encoding="application/x-tex">A \alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span> 替换 A，将得到 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>α</mi><mi>α</mi><mi>α</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mi>α</mi><mi>α</mi><mi>α</mi></mrow><annotation encoding="application/x-tex">A \alpha \alpha \alpha... \alpha \alpha \alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord">...</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span>；</p>
+<p>此时用 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span></span></span></span> 替换 A，我们就得到了一个在 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span></span></span></span> 后跟有多个  <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span> 的序列。</p>
+<p>我们把 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>→</mo><mi>A</mi><mi>α</mi><mtext> </mtext><mi mathvariant="normal">∣</mi><mtext> </mtext><mi>β</mi></mrow><annotation encoding="application/x-tex">A \rightarrow A \alpha\ | \ \beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">A</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace"> </span><span class="mord">∣</span><span class="mspace"> </span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span></span></span></span> 的语法分析树画出来：</p>
+<img src="image-20250831224323723.png" srcset="/img/loading.gif" lazyload alt="image-20250831224323723" style="zoom:33%;" />
+<p>把 0 个或多个 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span> 的序列用非终结符 R 表示，那么 A 的产生式可以写成：</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>→</mo><mi>β</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">A \rightarrow  \beta R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span></span></p>
+<img src="image-20250901104616324.png" srcset="/img/loading.gif" lazyload alt="image-20250901104616324" style="zoom: 33%;" />
+<p>R 可以用递归的方法表示：</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>→</mo><mi>α</mi><mi>R</mi><mtext> </mtext><mi mathvariant="normal">∣</mi><mtext> </mtext><mi>ϵ</mi></mrow><annotation encoding="application/x-tex">R \rightarrow  \alpha R \ | \ \epsilon</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace"> </span><span class="mord">∣</span><span class="mspace"> </span><span class="mord mathnormal">ϵ</span></span></span></span></p>
+<p>所以，对于左递归的产生式 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>→</mo><mi>A</mi><mi>α</mi><mtext> </mtext><mi mathvariant="normal">∣</mi><mtext> </mtext><mi>β</mi></mrow><annotation encoding="application/x-tex">A \rightarrow A \alpha\ | \ \beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">A</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace"> </span><span class="mord">∣</span><span class="mspace"> </span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span></span></span></span></p>
+<p>可以改写为：</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>→</mo><mi>β</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">A \rightarrow  \beta R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span></span></p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>→</mo><mi>α</mi><mi>R</mi><mtext> </mtext><mi mathvariant="normal">∣</mi><mtext> </mtext><mi>ϵ</mi></mrow><annotation encoding="application/x-tex">R \rightarrow  \alpha R \ | \ \epsilon</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace"> </span><span class="mord">∣</span><span class="mspace"> </span><span class="mord mathnormal">ϵ</span></span></span></span></p>
+<p>有的读者说，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>→</mo><mi>α</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">R \rightarrow  \alpha R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span></span> 不也是递归吗？</p>
+<p>没错，但是这是右递归，因为 R 是产生式右部的最后一个符号（在最右边），所以称之为右递归。</p>
+<p>套用上面的公式， <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mi>x</mi><mi>p</mi><mi>r</mi><mo>→</mo><mi>e</mi><mi>x</mi><mi>p</mi><mi>r</mi><mo>+</mo><mi>t</mi><mi>e</mi><mi>r</mi><mi>m</mi><mtext> </mtext><mi mathvariant="normal">∣</mi><mtext> </mtext><mi>t</mi><mi>e</mi><mi>r</mi><mi>m</mi></mrow><annotation encoding="application/x-tex">expr \rightarrow expr + term\  |\  term</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">t</span><span class="mord mathnormal" style="margin-right:0.0278em;">er</span><span class="mord mathnormal">m</span><span class="mspace"> </span><span class="mord">∣</span><span class="mspace"> </span><span class="mord mathnormal">t</span><span class="mord mathnormal" style="margin-right:0.0278em;">er</span><span class="mord mathnormal">m</span></span></span></span></p>
+<p>可以改写为：</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mi>x</mi><mi>p</mi><mi>r</mi><mo>→</mo><mtext> </mtext><mi>t</mi><mi>e</mi><mi>r</mi><mi>m</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">expr \rightarrow \  termR</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">t</span><span class="mord mathnormal" style="margin-right:0.0278em;">er</span><span class="mord mathnormal">m</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span></span></p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>→</mo><mo>+</mo><mi>t</mi><mi>e</mi><mi>r</mi><mi>m</mi><mi>R</mi><mtext> </mtext><mi mathvariant="normal">∣</mi><mtext> </mtext><mi>ϵ</mi></mrow><annotation encoding="application/x-tex">R \rightarrow  +term R \ | \ \epsilon</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">+</span><span class="mord mathnormal">t</span><span class="mord mathnormal" style="margin-right:0.0278em;">er</span><span class="mord mathnormal">m</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace"> </span><span class="mord">∣</span><span class="mspace"> </span><span class="mord mathnormal">ϵ</span></span></span></span></p>
+<p>把上面的产生式翻译成伪代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">expr</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    term();<br>    R();<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">R</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-keyword">if</span>(token_g == ADD) &#123; <span class="hljs-comment">// 和 “+” 匹配</span><br>        get_token() ;    <span class="hljs-comment">// 读入新的符号</span><br>    	term();<br>        R();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>虽然 R() 会递归调用自身，但是 10 ~ 11 行会消耗 ‘+’ 和 term；</p>
+<p>这样就会不断读入新的符号，程序就不会陷入无限循环。</p>
+<h2 id="LL（1）文法">LL（1）文法</h2>
+<p>递归下降分析法不仅存在无限循环的问题，还存在另外一个问题。</p>
+<p>回顾前文，当我们给非终结符 A 编写函数的时候，如果 A 只有一个产生式，那没有问题。但是如果 A 有多个产生式呢？</p>
+<p>依然是前面的伪代码：<br>
+如果有产生式：</p>
+<p class="katex-block "><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>A</mi><mo>→</mo><msub><mi>X</mi><mn>1</mn></msub><msub><mi>X</mi><mn>2</mn></msub><msub><mi>X</mi><mn>3</mn></msub><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><msub><mi>X</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">A \rightarrow X_1X_2X_3...X_k
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">...</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></p>
+<p>那么 A() 函数内部应该这样处理：</p>
+<p class="katex-block "><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mi>f</mi><mi>o</mi><mi>r</mi><mtext>  </mtext><mo stretchy="false">(</mo><mi>i</mi><mo>=</mo><mn>1</mn><mtext> </mtext><mi>t</mi><mi>o</mi><mtext> </mtext><mi>k</mi><mo stretchy="false">)</mo><mtext>  </mtext><mo stretchy="false">{</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mspace width="1em"/><mi>i</mi><mi>f</mi><mtext>  </mtext><mo stretchy="false">(</mo><msub><mi>X</mi><mi>i</mi></msub><mtext>是非终结符</mtext><mo stretchy="false">)</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mspace width="1em"/><mspace width="1em"/><mtext>调用函数</mtext><msub><mi>X</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mo stretchy="false">)</mo><mo separator="true">;</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mspace width="1em"/><mi>e</mi><mi>l</mi><mi>s</mi><mi>e</mi><mtext>  </mtext><mi>i</mi><mi>f</mi><mtext>  </mtext><mo stretchy="false">(</mo><msub><mi>X</mi><mi>i</mi></msub><mtext>等于当前的输入符号</mtext><mo stretchy="false">)</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mspace width="1em"/><mspace width="1em"/><mtext>读入下一个输入符号</mtext><mo separator="true">;</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mspace width="1em"/><mi>e</mi><mi>l</mi><mi>s</mi><mi>e</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mspace width="1em"/><mspace width="1em"/><mi mathvariant="normal">/</mi><mo>∗</mo><mtext>发生了一个错误</mtext><mo>∗</mo><mi mathvariant="normal">/</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo stretchy="false">}</mo></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+&amp; for\;(i = 1  \ to \   k)\;\{ \\
+&amp; \quad if\;(X_i 是非终结符 ) \\
+&amp; \quad\quad调用函数 X_i();\\
+&amp; \quad else\; if \;(X_i 等于当前的输入符号 )\\
+&amp; \quad\quad读入下一个输入符号;\\
+&amp; \quad else \\
+&amp; \quad\quad/* 发生了一个错误*/\\
+&amp;\}
+\end{aligned}
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:11.7em;vertical-align:-5.6em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:6.1em;"><span style="top:-8.1em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:-6.6em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:-5.1em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:-3.6em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:-2.1em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:-0.6em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:0.9em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span><span style="top:2.4em;"><span class="pstrut" style="height:2.84em;"></span><span class="mord"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:5.6em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:6.1em;"><span style="top:-8.26em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mord mathnormal" style="margin-right:0.0278em;">or</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mopen">(</span><span class="mord mathnormal">i</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">1</span><span class="mspace"> </span><span class="mord mathnormal">t</span><span class="mord mathnormal">o</span><span class="mspace"> </span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mopen">{</span></span></span><span style="top:-6.76em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:1em;"></span><span class="mord mathnormal">i</span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord cjk_fallback">是非终结符</span><span class="mclose">)</span></span></span><span style="top:-5.26em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:1em;"></span><span class="mord cjk_fallback">调用函数</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mclose">)</span><span class="mpunct">;</span></span></span><span style="top:-3.76em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:1em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal" style="margin-right:0.0197em;">l</span><span class="mord mathnormal">se</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal">i</span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord cjk_fallback">等于当前的输入符号</span><span class="mclose">)</span></span></span><span style="top:-2.26em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:1em;"></span><span class="mord cjk_fallback">读入下一个输入符号</span><span class="mpunct">;</span></span></span><span style="top:-0.76em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:1em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal" style="margin-right:0.0197em;">l</span><span class="mord mathnormal">se</span></span></span><span style="top:0.74em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:1em;"></span><span class="mord">/</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord cjk_fallback">发生了一个错误</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">/</span></span></span><span style="top:2.24em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mclose">}</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:5.6em;"><span></span></span></span></span></span></span></span></span></span></span></span></p>
+<p>如果执行到最后的 else 分支，并不能说明发生了错误，也可能是产生式选错了，这时候我们要做的是逐个尝试 A 的产生式。只有当所有的产生式都尝试完毕，才知道是不是发生了错误。</p>
+<p>为了尝试另一个产生式，我们需要把已经读取的词法记号放回到缓冲区中（回溯），这无疑让程序编写变得复杂。</p>
+<p>如何解决这个问题？</p>
+<p>有一种文法叫 <strong>LL(1)</strong> ，对于这种文法，我们可以构造出预测分析器，也就是不用回溯。</p>
+<p>这种文法的名字体现了我们要构造的预测分析器的特点：</p>
+<ul>
+<li><strong>第一个 L</strong>：从左向右（<strong>L</strong>eft-to-right）扫描输入字符串。</li>
+<li><strong>第二个 L</strong>：构建一个最左推导（<strong>L</strong>eftmost derivation）。</li>
+<li><strong>(1)</strong>：在每一步分析时，只需要向前查看<strong>1个</strong>输入符号（token）来决定使用哪条产生式规则。</li>
+</ul>
+<p>最左推导的意思是在推导过程中，总是选择<strong>当前句型中最左边的非终结符</strong>进行替换。（句型是推导过程中的任一时刻的符号串表示，可以同时包含<strong>终结符</strong>和<strong>非终结符</strong>。）</p>
+<p>为什么要用最左推导呢？很简单，第一个　L　的意思是“从左向右（<strong>L</strong>eft-to-right）扫描输入字符串”，所以匹配过程也要从左到右。</p>
+<p><strong>在最左推导中</strong>，当前要扩展的<strong>正是句型中最左边的非终结符</strong>。这个非终结符的右侧可能还有其他非终结符或终结符，但这些都还<strong>没有被分析到</strong>。</p>
+<p><strong>试想如果不是最左推导</strong>：假设当前句型中有多个非终结符（如 <code>A B C</code>），分析器选择先扩展最右边的 <code>C</code>,但是当前要分析的 token 其实是 A 扩展出来的，这不是张冠李戴吗？</p>
+<h3 id="LL-1-文法的形式化条件">LL(1)文法的形式化条件</h3>
+<img src="image-20250901131428106.png" srcset="/img/loading.gif" lazyload alt="image-20250901131428106" style="zoom:100%;" />
+<p>上面的形式化条件留给学有遗力的同学去钻研。</p>
+<p>看不懂没有关系，不影响后面的学习。总之记住，在构造文法的时候，我们不可能给自己挖坑。对于任何非终结符 A，如果它有多个产生式，我们只需要向前查看 1 个输入符号（token）就可以决定使用哪个产生式。</p>
+<h3 id="提取左公因子">提取左公因子</h3>
+<p>在构造文法的过程中,往往不是一步到位,对于不合要求的文法要加以改造。</p>
+<p>请看下面的产生式：</p>
+<figure class="highlight nim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs nim">&lt;<span class="hljs-type">stmt</span>&gt; -&gt; <span class="hljs-keyword">if</span> ( &lt;<span class="hljs-type">expr</span>&gt; ) &lt;<span class="hljs-type">stmt</span>&gt;<br>        | <span class="hljs-keyword">if</span> ( &lt;<span class="hljs-type">expr</span>&gt; ) &lt;<span class="hljs-type">stmt</span>&gt; <span class="hljs-keyword">else</span> &lt;<span class="hljs-type">stmt</span>&gt;<br></code></pre></td></tr></table></figure>
+<p>假设当前读入的 token 是 if，请问我们选择哪个产生式呢？</p>
+<p>感觉哪个都可以，因为都是 if 开头的。</p>
+<p>这就需要我们改写产生式：</p>
+<p>首先，在 <code> &lt;stmt&gt; -&gt; if ( &lt;expr&gt; ) &lt;stmt&gt;</code> 尾部增加 ε, 因为 ε是空串，这并不会改变原来的意思。</p>
+<figure class="highlight nim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs nim">&lt;<span class="hljs-type">stmt</span>&gt; -&gt; <span class="hljs-keyword">if</span> ( &lt;<span class="hljs-type">expr</span>&gt; ) &lt;<span class="hljs-type">stmt</span>&gt; ε  // 在尾部增加 ε<br>        | <span class="hljs-keyword">if</span> ( &lt;<span class="hljs-type">expr</span>&gt; ) &lt;<span class="hljs-type">stmt</span>&gt; <span class="hljs-keyword">else</span> &lt;<span class="hljs-type">stmt</span>&gt;<br></code></pre></td></tr></table></figure>
+<p>其次，注意到它们有共同的左因子<code>if ( &lt;expr&gt; ) &lt;stmt&gt;</code></p>
+<p>把 <code>ε | else &lt;stmt&gt;</code> 用新的非终结符 <code>&lt;else-clause&gt;</code> 表示，则产生式被改写为：</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs gherkin"><span class="hljs-variable">&lt;stmt&gt;</span> -&gt; if ( <span class="hljs-variable">&lt;expr&gt;</span> ) <span class="hljs-variable">&lt;stmt&gt;</span> <span class="hljs-variable">&lt;else-clause&gt;</span><br><br><span class="hljs-variable">&lt;else-clause&gt;</span> -&gt; else <span class="hljs-variable">&lt;stmt&gt;</span>  |<span class="hljs-string"> ε      </span><br></code></pre></td></tr></table></figure>
+<p>现在再看看之前遇到的问题还存在吗？</p>
+<p>假设当前读入的 token 是 if，</p>
+<p>根据产生式 <code>&lt;stmt&gt; -&gt; if ( &lt;expr&gt; ) &lt;stmt&gt; &lt;else-clause&gt;</code></p>
+<p>先匹配 “if”, 再匹配“(”，再调用 expr(), … 最后调用 else_clause()</p>
+<p>else_clause 函数的伪代码是：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">else_clause</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-keyword">if</span>(token_g == ELSE) &#123; <span class="hljs-comment">// 和 else 匹配</span><br>        get_token(); <span class="hljs-comment">// 读入新的符号</span><br>        stmt();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>当输入符号是 else 的时候，就调用  stmt(); 否则认为 else 部分不存在。</p>
+<p>当一个非终结符的多条产生式具有<strong>共同的起始部分（即左公因子）</strong> 时，编译器在分析时无法仅凭向前查看 1 个输入符号就能确定用哪个产生式。</p>
+<p>提取左公因子就是为了解决这个问题。</p>
+<h2 id="实战环节">实战环节</h2>
+<p>这部分内容用一个简单的例子帮读者理解如何把产生式转换成代码。</p>
+<p>某个文法定义如下：</p>
+<ol>
+<li>
+<p><strong>非终结符 (V<sub>N</sub>)</strong>: <code>&lt;赋值语句&gt;</code>, <code>&lt;表达式&gt;</code>, <code>&lt;项&gt;</code>,  <code>&lt;其余项&gt;</code>,<code>&lt;变量&gt;</code>, <code>&lt;数字&gt;</code></p>
+</li>
+<li>
+<p><strong>终结符 (V<sub>T</sub>)</strong>: <code>'='</code>, <code>'+'</code>, <code>';'</code>, <code>'a'</code>, <code>'b'</code>, <code>'c'</code>, <code>'0'</code>, <code>'1'</code>, <code>'2'</code>,<code>ε</code></p>
+</li>
+<li>
+<p><strong>开始符号 (S)</strong>: <code>&lt;程序&gt;</code></p>
+</li>
+<li>
+<p><strong>产生式集合 (P)</strong>: 下面的 7 条产生式规则</p>
+</li>
+</ol>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">程序</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">赋值语句</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">程序</span>&gt;</span> | ε<br><span class="hljs-tag">&lt;<span class="hljs-name">赋值语句</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">变量</span>&gt;</span> &#x27;=&#x27; <span class="hljs-tag">&lt;<span class="hljs-name">表达式</span>&gt;</span> &#x27;;&#x27;<br><span class="hljs-tag">&lt;<span class="hljs-name">表达式</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">项</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">其余项</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">其余项</span>&gt;</span> -&gt; &#x27;+&#x27; <span class="hljs-tag">&lt;<span class="hljs-name">项</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">其余项</span>&gt;</span> | ε<br><span class="hljs-tag">&lt;<span class="hljs-name">项</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">变量</span>&gt;</span> | <span class="hljs-tag">&lt;<span class="hljs-name">数字</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">变量</span>&gt;</span> -&gt; &#x27;a&#x27; | &#x27;b&#x27; | &#x27;c&#x27;<br><span class="hljs-tag">&lt;<span class="hljs-name">数字</span>&gt;</span> -&gt; &#x27;0&#x27; | &#x27;1&#x27; | &#x27;2&#x27;<br></code></pre></td></tr></table></figure>
+<p>我们手工推导一下，看看能推出什么句子。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;程序&gt; -&gt; &lt;赋值语句&gt; &lt;程序&gt;    <br>      -&gt; &lt;赋值语句&gt;  <span class="hljs-comment">// 用  ε 替换 &lt;程序&gt;</span><br></code></pre></td></tr></table></figure>
+<p>然后推导  &lt;赋值语句&gt;</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;赋值语句&gt; -&gt; &lt;变量&gt; <span class="hljs-string">&#x27;=&#x27;</span> &lt;表达式&gt; <span class="hljs-string">&#x27;;&#x27;</span><br>          -&gt; <span class="hljs-string">&#x27;a&#x27;</span>  <span class="hljs-string">&#x27;=&#x27;</span> &lt;项&gt; &lt;其余项&gt; <span class="hljs-string">&#x27;;&#x27;</span>                 <span class="hljs-comment">// 用 &#x27;a&#x27; 替换 &lt;变量&gt;；用 &lt;项&gt; &lt;其余项&gt; 替换 &lt;表达式&gt;</span><br>          -&gt; <span class="hljs-string">&#x27;a&#x27;</span>  <span class="hljs-string">&#x27;=&#x27;</span> &lt;数字&gt; <span class="hljs-string">&#x27;+&#x27;</span> &lt;项&gt; &lt;其余项&gt; <span class="hljs-string">&#x27;;&#x27;</span>      <span class="hljs-comment">// 用 &lt;数字&gt; 替换 &lt;项&gt;； 用 &#x27;+&#x27; &lt;项&gt; &lt;其余项&gt; 替换 &lt;其余项&gt;</span><br>          -&gt; <span class="hljs-string">&#x27;a&#x27;</span>  <span class="hljs-string">&#x27;=&#x27;</span> <span class="hljs-string">&#x27;0&#x27;</span> <span class="hljs-string">&#x27;+&#x27;</span> &lt;数字&gt;  ε <span class="hljs-string">&#x27;;&#x27;</span>            <span class="hljs-comment">// 用 0 替换 &lt;数字&gt;；用 &lt;数字&gt; 替换 &lt;项&gt;； 用 ε 替换 &lt;其余项&gt;</span><br>          -&gt; <span class="hljs-string">&#x27;a&#x27;</span>  <span class="hljs-string">&#x27;=&#x27;</span> <span class="hljs-string">&#x27;0&#x27;</span> <span class="hljs-string">&#x27;+&#x27;</span> <span class="hljs-string">&#x27;2&#x27;</span> <span class="hljs-string">&#x27;;&#x27;</span>                  <span class="hljs-comment">// 用 &#x27;2&#x27; 替换 &lt;数字&gt;</span><br></code></pre></td></tr></table></figure>
+<p>所以， <code>'a'  '=' '0' '+' '2' ';' </code>是这个文法的一个句子。</p>
+<p>同理，我们可以推出</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-string">&#x27;b&#x27;</span> <span class="hljs-string">&#x27;=&#x27;</span> <span class="hljs-string">&#x27;a&#x27;</span> <span class="hljs-string">&#x27;+&#x27;</span> <span class="hljs-string">&#x27;0&#x27;</span> <span class="hljs-string">&#x27;;&#x27;</span><br><span class="hljs-string">&#x27;c&#x27;</span> <span class="hljs-string">&#x27;=&#x27;</span> <span class="hljs-string">&#x27;a&#x27;</span> <span class="hljs-string">&#x27;+&#x27;</span> <span class="hljs-string">&#x27;a&#x27;</span> <span class="hljs-string">&#x27;+&#x27;</span> <span class="hljs-string">&#x27;a&#x27;</span> <span class="hljs-string">&#x27;+&#x27;</span> <span class="hljs-string">&#x27;a&#x27;</span> <span class="hljs-string">&#x27;;&#x27;</span>    <br><span class="hljs-string">&#x27;a&#x27;</span> <span class="hljs-string">&#x27;=&#x27;</span> <span class="hljs-string">&#x27;b&#x27;</span> <span class="hljs-string">&#x27;+&#x27;</span> <span class="hljs-string">&#x27;0&#x27;</span> <span class="hljs-string">&#x27;+&#x27;</span> <span class="hljs-string">&#x27;2&#x27;</span> <span class="hljs-string">&#x27;;&#x27;</span><br></code></pre></td></tr></table></figure>
+<p>以上都是符合语法的。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-string">&#x27;1&#x27;</span> <span class="hljs-string">&#x27;=&#x27;</span> <span class="hljs-string">&#x27;a&#x27;</span> <span class="hljs-string">&#x27;+&#x27;</span> <span class="hljs-string">&#x27;0&#x27;</span> <span class="hljs-string">&#x27;;&#x27;</span><br></code></pre></td></tr></table></figure>
+<p>这句就不符合语法。因为 ‘=’  左边是 &lt;变量&gt; ，  &lt;变量&gt; 只能推导出 ‘a’ | ‘b’ | ‘c’ , 推导不出 ‘1’</p>
+<p>此文法属于 LL（1） 文法，我们可以构造出一个不需要回溯的递归下降分析器。</p>
+<p>下面，请编程实现一个简单的语法分析器，用它分析给出的文本文件是否合乎文法。</p>
+<h3 id="代码实现">代码实现</h3>
+<p>为了方便阅读和书写，我们把终结符的单引号都去掉。</p>
+<p>递归下降法告诉我们，要为每一个非终结符编写一个函数。</p>
+<p>我们从简单的产生式开始。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">    &lt;数字&gt; -&gt; 0 | 1 | 2</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">num</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-keyword">if</span>(token_g == NUM &amp;&amp; (token_num_g == <span class="hljs-number">0</span> || token_num_g == <span class="hljs-number">1</span> || token_num_g == <span class="hljs-number">2</span>)) &#123;<br>        ;<br>    &#125;<span class="hljs-keyword">else</span> &#123;<br>        syn_err(UNKNOW_NUM, ERROR);<br>    &#125;<br>    get_token();<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>注意，和 scan() 函数一样，我们每次都会预读一个 token, 所以执行 num() 函数的时候， token_g 已经有值了。</p>
+<p>因为只有 0，1，2 是合法的数字，所以不是这些数字就应该报错（第 9 行）</p>
+<p>第 11 行调用 get_token()，再次读入一个 token;</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">    &lt;变量&gt; -&gt; a | b | c</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">var</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-keyword">if</span>(token_g == ID) &#123;<br>        <span class="hljs-keyword">if</span>(<span class="hljs-built_in">strcmp</span>(token_id_g,<span class="hljs-string">&quot;a&quot;</span>) == <span class="hljs-number">0</span>) &#123;<br><br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-built_in">strcmp</span>(token_id_g,<span class="hljs-string">&quot;b&quot;</span>) == <span class="hljs-number">0</span>) &#123;<br><br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-built_in">strcmp</span>(token_id_g,<span class="hljs-string">&quot;c&quot;</span>) == <span class="hljs-number">0</span>) &#123;<br><br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            syn_err(UNKNOW_VAR, ERROR);<br>        &#125;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        syn_err(UNKNOW_VAR, ERROR);<br>    &#125;<br>    get_token();<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>var() 函数用来分析变量。在我们的词法分析里面， a，b，c 被解析成标识符（用字符数组存储，属于字符串），所以 7~11 行比较字符串。</p>
+<p>有读者问，为什么 8、10、12 都空着？因为现阶段我们只是判断语法正不正确，无需再做什么。</p>
+<p>14、17 行是错误处理，报错“未知变量”。</p>
+<p>19 行，预读 token；</p>
+<p>num() 和 var() 函数都写好了，相当于有了 2 块积木。现在就可以利用它们做更大的积木了。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">    &lt;项&gt; -&gt; &lt;变量&gt; | &lt;数字&gt;</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">item</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> <br>&#123;<br>    <span class="hljs-keyword">if</span>(token_g == NUM) &#123;<br>        num();<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        var();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>&lt;项&gt; 可以推导出 &lt;变量&gt;，也可以推导出 &lt;数字&gt;，如何选择产生式呢？</p>
+<p>这时候就体现出“只需要向前查看 1 个输入符号就可以决定用哪个产生式”。</p>
+<p>因为非终结符  &lt;变量&gt; 和 &lt;数字&gt; 展开后的第一个 token 是不同的，判断当前的 token, 如果是 NUM（第 6 行），那肯定是数字，所以调用  num()，否则调用  var();</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">    &lt;其余项&gt; -&gt; + &lt;项&gt; &lt;其余项&gt; | ε   </span><br><span class="hljs-comment">*/</span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">other_items</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-keyword">if</span>(token_g == ADD) &#123;<br>        get_token();<br>        item();<br>        other_items();<br>    &#125; <br>&#125;<br></code></pre></td></tr></table></figure>
+<p>&lt;其余项&gt;  可以推导出  + &lt;项&gt; &lt;其余项&gt; ，也可以推导出 ε；</p>
+<p>到底是哪个呢？还是判断 token_g，如果是 ADD，就选择  + &lt;项&gt; &lt;其余项&gt; ，否则就选择 ε（就是不处理）</p>
+<p>第 8 行读入新的 token；</p>
+<p>第 9 行，&lt;项&gt; 对应的函数是 item(), 直接调用就行；</p>
+<p>第 10 行，&lt;其余项&gt; 对应的函数不就是我们正在写的这个 other_items() 吗？ 这里递归。</p>
+<p>other_items() 函数也完成了，下面完成产生式  &lt;表达式&gt; -&gt; &lt;项&gt; &lt;其余项&gt;。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">    &lt;表达式&gt; -&gt; &lt;项&gt; &lt;其余项&gt;</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">expression</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    item();<br>    other_items();<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>非常简单，就像搭积木一样。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">    &lt;赋值语句&gt; -&gt; &lt;变量&gt; = &lt;表达式&gt; ;</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">assign_statement</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    var();<br>    <span class="hljs-keyword">if</span>(token_g == ASSIGN) &#123;<br>        get_token();      <br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        syn_err(LOST_ASSIGN, ERROR);<br>    &#125;<br>    expression();<br>    <span class="hljs-keyword">if</span>(token_g == SEMICO) &#123;<br>        get_token();      <br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        syn_err(LOST_SEMICO, ERROR);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>第 6 行，直接调用 var()；</p>
+<p>接下来，应该是等号，我们需要判断一下，如果不是就报错；</p>
+<p>第 12 行，还是用我们造好的轮子， expression()函数；</p>
+<p>别忘了，最后还有一个分号。</p>
+<p>还有最后一个函数，就是开始符号 &lt;程序&gt;。</p>
+<p>当文件到了末尾，就可以用 “ &lt;程序&gt; -&gt; ε”</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// &lt;程序&gt; -&gt; &lt;赋值语句&gt; &lt;程序&gt; | ε</span><br>    <br><span class="hljs-type">void</span> <span class="hljs-title function_">program</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;   <br>    <span class="hljs-keyword">if</span>(token_g != FILE_END) &#123;<br>        assign_statement();<br>        program();<br>    &#125; <br>    <span class="hljs-comment">//  &lt;程序&gt; -&gt;  ε ， 什么也不做</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>对了，还有main() 函数：</p>
+<img src="image-20250912112929874.png" srcset="/img/loading.gif" lazyload alt="image-20250912112929874" style="zoom:50%;" />
+<p>关键代码是 19~20 行。</p>
+<p>19行：先读入一个 token</p>
+<p>20行：调用开始符号代表的函数： program()</p>
+<p>22行：如果有语法错误，就打印出错误的个数。</p>
+<p>我们写几个简单的源文件测试一下。</p>
+<h3 id="成果展示">成果展示</h3>
+<h4 id="测试1">测试1</h4>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c">b=a+<span class="hljs-number">1</span>;<br>c=a+a +b +a+ <span class="hljs-number">1</span>+<span class="hljs-number">1</span>+<span class="hljs-number">2</span>;<br>a= <span class="hljs-number">0</span>+<span class="hljs-number">0</span>+a+b+c+<span class="hljs-number">1</span>+<span class="hljs-number">2</span>   <br><br><br>+ a;<br></code></pre></td></tr></table></figure>
+<p>运行结果是：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">warning: <span class="hljs-number">0</span>, error: <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<h4 id="测试2">测试2</h4>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">b=a+<span class="hljs-number">1</span>;<br>c=a+a +b +a+ <span class="hljs-number">1</span>+<span class="hljs-number">1</span>+<span class="hljs-number">2</span><br>a= <span class="hljs-number">0</span>+<span class="hljs-number">0</span>+a+b+c+<span class="hljs-number">1</span>+<span class="hljs-number">2</span>  <br></code></pre></td></tr></table></figure>
+<img src="image-20250829210936956.png" srcset="/img/loading.gif" lazyload alt="image-20250829210936956" style="zoom: 50%;" />
+<p>2 个地方缺少分号都检查出来了。但是行号没有对上（没有关系，这不是这节课的重点）。</p>
+<h4 id="测试3">测试3</h4>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">m=a+<span class="hljs-number">1</span>;<br><span class="hljs-number">2</span>=a+a +b +a+ <span class="hljs-number">1</span>+<span class="hljs-number">1</span>+<span class="hljs-number">2</span>;<br>a= <span class="hljs-number">0</span>+<span class="hljs-number">0</span>+a+b+c+<span class="hljs-number">1</span>+<span class="hljs-number">9</span>;   <br></code></pre></td></tr></table></figure>
+<img src="image-20250829211513356.png" srcset="/img/loading.gif" lazyload alt="image-20250829211513356" style="zoom:50%;" />
+<p>如果你已经掌握了这个简单的语法分析程序，那么可以顺利学习后面的内容了。</p>
+<p>配套代码：<a target="_blank" rel="noopener" href="https://gitee.com/chezi2020/csub">https://gitee.com/chezi2020/csub</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第3天：语法分析之理论篇</div>
+      <div>https://leslieche.github.io/2026/03/30/第3天：语法分析之理论篇/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年3月30日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/03/30/%E7%AC%AC4%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E5%AE%9A%E4%B9%89%E6%96%87%E6%B3%95/" title="第4天：语法分析之定义文法">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">第4天：语法分析之定义文法</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/03/29/%E7%AC%AC2%E5%A4%A9%EF%BC%9A%E6%90%9E%E5%AE%9A%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/" title="第2天：搞定词法分析">
+                        <span class="hidden-mobile">第2天：搞定词法分析</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
