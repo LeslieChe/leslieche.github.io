@@ -21,52 +21,52 @@
   
     <meta name="description" content="本节课学习什么是符号表以及如何用符号表管理变量。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="第9天：符号表之变量管理">
-<meta property="og:url" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:title" content="第10天：符号表之变量管理">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/index.html">
 <meta property="og:site_name" content="49天自制编译器">
 <meta property="og:description" content="本节课学习什么是符号表以及如何用符号表管理变量。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012150553206.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251014170439084.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251014171029831.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251014171527595.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251017133228161.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012163409777.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012171750585.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012164446631.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012164757321.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20250929122433157.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251014172705822.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251015215905723.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251014173452726.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012174939445.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251001164447022.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251001170336410.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012174939445.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251001182300250.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251001183002376.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012214019599.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251013104700405.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251016112550719.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251016200803988.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251013155711088.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251013155830026.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251005095452229.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251016115511997.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251005163452951.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251016114718741.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251016121744724.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012150553206.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251014170439084.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251014171029831.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251014171527595.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251017133228161.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012163409777.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012171750585.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012164446631.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012164757321.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20250929122433157.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251014172705822.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251015215905723.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251014173452726.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012174939445.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251001164447022.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251001170336410.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012174939445.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251001182300250.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251001183002376.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012214019599.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251013104700405.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251016112550719.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251016200803988.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251013155711088.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251013155830026.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251005095452229.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251016115511997.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251005163452951.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251016114718741.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251016121744724.png">
 <meta property="article:published_time" content="2026-04-17T09:44:37.000Z">
-<meta property="article:modified_time" content="2026-04-17T09:40:17.058Z">
+<meta property="article:modified_time" content="2026-04-17T10:48:09.019Z">
 <meta property="article:author" content="Che">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012150553206.png">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/image-20251012150553206.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>第9天：符号表之变量管理 - 49天自制编译器</title>
+  <title>第10天：符号表之变量管理 - 49天自制编译器</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -331,7 +331,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="第9天：符号表之变量管理"></span>
+            <span id="subtitle" data-typed-text="第10天：符号表之变量管理"></span>
           
         </div>
 
@@ -404,12 +404,12 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">第9天：符号表之变量管理</h1>
+            <h1 id="seo-header">第10天：符号表之变量管理</h1>
             
             
               <div class="markdown-body">
                 
-                <h1 id="第9天：符号表之变量管理">第9天：符号表之变量管理</h1>
+                <h1 id="第10天：符号表之变量管理">第10天：符号表之变量管理</h1>
 <p>前面我们完成了语法分析。</p>
 <p>复习一下，语法分析的任务是：接受一个终结符号串作为输入，找出从文法的开始符号推导出这个串的方法；如果推导不出来，就报告语法错误。</p>
 <p>前面的文章也多处提到，对于语法分析做不了的或者不方便做的，可以延后到语义分析解决。</p>
@@ -765,8 +765,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>第9天：符号表之变量管理</div>
-      <div>https://leslieche.github.io/2026/04/17/第9天：符号表之变量管理/</div>
+      <div>第10天：符号表之变量管理</div>
+      <div>https://leslieche.github.io/2026/04/17/第10天：符号表之变量管理/</div>
     </div>
     <div class="license-meta">
       
@@ -822,9 +822,9 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/" title="第10天：符号表之函数管理">
+                      <a href="/2026/04/17/%E7%AC%AC11%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/" title="第11天：符号表之函数管理">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">第10天：符号表之函数管理</span>
+                        <span class="hidden-mobile">第11天：符号表之函数管理</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -832,8 +832,8 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2026/04/17/%E7%AC%AC8%E5%A4%A9%EF%BC%9A%E6%9D%A5%E7%82%B9%E5%90%8E%E6%82%94%E8%8D%AF/" title="第8天：来点后悔药">
-                        <span class="hidden-mobile">第8天：来点后悔药</span>
+                      <a href="/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%AE%A1%E7%90%86/" title="第9天：作用域管理">
+                        <span class="hidden-mobile">第9天：作用域管理</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

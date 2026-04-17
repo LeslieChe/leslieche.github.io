@@ -1,0 +1,950 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="你是否好奇过，编译器是如何把不同作用域的同名变量区分开的？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第9天：作用域管理">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="你是否好奇过，编译器是如何把不同作用域的同名变量区分开的？">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%AE%A1%E7%90%86/image-20251015154952002.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%AE%A1%E7%90%86/image-20251015164005198.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%AE%A1%E7%90%86/image-20251015200713680.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%AE%A1%E7%90%86/image-20251015201744610.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%AE%A1%E7%90%86/image-20251015202553347.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%AE%A1%E7%90%86/image-20251015202709771.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%AE%A1%E7%90%86/image-20260417184533642.png">
+<meta property="article:published_time" content="2026-04-17T04:41:00.000Z">
+<meta property="article:modified_time" content="2026-04-17T10:49:45.005Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%AE%A1%E7%90%86/image-20251015154952002.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第9天：作用域管理 - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/download/" target="_self">
+                <i class="iconfont icon-gitee-fill"></i>
+                <span>代码下载</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/download/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-gitee-fill"></i>
+                  <span>代码下载</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第9天：作用域管理"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-17 12:41" pubdate>
+          2026年4月17日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          44 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第9天：作用域管理</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第9天：作用域管理">第9天：作用域管理</h1>
+<p>为了语义分析，我们要做符号表管理。符号表管理又离不开作用域管理，所以我们先要解决作用域的问题。</p>
+<p>举个简单的例子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> hello = <span class="hljs-number">0</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> hello = <span class="hljs-number">1</span>;<br>    &#123;<br>        <span class="hljs-type">int</span> hello = <span class="hljs-number">2</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>上面的代码一共定义了 3 个 hello, 它们属于不同的作用域。</p>
+<p>我们的符号表，要把这 3 个 hello 都保存起来。如果区别它们的作用域呢？</p>
+<p>第一行的 hello 具有文件作用域，第 4 行的 hello，因为被一对大括号包裹，就和外面的 hello 不是一个变量了；</p>
+<p>同理，第 6 行的 hello 又被一对大括号包裹住，它又成为了一个新的变量。</p>
+<p>我们可以给大括号编号，每对大括号都有一个独一无二的编号。想象从文件作用域进入一个左大括号，再进入一个左大括号，…，直至遇到某个变量，把这些大括号的编号连起来就构成了一个数字序列，这个数字序列就表示这个变量的作用域。</p>
+<p>如下图所示，文件作用域是 0；每遇到一个左大括号，编号就增加1；右大括号不用管。</p>
+<p>当给大括号编号完成后，就可以表示变量或者函数声明的作用域了。</p>
+<p>例如第 5 行的 hello，它在 1 这个括号里面，所以它的作用域是 0/1</p>
+<p>再比如第 7 行的 hello,从最外面到达它需要穿越括号 1 和括号 2，所以它的作用域是 0/1/2</p>
+<p>再看看第 24 行的函数声明 foo,从最外面到达它需要穿越括号 5 和括号 6，所以它的作用域是 0/5/6</p>
+<img src="image-20251015154952002.png" srcset="/img/loading.gif" lazyload alt="image-20251015154952002" style="zoom:50%;" />
+<p>不过有个问题。请看下面的代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b)</span><br>&#123;<br>    <span class="hljs-keyword">return</span> a + b;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>请问参数 a 和 b 的作用域是什么？</p>
+<p>显然它们的作用域在大括号里面。所以，遇到函数定义，应该把左小括号和左大括号一起编号。</p>
+<p>对于函数声明，又怎么处理呢？</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> a;<br>    <span class="hljs-type">int</span> b;<br>    foo(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b);<br>    foo(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>显然第 5 行的声明中的 a 和 b 和第 3、4 行的 a 和 b 是不同的变量。</p>
+<p>所以，遇到函数声明，要把左小括号编号。</p>
+<img src="image-20251015164005198.png" srcset="/img/loading.gif" lazyload alt="image-20251015164005198" style="zoom:50%;" />
+<p>接下来的内容比较烧脑，请读者集中注意力。</p>
+<p>为了跟踪当前解析的代码属于哪个作用域，我们需要栈这种数据结构，还需要一个变量（假设名字叫 scope_id）用来表示括号的值递增到哪里了。</p>
+<p>初始状态，scope_id = 0，表示全局作用域。编译器做初始化工作，把 0 入栈。</p>
+<p>假设这时候编译器在解析全局变量，那么这些全局变量的作用域就是 0；</p>
+<p>然后，遇到上面第 19 行的左小括号（正在执行 fun_decl_tail() 函数），scope_id 增加 1，变成 1，把 1 入栈；</p>
+<p>继续分析代码，遇到了函数的参数 x，它的作用域是多少？去栈里面看，是 0-1</p>
+<p>遇到了 x 右边的右小括号，这时候多看一个符号，发现是“{”，所以这不是函数声明，是函数定义，那么要忽略这个右小括号；</p>
+<p>又遇到了第 20 行的左大括号，这个不用管，因为 1 已经入栈了。</p>
+<p>又遇到了第 21 行的 world，它的作用域是多少？ 去栈里面看，是 0-1</p>
+<p>又遇到了第 22 行的左大括号，scope_id 增加 1，变成 2，把 2 入栈；</p>
+<p>遇到了第 23 行的 hello，它的作用域是多少？ 去栈里面看，是 0-1-2</p>
+<p>遇到了 foo 函数的左小括号，scope_id 增加 1，变成 3，把 3入栈；</p>
+<p>遇到了 foo 函数的右小括号，这时候多看一个符号，发现是分号，编译器得知声明结束了。注意，这时候要出栈，把 3 出栈；</p>
+<p>假设又遇到了某个变量（图中没有，请读者想象一下），此时它的作用域是 0-1-2，和第 23 行的 hello 一样；</p>
+<p>继续解析，遇到了第 25 行的右大括号，注意，这时候要出栈，把 2 出栈。</p>
+<p>继续解析，遇到了第 26 行的右大括号，编译器得知函数定义结束了。这时候要出栈，把 1 出栈。</p>
+<p>此时，又回到了全局作用域，因为栈里面只有 0 了。</p>
+<p>总结一下：</p>
+<p>初始状态，scope_id = 0，把 0 入栈，表示全局作用域；</p>
+<p>遇到函数名字后面的左小括号，scope_id 增加 1； 把 scope_id 入栈；</p>
+<p>每当遇到一个左大括号就把 scope_id 增加 1； 把 scope_id 入栈；</p>
+<p>每当遇到一个右大括号就出栈一个数；</p>
+<p>如果是函数定义，则忽略参数列表最右边的小括号和最外层的一对大括号；如果是函数声明，忽略参数列表最右边的小括号；</p>
+<p>当函数声明结束或者定义结束的时候，也要出栈一个数；</p>
+<p>在整个代码的分析过程中，这个栈是动态变化的。只要读取栈中的数据（从栈底到栈顶），就可以获得当前符号的作用域。</p>
+<p>讲了这么多原理，下来该代码实现了。</p>
+<p>我们已经学了链表，就不用再手写栈了。可以把链表当成栈使用，只操作链表的尾巴。入栈就用 list_add_tail ，出栈就根据头节点找到最后一个节点，然后把它删除。读取栈中的数据也不难，从头到尾遍历链表。</p>
+<h2 id="基本数据结构介绍">基本数据结构介绍</h2>
+<p>首先，看 sym_table_t 这个结构体</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">sym_table</span>&#123;</span><br>	<span class="hljs-comment">// ...</span><br>	<span class="hljs-type">scope_info_t</span> scope;<br>&#125;<span class="hljs-type">sym_table_t</span>;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">scope_info</span> &#123;</span><br>	<span class="hljs-type">int</span> scope_id;<br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">head</span>;</span><br>	<span class="hljs-type">int</span> list_len;<br>&#125;<span class="hljs-type">scope_info_t</span>;<br><br><span class="hljs-type">sym_table_t</span> sym_tab_g;<br></code></pre></td></tr></table></figure>
+<p>sym_table_t 这里面有很多东西，但是这节课只用看第 6~10 行定义的  scope_info_t scope;</p>
+<p>第 7 行 scope_id 和前文中的含义一样，用来表示大括号的值递增到哪里了。</p>
+<p>第 8 行是链表的头节点；</p>
+<p>第 9 行把链表的长度记录下来，方便快速获得链表的长度。</p>
+<p>第 12 行，定义 sym_table_t 类型的全局变量 sym_tab_g；</p>
+<p>链表有了，用户节点呢？</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">scope_node</span>&#123;</span> <br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">entry</span>;</span><br>	<span class="hljs-type">int</span> id; <br>&#125;<span class="hljs-type">scope_node_t</span>;<br></code></pre></td></tr></table></figure>
+<p>很简单，一个 struct list_head 结构，一个 id， 这个 id 可以看成是大括号的编号。</p>
+<h2 id="作用域的初始化">作用域的初始化</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">sym_table_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	<span class="hljs-built_in">memset</span>(&amp;sym_tab_g, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">sym_table_t</span>));<br>	INIT_LIST_HEAD(&amp;sym_tab_g.scope.head);<br>	scope_enter(); <span class="hljs-comment">// 进入全局作用域</span><br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;	<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>第 3 行，把结构体 sym_tab_g 的所有字段都清零。于是 sym_tab_g.scope.scope_id 等于 0；sym_tab_g.scope.list_len 也等于 0；</p>
+<p>第 4 行，初始化链表，此时链表是空的。</p>
+<p>sym_tab_g.scope.scope_id 等于 0；</p>
+<h2 id="进入作用域">进入作用域</h2>
+<p>第 5 行的代码是：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">scope_enter</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	<span class="hljs-type">scope_node_t</span> *node = <span class="hljs-built_in">malloc</span>(<span class="hljs-keyword">sizeof</span>(<span class="hljs-type">scope_node_t</span>));<br>	<span class="hljs-keyword">if</span>(!node) &#123;<br>		SYSTEM_FATAL_ERR(MEM_ALLOC_FAILED);<br>		<span class="hljs-keyword">return</span>;<br>	&#125;<br>    <br>	node-&gt;id = sym_tab_g.scope.scope_id++;<br>	list_add_tail(&amp;node-&gt;entry, &amp;sym_tab_g.scope.head);<br>	++sym_tab_g.scope.list_len;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>每次进入新的作用域，都会调用这个函数。</p>
+<p>分配内存就不多说了。第 9 行，获取编号，注意，先返回sym_tab_g.scope.scope_id 的值，然后 sym_tab_g.scope.scope_id 再增加 1</p>
+<p>第 10 行，把节点插入到链表的末尾，相当于入栈。</p>
+<p>第 11 行，因为插入了一个节点，链表长度增加 1</p>
+<p>有进入作用域就有退出作用域，其实这两个函数是成对使用的。</p>
+<h2 id="退出作用域">退出作用域</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">scope_leave</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	<span class="hljs-keyword">if</span>(list_empty(&amp;sym_tab_g.scope.head))<br>		<span class="hljs-keyword">return</span>;<br>	<br>	<span class="hljs-type">scope_node_t</span> *last_node = container_of(sym_tab_g.scope.head.prev, <span class="hljs-type">scope_node_t</span>, entry);<br>	list_del_init(&amp;last_node-&gt;entry);<br>	<span class="hljs-built_in">free</span>(last_node);<br>	--sym_tab_g.scope.list_len;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>第 6 行，sym_tab_g.scope.head.prev 表示链表最后一个节点的 struct list_head entry 的地址（头节点的前面那个，因为是循环链表，所以就是最后一个）</p>
+<p>然后利用 container_of 宏得到用户节点的地址，也就是 last_node</p>
+<p>第 7 行，删除这个节点，相当于出栈。</p>
+<p>第 8 行，别忘了释放内存</p>
+<p>第 9 行，链表长度减去 1</p>
+<h2 id="获得作用域">获得作用域</h2>
+<p>比如代码某个地方定义了一个变量，当我们记录这个变量到符号表的时候，也要保存它的作用域，这时候需要获得作用域，其实就是读取此时栈中的数据。</p>
+<p>栈中的数据构成了作用域路径，我们用数组来存储变量或者函数声明所在的作用域。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">scope_path</span> &#123;</span><br>    <span class="hljs-type">int</span> *path;    <span class="hljs-comment">// 数组</span><br>    <span class="hljs-type">int</span> path_len; <span class="hljs-comment">// 数组长度 </span><br>&#125;<span class="hljs-type">scope_path_t</span>;<br></code></pre></td></tr></table></figure>
+<p>第 2 行的 path 是一个指针，根据栈中数据的个数为其分配内存。</p>
+<p>第 3 行的 path_len 记录数组长度。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> SYMBOL_TYPE_VAR  1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> SYMBOL_TYPE_FUN  2</span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">get_cur_scope</span><span class="hljs-params">(<span class="hljs-type">scope_path_t</span> *scope_path, <span class="hljs-type">int</span> symbol_type)</span><br>&#123;<br>	assert(scope_path);<br>	assert(symbol_type == SYMBOL_TYPE_VAR || symbol_type == SYMBOL_TYPE_FUN);<br><br>	<span class="hljs-type">int</span> path_len;<br>	<span class="hljs-keyword">if</span>(symbol_type == SYMBOL_TYPE_VAR) &#123;<br>		path_len = sym_tab_g.scope.list_len;<br>	&#125; <span class="hljs-keyword">else</span> &#123;<br>		<span class="hljs-comment">// 函数声明或者定义的作用域要去掉最后一个数字</span><br>		<span class="hljs-comment">// 因为不去掉的话表示的是函数参数的作用域</span><br>		path_len = sym_tab_g.scope.list_len - <span class="hljs-number">1</span>; <br>	&#125;<br>	...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>get_cur_scope 这个函数要 2 个参数，参数 1 是  scope_path_t 类型的指针，这是个输出型参数，参数 2 是一个宏，只有两种取值，一个是 SYMBOL_TYPE_VAR，用于获得变量的作用域，另一个是 SYMBOL_TYPE_FUN，用于获得函数声明或者定义的作用域。</p>
+<p>这两种情况有何区别呢？</p>
+<img src="image-20251015200713680.png" srcset="/img/loading.gif" lazyload alt="image-20251015200713680" style="zoom:50%;" />
+<p>请看上面的代码，第 410 行，当遇到左小括号的时候，调用 scope_enter();</p>
+<p>第 411 行是函数参数的解析。</p>
+<p>第 416 行是 fun_body 函数。它会调用 new_fun()，此函数下节课讲，总之现在知道这是创建函数符号的操作就可以了。</p>
+<p>在创建函数符号的时候，会记录此函数的作用域；如果是定义，其作用域肯定是 0，如果是声明，那就根据实际情况。</p>
+<p>但是问题来了，执行完第 410 行后，此时是函数参数所在的作用域。</p>
+<p>执行 416 行的时候，依然在这个作用域里面。所以 new_fun()里面获取的也是这个作用域。</p>
+<img src="image-20251015201744610.png" srcset="/img/loading.gif" lazyload alt="image-20251015201744610" style="zoom:67%;" />
+<p>用这张图来解释，第 24 行是 foo(void)</p>
+<p>当解析到它的参数的时候，当前作用域已经是 0-1-2-3 了</p>
+<p>但是我们创建 foo 这个函数符号的时候，需要的是本声明的作用域，应该是 0-1-2，也就是说和第 23 行的 hello 是同一个作用域</p>
+<p>也就是说要把当前的作用域修正一下，去掉最后一个数字。</p>
+<p>如果是获取变量的作用域，不用修正；如果是函数定义或者声明，就需要修正。</p>
+<img src="image-20251015202553347.png" srcset="/img/loading.gif" lazyload alt="image-20251015202553347" style="zoom:50%;" />
+<p>所以才有代码 102，如果是函数就把链表长度减一。</p>
+<img src="image-20251015202709771.png" srcset="/img/loading.gif" lazyload alt="image-20251015202709771" style="zoom:50%;" />
+<p>剩下的代码就比较简单了。</p>
+<p>第 106 行，根据实际长度分配数组的内存</p>
+<p>第 114 行遍历链表，把每个节点的编号记录到数组里面。一旦长度攒够，就 break</p>
+<p>最后两行填写数组的地址和长度。</p>
+<p>为了把变量和函数加入符号表，我设计了结构体 struct var_info 来保存变量符号；如下图，scope_path 这个字段用来记录变量所在的作用域。同理，函数符号也有这个字段。当需要获取变量或者函数的作用域的时候，就把这个字段的地址和符号类型（变量/函数）传递给 get_cur_scope 函数，get_cur_scope 函数会根据栈的内容填好作用域。</p>
+<img src="image-20260417184533642.png" srcset="/img/loading.gif" lazyload alt="image-20260417184533642" style="zoom:50%;" />
+<p>本文内容到这里就结束了。等把后面的两节内容讲完（符号表和语义分析），会一并上传代码。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第9天：作用域管理</div>
+      <div>https://leslieche.github.io/2026/04/17/第9天：作用域管理/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月17日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/" title="第10天：符号表之变量管理">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">第10天：符号表之变量管理</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/17/%E7%AC%AC8%E5%A4%A9%EF%BC%9A%E6%9D%A5%E7%82%B9%E5%90%8E%E6%82%94%E8%8D%AF/" title="第8天：来点后悔药">
+                        <span class="hidden-mobile">第8天：来点后悔药</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"LeslieChe/comment_for_blog","repo-id":"R_kgDOR6CL3g","category":"General","category-id":"DIC_kwDOR6CL3s4C6Ez9","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":1,"input-position":"top","lang":"zh-CN","strict":0,"theme":"preferred_color_scheme","loading":"lazy"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
