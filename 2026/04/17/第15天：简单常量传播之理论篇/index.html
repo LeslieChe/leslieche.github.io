@@ -1,0 +1,1024 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="数据流分析框架、简单常量传播">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第15天：简单常量传播之理论篇">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="数据流分析框架、简单常量传播">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251111114518960.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251111150723713.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251111153208118.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251111153711159.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251111165020452.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251111154530402.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251111155206062.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251111160421801.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251111162237043.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251112185642625.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251112194738193.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251112201340449.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251112203216607.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251114142720764.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251114143059680.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251114144842980.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251114150146458.png">
+<meta property="article:published_time" content="2026-04-17T12:16:40.000Z">
+<meta property="article:modified_time" content="2026-04-17T12:21:34.295Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251111114518960.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第15天：简单常量传播之理论篇 - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/download/" target="_self">
+                <i class="iconfont icon-gitee-fill"></i>
+                <span>代码下载</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/download/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-gitee-fill"></i>
+                  <span>代码下载</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第15天：简单常量传播之理论篇"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-17 20:16" pubdate>
+          2026年4月17日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          49 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第15天：简单常量传播之理论篇</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第15天：简单常量传播之理论篇">第15天：简单常量传播之理论篇</h1>
+<p>上节课我们学习了流图，先复习一下关键知识点。</p>
+<p>流图（Flow Graph）是编译原理中用于表示程序控制流的一种有向图，也称为控制流图（Control Flow Graph, CFG）。它将程序的基本块作为节点，控制流转移作为边，为程序分析和优化提供了重要的数据结构基础。</p>
+<p>基于控制流图，我们可以分析程序内部数据是怎么流动的，进而优化代码。不过仅有流图还不够，还需要掌握数据流分析框架。</p>
+<h2 id="数据流分析框架">数据流分析框架</h2>
+<p>编译原理中的数据流分析框架是一个用于静态推导程序中数据如何随执行而流动的通用模型。它既是迭代求解算法的理论基础，也是众多全局优化（如死码删除、常量传播、活跃变量分析）的共同“骨架”。数据流分析的典型框架可抽象为四元组 (D, V, ∧, F)。</p>
+<ol>
+<li>
+<p>D（方向）<br>
+指定信息传播方向。</p>
+<ul>
+<li>正向（forward）：也叫前向，从程序入口开始，沿控制流前进，例如马上要讲的常量传播。</li>
+<li>逆向（backward）：从程序出口反向传播，如后面要讲的“活跃变量”。</li>
+</ul>
+</li>
+<li>
+<p>V （值集）</p>
+<p>包含初值和数据流分析中使用的值。对于正向分析，初值为 Entry 块的 out 值和其他基本块的 out 值；对于逆向分析，初值为 Exit 块的 in 值和其他基本块的 in 值。Entry 块的 out 值或者 Exit 块的 in 值也叫做边界集合，其他基本块的 out 值或者 in 值也叫做初值集合。</p>
+</li>
+<li>
+<p>交汇函数</p>
+<p>对于正向数据流，在计算基本块的 in 值时，如果基本块有多个前驱，则需要提供一种计算方法将前驱的 out 合并；对于反向数据流，在计算基本块的 out 值时，如果基本块有多个后继，则需要提供一种计算方法将后继的 in 合并。</p>
+</li>
+<li>
+<p>传递函数<br>
+对于正向数据流，需要提供一种计算方法将基本块的 in 值转化为基本块的 out 值；对于逆向数据流，需要提供一种计算方法将基本块的 out 值转化为基本块的 in 值。</p>
+</li>
+</ol>
+<p>以上文字可能太抽象了，让读者云里雾里。没有关系，后文会结合“常量传播”为读者讲明白到底什么是数据流分析框架，以及如何做数据流分析。</p>
+<h2 id="什么是常量传播">什么是常量传播</h2>
+<p>常量传播是一种在编译时（即程序运行前）进行的静态程序分析优化技术。其核心思想非常简单：如果一个变量在某个程序点拥有一个已知的常量值，那么就可以在后续的代码中，直接用这个常量值替换所有对该变量的引用。如此一来，就可以减少不必要的变量访问和运行时计算，并可能触发进一步的优化（如死代码消除）。</p>
+<p>常量传播的基本目标是：</p>
+<ol>
+<li><strong>确定常量值：</strong> 在程序的每一个点上，分析并确定哪些变量具有恒定的值。</li>
+<li><strong>传播常量值：</strong> 将这些已确定的常量值尽可能远地向程序的后继部分传播。</li>
+</ol>
+<p>请看下面的代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">test</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> x = <span class="hljs-number">1</span>;<br>    <span class="hljs-type">int</span> y = x - <span class="hljs-number">1</span>;  <span class="hljs-comment">// y = 0;</span><br>    <span class="hljs-keyword">if</span>(x)<br>        x++; <span class="hljs-comment">// x = 2</span><br>    <span class="hljs-keyword">else</span><br>        x--; <span class="hljs-comment">// 不会执行</span><br>    <br>    <span class="hljs-keyword">if</span>(y)<br>        y--;  <span class="hljs-comment">// 不会执行</span><br>    <span class="hljs-keyword">else</span> <br>        y++; <span class="hljs-comment">// y = 1</span><br><br>    <span class="hljs-keyword">return</span> x * y;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>第 3 行，我们可以确定 x  的值是 1；</p>
+<p>第 4 行，把 x 的值 1 传播进来，可以确定 y 的值是 0；</p>
+<p>x 的值 1 传播到第 5 行，if 条件为真，执行 x++； 之后 x 变成 2；</p>
+<p>y 的值 0 传播到第 10 行，if 条件为假，执行 else 分支， y++； 之后 y 变成 1；</p>
+<p>x 的值 2 和 y 的值 1 传播到第 15 行，表达式的值是 2；</p>
+<p>以上是我们手动计算的过程，如果用代码实现这个过程呢？</p>
+<p>请看下面的代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">x = <span class="hljs-number">10</span>;  <span class="hljs-comment">// L1</span><br>y = x + <span class="hljs-number">1</span>; <span class="hljs-comment">// L2</span><br></code></pre></td></tr></table></figure>
+<p>在语句 L2 处，我们知道 <code>x</code>的值肯定是 10。因此，常量传播优化可以将 L2 直接替换为 <code>y = 10 + 1</code>，进而得出 <code>y = 11</code>。</p>
+<p>然而，现实中的程序可能有分支和循环，使分析变得复杂。例如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span> (some_condition) &#123;<br>    x = <span class="hljs-number">5</span>;<br>&#125; <span class="hljs-keyword">else</span> &#123;<br>    x = <span class="hljs-number">10</span>;<br>&#125;<br>y = x + <span class="hljs-number">1</span>; <span class="hljs-comment">// x 在这里是常量吗？</span><br></code></pre></td></tr></table></figure>
+<p>第 6 行，<code>x</code>的值可能是 5 也可能是 10。所以<code>x</code>在此处<strong>不是</strong>常量。编译器必须能够保守地处理这种情况。</p>
+<h2 id="理论模型：格（Lattice）">理论模型：格（Lattice）</h2>
+<p>为了可以正确处理这种“可能为常量”、“肯定是常量”或“肯定不是常量”的不确定性，常量传播算法基于<strong>格理论</strong>进行建模。</p>
+<p>题外话，格理论最自然、最基础的归属是序理论，而序理论本身是集合论与离散数学的一部分。在这里，格被定义为一种特殊的<strong>偏序集</strong>（poset），其中任意两个元素都有最小上界（join）和最大下界（meet）。</p>
+<p>关于格理论，可以先放在一边，只要知道对于常量传播来说，程序中的每一个变量，都可以映射到三种值中的一个。</p>
+<p>常量传播格包含三种基本值：</p>
+<ul>
+<li><strong>T（Top，顶）</strong>：表示“可能为常量”。这是初始状态，意味着尚未看到任何对该变量的赋值。后文用 undef 表示</li>
+<li><strong>c（Constant，常量）</strong>：表示该变量具有一个确定的常量值。</li>
+<li><strong>⊥（Bottom，底）</strong>：表示“非常量”。该变量在不同执行路径上可能具有不同的值。后文用 NAC 表示</li>
+</ul>
+<img src="image-20251111114518960.png" srcset="/img/loading.gif" lazyload alt="image-20251111114518960" style="zoom:50%;" />
+<p>上图是常量传播格的哈斯图。</p>
+<p><strong>哈斯图</strong>（Hasse diagram）是<strong>偏序集</strong>（Partially Ordered Set, 简称 poset）的一种<strong>简洁、直观的图形表示方法</strong>，由德国数学家 <strong>Helmut Hasse</strong> 在20世纪推广而得名。</p>
+<p>从哈斯图可以直观看到这三种值的层次关系：最上面是 UNDEF，表示不确定性最大；中间是所有的整数，因为它们之间不可比较，所以没有连线；最下面是 NAC，表示已确定无法优化。</p>
+<h2 id="举例分析">举例分析</h2>
+<p>接下来，我们结合数据流分析框架和常量传播格，手动分析一下常量是如何传播的。</p>
+<p>首先，我们把代码转换成数据流图，这一步骤我们的编译器就能完成。下图是我根据编译器的输出结果绘制的流图。</p>
+<img src="image-20251111150723713.png" srcset="/img/loading.gif" lazyload alt="image-20251111150723713" style="zoom:50%;" />
+<p>前文说了，数据流分析框架可抽象为四元组 (D, V, ∧, F)，分别是方向、值集、交汇函数和传递函数。</p>
+<p>先说方向，对于常量传播分析，方向是正向（也叫前向），即按照代码执行的顺序来分析。</p>
+<p>再看值集，我们要研究的是变量在程序的某点有没有确定的常量值，那么首先要统计都有哪些变量。</p>
+<p>代码中没有全局变量，此函数也没有参数，仅有局部变量。为了简化分析，如果是非基本类型，初始值为 NAC；如果是基本类型且带初始化的，初值就为初始化值。因为代码仅对 x 做的初始化，所以变量的初始值如下表。</p>
+<img src="image-20251111153208118.png" srcset="/img/loading.gif" lazyload alt="image-20251111153208118" style="zoom:50%;" />
+<p>因为是正向传播，所以从 Entry 的 out 开始，out 的初始值就是上面的表格。</p>
+<p>此 out 集合会传播给下一个基本块，成为下一个基本块的 in。</p>
+<img src="image-20251111153711159.png" srcset="/img/loading.gif" lazyload alt="image-20251111153711159" style="zoom:50%;" />
+<p>此基本块有 3 条指令，这些指令对值有什么影响呢？这就要用到传递函数了。</p>
+<p>前文说了，对于正向数据流，需要提供一种计算方法将基本块的 in 值转化为基本块的 out 值，这种方法就在传递函数中。</p>
+<p>常量传播的传递函数（或者说传递规则）如下：</p>
+<p>1、如果指令不是赋值语句，例如是标号，跳转等，这时候变量的值不变</p>
+<p>2、如果是赋值语句，形如 z = x ⊕ y</p>
+<p>则采取下面的规则</p>
+<img src="image-20251111165020452.png" srcset="/img/loading.gif" lazyload alt="image-20251111165020452" style="zoom:50%;" />
+<p>（1）如果 y 和 z 都能映射到常量，则结果就是两个常量计算后的值</p>
+<p>（2）如果 y 和 z 有任何一个映射到了 NAC，那结果就是 NAC</p>
+<p>（3）如果不是上面的情况，则结果是 undef</p>
+<p>规则清楚了，我们可以手动计算。</p>
+<p>经过指令 t2 = x - 1；t2 的值变成 0；</p>
+<p>经过指令 y = t2; y 的值变成 0；</p>
+<p>接下来继续传播，分别传给左边和右边的基本块。</p>
+<img src="image-20251111154530402.png" srcset="/img/loading.gif" lazyload alt="image-20251111154530402" style="zoom:50%;" />
+<p>左边，经过 t4 = x;t4 变成 1；经过 x = x + 1; x 变成 2；</p>
+<p>右边，经过 t6 = x; t6 变成 1；经过 x = x - 1; x 变成 0；</p>
+<p>继续往下，似乎遇到了麻烦。</p>
+<img src="image-20251111155206062.png" srcset="/img/loading.gif" lazyload alt="image-20251111155206062" style="zoom:50%;" />
+<p>此基本块的输入有 2 个，也就是说它有 2 个前驱。</p>
+<p>标记为红色的变量似乎有点麻烦，对于 x，左边的输入是 2，右边的输入是 0；对于 t4,左边的输入是 1，右边的输入是 undef,</p>
+<p>对于 t6, 左边的输入是 undef，右边的输入是 1；</p>
+<p>也就是说左边右边的值不一样，该怎么处理？</p>
+<p>这时候，就需要用到交汇函数，需要提供一种计算方式将前驱的 out 值合并。</p>
+<p>常量传播的交汇函数是（其实就是在哈斯图中找两个元素的最大下界）：</p>
+<ul>
+<li>x ⊓ ⊤ = x（任何值与 Top 合并保持不变）</li>
+<li>x ⊓ ⊥ = ⊥（任何值与 Bottom 合并结果为 Bottom）</li>
+<li>c1 ⊓ c1 = c1（相同常量合并仍为该常量）</li>
+<li>c2 ⊓ c2 = ⊥（不同常量合并结果为 Bottom）</li>
+</ul>
+<p>所以，  合并后 x 的值为 NAC， t4 和 t6 的值都为 1；</p>
+<p>合并后经过上面的基本块传播，值不会改变，因为标号和条件跳转指令不会改变任何一个变量的值（常量传播的传递函数的规则 1）。</p>
+<img src="image-20251111160421801.png" srcset="/img/loading.gif" lazyload alt="image-20251111160421801" style="zoom:50%;" />
+<p>继续传播，经过上图左右两个基本块，变量值的变化已经用红色标出。</p>
+<p>接下来又遇到了交汇。根据常量传播的交汇函数，左边和右边的交汇结果是：</p>
+<img src="image-20251111162237043.png" srcset="/img/loading.gif" lazyload alt="image-20251111162237043" style="zoom:50%;" />
+<p>然后，再继续传播</p>
+<img src="image-20251112185642625.png" srcset="/img/loading.gif" lazyload alt="image-20251112185642625" style="zoom:50%;" />
+<p>直到传播到 Exit 的 out,这就是一轮迭代。</p>
+<p>讲到这里，相信读者对数据流分析框架的四个要素：方向、值集、交汇函数和传递函数有了基本的了解。</p>
+<p>这个例子先分析到这里，下面我们要介绍另外一个概念：不动点。</p>
+<h2 id="不动点">不动点</h2>
+<p>刚才的例子，我们勉强算是做了一轮迭代（因为偷懒，后面三个基本块没有走完）。</p>
+<p>在若干轮迭代后，<strong>每个基本块的 IN 值和 OUT 值都不再改变</strong>，说明到达了不动点。</p>
+<p>为什么要追求不动点呢？不动点是数据流方程组“全部同时成立”的唯一可计算、可判定、且保证安全的最小解；不达到它，分析结果就必然缺失某些路径信息，从而可能让后续优化产生错误的代码。</p>
+<p>请看下面的代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">test</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    <span class="hljs-type">int</span> x = <span class="hljs-number">3</span>;<br>    <span class="hljs-type">int</span> a = x;<br>    <span class="hljs-type">int</span> y = <span class="hljs-number">8</span>;<br>    <span class="hljs-keyword">while</span>(a == <span class="hljs-number">3</span>) &#123;<br>        y = y + <span class="hljs-number">2</span>;<br>    &#125;<br>    x = x * y;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>此函数的流图和第一轮迭代的结果如下图：</p>
+<img src="image-20251112194738193.png" srcset="/img/loading.gif" lazyload alt="image-20251112194738193" style="zoom: 67%;" />
+<p>从Entry 的 out 开始看，因为变量 x 和 y 被常量初始化，所以开始的时候，它们俩的值是 3 和 8，其他的变量值为 undef;</p>
+<p>经过 block-1, a 的值变成 3;</p>
+<p>现在我们看 block-2 的输入，注意，它有 2 个输入，因为它的前驱是 1 和 3，1 对 2 的输入已经求出来了；但是 3 对 2 的输入是多少？</p>
+<p>这就牵扯到数据流分析框架的初值，在常量传播这个场景下，每个 block(入口 Entry 除外)的 out 值为 undef,我已经在图中标明了(左边第一个表格)。</p>
+<p>因为 block-2 有 2 个前驱，需要先把这两个前驱的 out 合并起来，也就是前文说的交汇函数，任何值与 undef 合并保持不变，所以它们合并的结果是右边从上往下数第 2 张表格。</p>
+<p>然后，把这个结果向 block-2 传递，得到了右边第 3 张表格。</p>
+<p>因为 block-2 有 2 个后继，分别是 3 和 4，所以 2 的输出要传递给 3 和 4；</p>
+<p>先看 4， 2 的输出经过 4，得到了右边第 4 张表格；</p>
+<p>再看 3，2 的输出经过 3，得到的是左边第 2 张表格，我用粉色标注的。</p>
+<p>到了这里，我们发现 3 的输出会变成 2 的输入，也就是说第一次迭代后，2 的输入不再是全 undef，而是粉色虚线指示的那张表格。看来没有到达不动点，需要继续迭代。</p>
+<p>下图就是第二次迭代，我把上图 3 的输出移动到下图 2 的输入（左边），右边第 1 第 2 张表没有变化。</p>
+<img src="image-20251112201340449.png" srcset="/img/loading.gif" lazyload alt="image-20251112201340449" style="zoom: 50%;" />
+<p>我们要再次求解 2 的输入，也就是合并 2 个 out，合并的结果在数值上等同第 3 张表，合并结果经过 block-2 后，每个变量的值都没有变，结果是右边第 3 张表；</p>
+<p>然后我们需要求解 3 和 4 的输出；4 的输出结果是右边第 4 张表；3 的输出结果是左边粉色虚线指示的表格。</p>
+<p>对比 3 的输出和 2 的输入（左边两个表格），还是不一样，说明还是没有到达不动点，所以继续迭代。</p>
+<p>下图就是第三次迭代，我把上图 3 的输出移动到下图 2 的输入（左边），右边第 1 第 2 张表没有变化。</p>
+<img src="image-20251112203216607.png" srcset="/img/loading.gif" lazyload alt="image-20251112203216607" style="zoom: 50%;" />
+<p>我们要再次求解 2 的输入，也就是合并 2 个 out，合并的结果在数值上等同第 3 张表，合并结果经过 block-2 后，每个变量的值都没有变，结果是右边第 3 张表；</p>
+<p>然后我们需要求解 3 和 4 的输出；4 的输出结果是右边第 4 张表；3 的输出结果是左边粉色虚线指示的表格。</p>
+<p>对比 3 的输出和 2 的输入，完全一样，说明到达不动点了。迭代可以结束了。</p>
+<p>肯定有读者问，到达不动点了，然后呢？</p>
+<h2 id="优化方法">优化方法</h2>
+<p>请看下面的代码。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">test</span><span class="hljs-params">(<span class="hljs-type">int</span> m)</span><br>&#123;<br>    <span class="hljs-type">int</span> x = <span class="hljs-number">1</span>;<br>    <span class="hljs-type">int</span> y = m + x;  <br>   <br>    <span class="hljs-keyword">switch</span>(x) &#123;<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:<br>            y = y &amp;&amp; x;<br>            <span class="hljs-keyword">break</span>;<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">2</span>:<br>            y--;<br>            <span class="hljs-keyword">break</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>首先，画出此函数的流图</p>
+<img src="image-20251114142720764.png" srcset="/img/loading.gif" lazyload alt="image-20251114142720764" style="zoom:50%;" />
+<p>因为这个流图没有环路，所以经过一轮迭代后就能到不动点。到达不动点后，每个基本块的 in 和 out 不再改变，这是宏观上的不变。</p>
+<p>如果再往细看，因为值集在基本块内部是逐指令传递的，所以每条指令的 in 和 out 不再改变。</p>
+<p>我们把每个基本块的每条指令拿出来，根据指令的 in 和 out，就可以做优化了。</p>
+<p>例如基本块 1，一共有 3 条指令，到达不动点后，三条指令的 in 和 out 如下：</p>
+<img src="image-20251114143059680.png" srcset="/img/loading.gif" lazyload alt="image-20251114143059680" style="zoom:50%;" />
+<p>红色背景这行，我标注了每个变量的名字。</p>
+<p>① 这行是 t2 = m + x 这条指令的 in</p>
+<p>② 这行是它的 out，同时是指令 y = t2 的 in</p>
+<p>③ 这行是指令 y = t2 的 out，同时是指令 if(x == 1) goto @L4 的 in</p>
+<p>④ 这行是指令 if(x == 1) goto @L4 的 out</p>
+<p>对于第一条指令  t2 = m + x ；</p>
+<p>因为 x 的 in 是 1，所以这个指令可以优化为  t2 = m + 1；</p>
+<p>对于第二条指令 y = t2；</p>
+<p>不管是从 in 还是从 out 来看，t2 和 y 都不是常量，没有优化的余地。</p>
+<p>对于第三条指令  if(x == 1) goto @L4;</p>
+<p>因为 x 的值是 1，所以 x == 1 成立，所以一定执行 goto @L4;这样看来基本块 2 都是多余的。</p>
+ <img src="image-20251114144842980.png" srcset="/img/loading.gif" lazyload alt="image-20251114144842980" style="zoom:50%;" />
+<p>既然基本块 2 是多余的，那就可以删除它；其实基本块 3 和 5 也是多余的，因为 3 和 5 都是作为 2 的后继存在，2 都不存在了，他俩也是不可达的，可以删除。</p>
+<p>还有，基本块 4 的指令 t5 = y &amp;&amp; x; 还可以优化，因为 x 的值是 1，所以 t5 的结果就看 y 是否为 0，当 y !=0 成立,t5 的值是 1；当 y == 0 成立, t5 的值是 0；所以指令 t5 = y &amp;&amp; x 可以替换为 t5 = （y != 0）；</p>
+<p>所以，对于常量传播分析，首先建立数据流分析框架，然后确定边界值和初始值，经过若干此迭代，会到达不动点。这时候我们考察每条指令的 in 和 out，看看有没有优化的空间，如果某个变量的 out 是常量，则用 result = c 代替这条指令。</p>
+<p>如果 out 不是常量，就看指令的操作数在 in 集合的值，如果是常量就可以把这个操作数替换为常量。</p>
+<p>另外，还可以做代数化简，例如上面的指令 t5 = y &amp;&amp; x 可以替换为 t5 = （y != 0）；</p>
+<p>最后，对于条件跳转，如果确定条件肯定为真或者假，就可以把不可达的 block 删掉。</p>
+<p>本节开始的代码经过常量传播及相关优化后，确实变简洁了，对比图如下：</p>
+<img src="image-20251114150146458.png" srcset="/img/loading.gif" lazyload alt="image-20251114150146458" style="zoom:50%;" />
+<p>本节的内容到这里就结束了，我们学习了数据流分析框架、不动点等必须要掌握的概念，下节我们用代码实现常量传播优化。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第15天：简单常量传播之理论篇</div>
+      <div>https://leslieche.github.io/2026/04/17/第15天：简单常量传播之理论篇/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月17日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/04/17/%E7%AC%AC16%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/" title="第16天：简单常量传播之代码实现">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">第16天：简单常量传播之代码实现</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/17/%E7%AC%AC14%E5%A4%A9%EF%BC%9A%E6%8E%A7%E5%88%B6%E6%B5%81%E5%9B%BE/" title="第14天：控制流图">
+                        <span class="hidden-mobile">第14天：控制流图</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"LeslieChe/comment_for_blog","repo-id":"R_kgDOR6CL3g","category":"General","category-id":"DIC_kwDOR6CL3s4C6Ez9","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":1,"input-position":"top","lang":"zh-CN","strict":0,"theme":"preferred_color_scheme","loading":"lazy"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
