@@ -1,0 +1,1089 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本文带读者学习函数的管理及符号的查找。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第10天：符号表之函数管理">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="本文带读者学习函数的管理及符号的查找。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016135657116.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016134452326.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016143127967.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016144329455.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/pics/image-20251016143256864.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016141851743.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016144038038.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016150318174.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016151208899.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016153640468.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016154153699.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016161647344.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016161918978.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016163447342.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016192155411.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016192703087.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016195515741.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016195818479.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016200945420.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016201147209.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016204659540.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016204957404.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251017104407180.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251017104919960.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251017104952368.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251017105317625.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251017105603803.png">
+<meta property="article:published_time" content="2026-04-17T10:42:58.000Z">
+<meta property="article:modified_time" content="2026-04-17T10:02:53.344Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC10%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%87%BD%E6%95%B0%E7%AE%A1%E7%90%86/image-20251016135657116.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第10天：符号表之函数管理 - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/download/" target="_self">
+                <i class="iconfont icon-gitee-fill"></i>
+                <span>代码下载</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/download/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-gitee-fill"></i>
+                  <span>代码下载</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第10天：符号表之函数管理"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-17 18:42" pubdate>
+          2026年4月17日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          55 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第10天：符号表之函数管理</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第10天：符号表之函数管理">第10天：符号表之函数管理</h1>
+<h2 id="解析函数参数">解析函数参数</h2>
+<p>上一节说过，调用 new_var 的地方有 2 处，一个是 var_init 函数，一个是 para_item 函数。</p>
+<p>para_item 的源头是 para_decl；para_decl 里面会解析函数的参数列表。代码如下：</p>
+<img src="image-20251016135657116.png" srcset="/img/loading.gif" lazyload alt="image-20251016135657116" style="zoom:50%;" />
+<p>如果执行到第 441 行，说明函数的参数列表不为空，先创建一个链表的头节点。</p>
+<p>第 446 行做头节点的初始化。</p>
+<p>然后调用 447，把头节点的地址作为参数传给 para_item，para_item 里面会收集函数的形式参数，并加入 params_head 这个链表。</p>
+<p>解析完所有形式参数后，返回 params_head；</p>
+<p>para_item 的代码如下：</p>
+<img src="image-20251016134452326.png" srcset="/img/loading.gif" lazyload alt="image-20251016134452326" style="zoom:50%;" />
+<p>第 469 行，获得参数的名字；第 470 行，获取参数名字所在的行号，这是为了报错用（可能会用到）。</p>
+<p>第 476 行，如果是 <code>int foo(int a[...])</code> 这种写法，我们就把参数当成 <code>int *a</code></p>
+<p>第 480 行，调用 new_var;这个函数上节课介绍了，它的原型是：</p>
+<p><code>var_t *new_var(bool is_ext, symbol_e type, bool is_ptr,const char *name,  var_t *init, int line)</code></p>
+<p>第一个参数给的是 false, 这是因为函数参数里面不能有 extern;</p>
+<p>倒数第二个参数是 NULL，这是因为 csub 不支持默认参数。</p>
+<p>第 482 行，把 var 加入变量表。</p>
+<p>第 484 行，把 var 加入链表。</p>
+<p>para_decl 函数收集好参数后，会把头节点返回给 fun_decl_tail 的第 411 行</p>
+<img src="image-20251016143127967.png" srcset="/img/loading.gif" lazyload alt="image-20251016143127967" style="zoom:50%;" />
+<h2 id="fun-body">fun_body</h2>
+<p>现在重点看第 416 的 fun_body 函数。</p>
+<p>做语法分析的时候，这个函数的代码如下：</p>
+<img src="image-20251016144329455.png" srcset="/img/loading.gif" lazyload alt="image-20251016144329455" style="zoom:50%;" />
+<p>现在它的代码如下。基本框架没有变，但是加入了很多东西。</p>
+<p>后面不再贴图对比现在的代码和之前的代码了，有心的同学可以打开以前的代码和现在的代码做对比，体会语义分析到底增加了什么。</p>
+<img src="pics/image-20251016143256864.png" srcset="/img/loading.gif" lazyload alt="image-20251016143256864" style="zoom:50%;" />
+<p>第 509 行，如果 if (scope == SCOPE_LOCAL) 成立，说明是局部作用域，那么只能是函数声明。</p>
+<p>第 523 行创建函数符号，第 525 调用 decl_fun() 把函数符号以声明的身份加入函数表。</p>
+<p>如果是全局作用域，执行第 528 行，创建函数符号；然后又分成两种情况，声明就调用 decl_fun()，定义就调用 def_fun()</p>
+<p>第 535 行，cur_fun 是符号表里面的一个指针（fun_t * 类型），当语义分析分析到函数定义的时候，就让它指向当前正在分析的函数。</p>
+<h2 id="fun-t">fun_t</h2>
+<p>我们先看看 fun_t 类型</p>
+<img src="image-20251016141851743.png" srcset="/img/loading.gif" lazyload alt="image-20251016141851743" style="zoom:50%;" />
+<p>第 16 行，用来加入哈希表的哈希表节点。</p>
+<p>第 22 行，is_ext 这个字段用来指示是函数定义还是函数声明，声明的话为 ture；</p>
+<p>注意，不是说函数名字前面有 extern 就是声明；</p>
+<p>函数定义前面加 extern 不算错误；函数声明前面没有 extern 也不算错误。</p>
+<p>真正区分声明和定义的方法是看参数列表末尾，如果是分号就是声明，如果是左大括号就是定义。</p>
+<p>因为我不想再定义一个什么字段来表示一个函数符号是声明还是定义，所以就借用了 is_ext 这个字段。</p>
+<p>第 27 行，前面说的 para_decl() 收集完函数参数后，头节点最终要给到这个 para_list_head；如果 para_list_head 值为空，则说明参数列表是空；</p>
+<p>第 30 行，函数定义或者声明所在的作用域，如果是函数定义，作用域是 0</p>
+<h2 id="创建函数符号">创建函数符号</h2>
+<img src="image-20251016144038038.png" srcset="/img/loading.gif" lazyload alt="image-20251016144038038" style="zoom:50%;" />
+<p>第 246 行，如果遗漏了函数名字，就释放参数链表，释放头节点，返回 NULL；</p>
+<p>但是 para_item 函数已经把参数都加到变量表了，这里选择保留这些变量，考虑到后面解析的时候还要用，否则会报告错误，说变量未定义。</p>
+<p>第 259 行，如果没有收集到有效的参数，肯定是语法有错误，也要标记 err_flag 为1</p>
+<img src="image-20251016150318174.png" srcset="/img/loading.gif" lazyload alt="image-20251016150318174" style="zoom:50%;" />
+<p>第 269 行，获得作用域。</p>
+<p>第 277 行，统计参数的个数。</p>
+<p>有同学会问，如果没有收集到有效的参数，fun-&gt;para_len 为 0；如果参数列表是 void，fun-&gt;para_len 也为 0；如何区分呢？</p>
+<p>因为前者标记 err_flag 为1了，在后面的查找中会跳过这些有错误的函数符号，所以不会有问题。</p>
+<h2 id="decl-fun">decl_fun</h2>
+<p>下面该介绍 decl_fun 函数了，它的作用是把函数声明加入函数表。</p>
+<p>这里的声明就是狭义声明，不包括函数定义。</p>
+<img src="image-20251016151208899.png" srcset="/img/loading.gif" lazyload alt="image-20251016151208899" style="zoom:50%;" />
+<p>第 395 行，设置 is_ext 为 true；表示这是一个声明。</p>
+<p>然后，我们要在变量表里面查一遍，看看有没有作用域相同的同名变量。其中的原因在上一节说过了。</p>
+<p>第 401 行，<code>！var-&gt;err_flag</code>的意思式跳过语法分析或语义分析有错误的变量</p>
+<p><code>0 == strcmp(var-&gt;name, fun-&gt;name)</code>是对比函数的名字和变量的名字。</p>
+<p>如果 401 为真，则比较它们的作用域，也就是第 402 行，</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">in_same_scope</span><span class="hljs-params">(<span class="hljs-type">scope_path_t</span> *p1, <span class="hljs-type">scope_path_t</span> *p2)</span><br>&#123;<br>	assert(p1 &amp;&amp; p2);<br>	<span class="hljs-type">int</span> i = p1-&gt;path_len;<br>	<span class="hljs-type">int</span> j = p2-&gt;path_len;<br>	<span class="hljs-keyword">return</span> ((i == j) &amp;&amp; (p1-&gt;path[i<span class="hljs-number">-1</span>] == p2-&gt;path[j<span class="hljs-number">-1</span>]));<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>因为每个作用域的路径是唯一的，不存在这样的情况：</p>
+<p>比如一个作用域，能表示成“0/1/6”，又能表示成“0/2/6”，还能表示成“0/3/5/6”</p>
+<p>因为每个大括号相邻的外层要么只有一个大括号，要么就是文件作用域；所以作用域相同，说明数组完全一样。</p>
+<p>比较的时候，仅需要比较数组长度，如果数组长度相同，再看最后一个元素是否相同。</p>
+<p>例如，一个作用域是 a/b/3，另一个作用域是 c/d/3</p>
+<p>这两个作用域肯定相同，因为 3 相邻的外层括号是确定的，所以 b 等于 d, 同理，  a 等于c</p>
+<p>这就是上面代码的意思。</p>
+<p>再回到上面的代码，如果发现名字一样且作用域一样的变量，就 break，然后报错 “xxx 作为不同的类型重声明”</p>
+<img src="image-20251016153640468.png" srcset="/img/loading.gif" lazyload alt="image-20251016153640468" style="zoom:50%;" />
+<p>下面该查找函数表了，依然是找同一个名字的函数，另外还要比较作用域；</p>
+<p>当跳出循环的时候，有没有同名的函数，用 found 指示；</p>
+<p>有没有作用域一样的同名函数，用 same_scope 指示。</p>
+<p>并且，declared_fun 这个变量指示某个名字相同的函数，当 same_scope 为 1 的时候， declared_fun 指示第一个遇到的同名且同作用域的函数符号。</p>
+<img src="image-20251016154153699.png" srcset="/img/loading.gif" lazyload alt="image-20251016154153699" style="zoom:50%;" />
+<p>当 found 为 1，说明有同名的函数符号，那么先要检查类型</p>
+<p>为了简化表达，这里的类型一致指函数返回值类型一样，参数列表的个数、类型也一样。</p>
+<p>如果定义了函数 xxx, 那么所有的 xxx 的函数声明，要和定义类型一致</p>
+<p>如果没有定义函数 xxx, 那么所有的 xxx 的函数声明（即使不同作用域），要类型一致</p>
+<p>所以，和 declared_fun 比较就可以了，因为能加入函数表的同名符号，其类型肯定一样，随便找一个比较就行。</p>
+<p>fun_semantic_check_ok 这个函数就不贴图了，里面的逻辑很好理解，先比较返回类型，再看参数个数，再比较每个参数的类型。</p>
+<p>如果连检查都没有通过，对不起，报错，并销毁内存，返回。</p>
+<p>如果通过了检查，第 441 行要判断是不是存在同名且同作用域的函数符号，如果是，销毁内存并返回。</p>
+<p>需要注意，如果已经存在函数定义了，那么全局作用域的声明就不添加了。</p>
+<h2 id="def-fun">def_fun</h2>
+<img src="image-20251016161647344.png" srcset="/img/loading.gif" lazyload alt="image-20251016161647344" style="zoom:50%;" />
+<p>折叠起来的代码是查询变量表，和前文同理。</p>
+<p>第 477 到 485 也和前面的代码类似，不再解释。</p>
+<img src="image-20251016161918978.png" srcset="/img/loading.gif" lazyload alt="image-20251016161918978" style="zoom:50%;" />
+<p>首先，还是类型检查，这个和前文一样。但是类型不一致要标记 err_flag 为1</p>
+<p>如果类型检查通过了，就看看是不是存在同名且同作用域的函数符号；如果存在，还分 2 种情况，声明和定义。、</p>
+<p>如果是声明（这肯定是一个全局的声明），替换掉声明。因为我的设计是同一个作用域，不允许现 2个名字一样的符号。</p>
+<p>如果是定义，就报错：函数重复定义。并且标记 err_flag 为1</p>
+<p>最后，把这个函数定义加入函数表，也是想后面解析代码不要报太多的语义错误。</p>
+<p>第 510 行，让符号表的 cur_fun 指向这个函数符号。虽然现在看不出 cur_fun 有什么作用，后面就知道了。</p>
+<p>我们趁热打铁。</p>
+<p>啃下 decl_var 和 def_var</p>
+<h2 id="decl-var">decl_var</h2>
+<img src="image-20251016163447342.png" srcset="/img/loading.gif" lazyload alt="image-20251016163447342" style="zoom:50%;" />
+<p>decl_var 用来把变量的声明（不是定义）加入变量表。</p>
+<p>老规矩，先扫一下函数表，看看相同作用域有没有同名的函数符号。如果有，就报错，释放内存，返回。</p>
+<img src="image-20251016192155411.png" srcset="/img/loading.gif" lazyload alt="image-20251016192155411" style="zoom:50%;" />
+<p>先看第 232 的宏 IS_GLOBAL(x)</p>
+<p>它的定义是 <code>#define IS_GLOBAL(x)  (x-&gt;scope_path.path_len == 1)</code></p>
+<p>因为全局变量的作用域是 0，数组长度是 1，所以用<code>x-&gt;scope_path.path_len == 1</code>来判断是不是全局变量。</p>
+<p>顺便也说一下局部变量的判断</p>
+<p><code>#define IS_LOCAL(x)  (x-&gt;scope_path.path_len &gt; 1)</code></p>
+<p>第 230 行，查找变量表中同名的符号，如果它是声明或者是全局变量的定义，就把它的地址记录在 decl_var 中。</p>
+<p>满足条件的符号可能不止一个，我们记录其中任何一个就行。</p>
+<p>第 234 行，查看是否有作用域相同的符号，一旦发现，记录下这个符号的地址，保存在 same_scp_var 中。</p>
+<img src="image-20251016192703087.png" srcset="/img/loading.gif" lazyload alt="image-20251016192703087" style="zoom:50%;" />
+<p>如果第 241 行成立，所有确实有同一个作用域的同名符号。我们分析一下这个符号的类型，逃不过以下 4 种：</p>
+<ol>
+<li>
+<p>全局的定义</p>
+</li>
+<li>
+<p>局部的定义</p>
+</li>
+<li>
+<p>全局的声明</p>
+</li>
+<li>
+<p>局部的声明</p>
+</li>
+</ol>
+<p>如果是局部的定义，就要报错，例如</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">&#123;<br>    <span class="hljs-type">int</span> x;<br>    <span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> x;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这样写是不对的。</p>
+<p>上面的代码 243~247 就是解决这种情况。</p>
+<p>如果不是这种情况，那就是其他三种了。此时需要检查类型。例如</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> x;<br><span class="hljs-keyword">extern</span> <span class="hljs-type">char</span> x; <span class="hljs-comment">// 类型冲突</span><br></code></pre></td></tr></table></figure>
+<p>要是类型不一致，也要报错。</p>
+<p>这四种情况，都不需要把声明加入变量表，即使通过类型检查，因为同一个作用域已经有同名的符号了，不重复添加。</p>
+<p>第 256 行，如果 decl_var 不是 NULL，说明已经存在相同名字的声明或者是全局变量的定义，而且和要加入的符号不在同一个作用域，</p>
+<p>这时候也要做类型检查，要是类型冲突，就报错，是否内存，返回。</p>
+<p>要是类型检查通过，则执行 264~266，把当前的符号加入变量表。</p>
+<p>有人问要是 decl_var 为 NULL 呢？要是能执行到第 256 行且 decl_var 为 NULL，那说明找不到同名的声明，也找不到同名的全局变量的定义，这都不需要类型检查，而且这个要加入的声明还没有作用域冲突的问题，那就直接添加到变量表。</p>
+<h2 id="def-var">def_var</h2>
+<p>此函数的作用是把一个变量的定义加入变量表。</p>
+<img src="image-20251016195515741.png" srcset="/img/loading.gif" lazyload alt="image-20251016195515741" style="zoom:50%;" />
+<p>扫描函数表检测冲突的代码已经折叠。</p>
+<p>第 300 行，遇到同名的符号且在一个作用域的，记录下此符号的地址，然后 break</p>
+<img src="image-20251016195818479.png" srcset="/img/loading.gif" lazyload alt="image-20251016195818479" style="zoom:50%;" />
+<p>如果 307 行为真，还是那 4 种情况</p>
+<ol>
+<li>
+<p>全局的定义</p>
+</li>
+<li>
+<p>局部的定义</p>
+</li>
+<li>
+<p>全局的声明</p>
+</li>
+<li>
+<p>局部的声明</p>
+</li>
+</ol>
+<p>不管是全局的定义还是局部的定义，都不能重复定义，这就是 308~312，报错，释放空间，返回。</p>
+<p>接下来就剩声明了。如果是局部作用域里面的声明，和前文一样，报错，释放空间，返回。</p>
+<p>如果是全局的声明，要检查类型，类型不一致，报错，释放空间，返回。要是通过了检查，先删除旧的声明，再把新的符号加入变量表（335~337）</p>
+<p>这样做是为了保证全局作用域不会出现 2 个同名的符号。</p>
+<p>刚才翻过了四座大山。后面还有三座小山。</p>
+<h2 id="查找符号">查找符号</h2>
+<img src="image-20251016200945420.png" srcset="/img/loading.gif" lazyload alt="image-20251016200945420" style="zoom:50%;" />
+<p>上节课已经展示过这个代码了，现在我们要研究一下第 892 行的</p>
+<p>void *get_var_or_fun(const char *name, int *symbol_type)</p>
+<p>但是，讲这个函数之前，先要看看 get_var</p>
+<p>这个函数的目的是根据符号的名字，去变量表中查找变量。如果有多个同名变量，就遵循就近原则，找到离当前作用域最近的那个变量。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a = <span class="hljs-number">0</span>; <span class="hljs-comment">// 0</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> a = <span class="hljs-number">1</span>;  <span class="hljs-comment">// 0/1</span><br>    &#123;<br>        <span class="hljs-type">int</span> a = <span class="hljs-number">2</span>;   <span class="hljs-comment">//  0/1/2</span><br>        &#123;           <br>            <span class="hljs-type">int</span> b; <span class="hljs-comment">//  0/1/2/3</span><br>            a++;<br>        &#125;<br><br>        &#123;<br>            <span class="hljs-type">int</span> a; <span class="hljs-comment">// 0/1/2/4</span><br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>请问遇到第 9 行的 a++, 请问这个 a 是哪个 a?</p>
+<p>方法不难，首先，看看 a++ 所在的作用域是什么？</p>
+<p>是 0/1/2/3</p>
+<p>然后，扫描符号表，找到所有的 a,把它的作用域列出来：</p>
+<p>第 1 行的 a: 0</p>
+<p>第 4 行的 a: 0/1</p>
+<p>第 6 行的 a: 0/1/2</p>
+<p>第 13 行的 a:  0/1/2/4</p>
+<p>然后判断哪个是  0/1/2/3 的最长的前缀</p>
+<p>第 1、4、6 都是  0/1/2/3 的前缀，最长的是 第 6 行的 a: 0/1/2</p>
+<p>所以，  a++ 就是指第 6 行定义的那个 a</p>
+<p>前缀有什么规律呢？</p>
+<p>前文分析过，一个作用域是 a/b/3，另一个作用域是 c/d/3</p>
+<p>那么这两个作用域肯定相同；</p>
+<p>所以，如果看  a/b/c  是不是  x/y/z/w 的前缀</p>
+<p>先找出长度比较小的（长度一样的话随便挑一个），然后看它的最后一个数字和另一个对应位置上的数字是否相同</p>
+<p>也就是看 c 是否等于 z;</p>
+<p>如果相等，那么 b 肯定等于 y, a 肯定等于 x</p>
+<p>把上面的步骤翻译成代码，就是下面的函数：</p>
+<img src="image-20251016201147209.png" srcset="/img/loading.gif" lazyload alt="image-20251016201147209" style="zoom:50%;" />
+<p>第 362 行，获取当前的作用域。这个函数前面讲过。</p>
+<p>第 366 遍历遍历表，第 367 查找同名的变量。</p>
+<p>第 370 ~ 371 用来判断是不是前缀</p>
+<p>第 372 ~ 375 用来找最长的前缀。</p>
+<p>最后，返回找到的变量（也可能找不到）</p>
+<p>get_fun 函数和上面的基本一样，就不解释了。</p>
+<img src="image-20251016204659540.png" srcset="/img/loading.gif" lazyload alt="image-20251016204659540" style="zoom:50%;" />
+<p>现在看看 get_var_or_fun</p>
+<img src="image-20251016204957404.png" srcset="/img/loading.gif" lazyload alt="image-20251016204957404" style="zoom:50%;" />
+<p>第 551~552，分别去变量表和函数表查一下，如果都返回 NULL，对不起，找不到。</p>
+<p>如果都能找到，那还要 PK 一下作用域，长度大的是更近的作用域，见 558~564；</p>
+<p>有人问会不会作用域一样长？不会！</p>
+<p>因为作用域一样长且都是当前作用域的前缀，那就是同一个作用域，同一个作用域不可能有 2 个同名的符号。</p>
+<p>第 565 ~ 568 解决一个表找到了，另一个找不到的问题。（绝大多数都是这种情况，基本上没有人把函数的名字和变量的名字搞成一样的，除非想写出令人无法维护的代码，哈哈哈）</p>
+<p>对了，这个函数有个输出型参数，所谓<strong>输出型参数</strong>（Output Parameter）是指函数中用于将计算结果传递到外部的参数。</p>
+<p>这里的 symbol_type 就是输出型参数，调用者传入一个指针（本质就是一个地址），被调用的函数负责往这个地址写入合适的值，这样信息就传给调用者了。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> SYMBOL_TYPE_VAR  1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> SYMBOL_TYPE_FUN  2</span><br></code></pre></td></tr></table></figure>
+<p>symbol_type 这个指针用来接收符号的类型，要么是变量，要么是函数。仅在找到符号的时候才有效。</p>
+<p>不过这个函数还不是最终版本，后面会根据需要再修改这个函数。由此可见，写代码也不是一蹴而就的，修修补补是常有的事情。</p>
+<p>本文到这里就结束了。</p>
+<p>作用域管理、符号表管理基本说完了，也穿插讲了语义分析。</p>
+<p>接下来会讲中间代码生成，这里面也会穿插语义分析。</p>
+<p>符号表，语义分析，中间代码生成，这三个兄弟是分不开了。</p>
+<h2 id="成果展示">成果展示</h2>
+<p>测试 1：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> bar;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>; <span class="hljs-comment">// 会报错</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>  <span class="hljs-comment">// 会报错</span><br>&#123;<br>    <br>&#125;<br></code></pre></td></tr></table></figure>
+<p>第 1 行，定义了变量 bar</p>
+<p>第 2 行又声明了函数类型的 bar，不可以；</p>
+<p>第 3 行同理。</p>
+<img src="image-20251017104407180.png" srcset="/img/loading.gif" lazyload alt="image-20251017104407180" style="zoom:67%;" />
+<p>测试 2：</p>
+<p>测试函数参数的收集；</p>
+<p>测试函数声明的作用域；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>; <br><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>  <br>&#123;<br>    a++;<br>    b++;<br>    c--;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    &#123;<br>        <span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>; <br>        &#123;<br>            <span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>; <br>            &#123;<br>                 <span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>; <br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<img src="image-20251017104919960.png" srcset="/img/loading.gif" lazyload alt="image-20251017104919960" style="zoom:50%;" />
+<img src="image-20251017104952368.png" srcset="/img/loading.gif" lazyload alt="image-20251017104952368" style="zoom:50%;" />
+<p>测试 3：</p>
+<p>测试符号查找，根据就近原则，是否能找到正确的符号。</p>
+<p>首先在 primary_expr 函数中添加下图的代码。</p>
+<img src="image-20251017105317625.png" srcset="/img/loading.gif" lazyload alt="image-20251017105317625" style="zoom:50%;" />
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> x;<br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> x;<br>    &#123;<br>        <span class="hljs-type">int</span> x;<br>        &#123;<br>            <span class="hljs-type">int</span> x;<br>            &#123;<br>                 x++;  <span class="hljs-comment">// 解析到这里就会调用 primary_expr 函数</span><br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<img src="image-20251017105603803.png" srcset="/img/loading.gif" lazyload alt="image-20251017105603803" style="zoom:50%;" />
+<p>确实找到了第 8 行的 x;</p>
+<p>囿于篇幅，就展示到这里吧。欢迎读者下载代码动手实践，捣鼓捣鼓挺好玩的！</p>
+<p>下节内容预告：</p>
+<p>语义分析还没有讲完，后面该学习中间代码生成了，这个过程还会涉及到语义分析。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第10天：符号表之函数管理</div>
+      <div>https://leslieche.github.io/2026/04/17/第10天：符号表之函数管理/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月17日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E7%AC%A6%E5%8F%B7%E8%A1%A8%E4%B9%8B%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/" title="第9天：符号表之变量管理">
+                        <span class="hidden-mobile">第9天：符号表之变量管理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"LeslieChe/comment_for_blog","repo-id":"R_kgDOR6CL3g","category":"General","category-id":"DIC_kwDOR6CL3s4C6Ez9","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":1,"input-position":"top","lang":"zh-CN","strict":0,"theme":"preferred_color_scheme","loading":"lazy"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
