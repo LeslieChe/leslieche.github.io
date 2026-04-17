@@ -404,17 +404,15 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第11天：符号表之函数管理">第11天：符号表之函数管理</h1>
-<h2 id="解析函数参数">解析函数参数</h2>
-<p>上一节说过，调用 new_var 的地方有 2 处，一个是 var_init 函数，一个是 para_item 函数。</p>
+                <h1 id="第11天：符号表之函数管理"><a href="#第11天：符号表之函数管理" class="headerlink" title="第11天：符号表之函数管理"></a>第11天：符号表之函数管理</h1><h2 id="解析函数参数"><a href="#解析函数参数" class="headerlink" title="解析函数参数"></a>解析函数参数</h2><p>上一节说过，调用 new_var 的地方有 2 处，一个是 var_init 函数，一个是 para_item 函数。</p>
 <p>para_item 的源头是 para_decl；para_decl 里面会解析函数的参数列表。代码如下：</p>
-<img src="image-20251016135657116.png" srcset="/img/loading.gif" lazyload alt="image-20251016135657116" style="zoom:50%;" />
+<p><img src="image-20251016135657116.png" srcset="/img/loading.gif" lazyload alt="image-20251016135657116" style="zoom:50%;" /></p>
 <p>如果执行到第 441 行，说明函数的参数列表不为空，先创建一个链表的头节点。</p>
 <p>第 446 行做头节点的初始化。</p>
 <p>然后调用 447，把头节点的地址作为参数传给 para_item，para_item 里面会收集函数的形式参数，并加入 params_head 这个链表。</p>
 <p>解析完所有形式参数后，返回 params_head；</p>
 <p>para_item 的代码如下：</p>
-<img src="image-20251016134452326.png" srcset="/img/loading.gif" lazyload alt="image-20251016134452326" style="zoom:50%;" />
+<p><img src="image-20251016134452326.png" srcset="/img/loading.gif" lazyload alt="image-20251016134452326" style="zoom:50%;" /></p>
 <p>第 469 行，获得参数的名字；第 470 行，获取参数名字所在的行号，这是为了报错用（可能会用到）。</p>
 <p>第 476 行，如果是 <code>int foo(int a[...])</code> 这种写法，我们就把参数当成 <code>int *a</code></p>
 <p>第 480 行，调用 new_var;这个函数上节课介绍了，它的原型是：</p>
@@ -424,21 +422,19 @@
 <p>第 482 行，把 var 加入变量表。</p>
 <p>第 484 行，把 var 加入链表。</p>
 <p>para_decl 函数收集好参数后，会把头节点返回给 fun_decl_tail 的第 411 行</p>
-<img src="image-20251016143127967.png" srcset="/img/loading.gif" lazyload alt="image-20251016143127967" style="zoom:50%;" />
-<h2 id="fun-body">fun_body</h2>
-<p>现在重点看第 416 的 fun_body 函数。</p>
+<p><img src="image-20251016143127967.png" srcset="/img/loading.gif" lazyload alt="image-20251016143127967" style="zoom:50%;" /></p>
+<h2 id="fun-body"><a href="#fun-body" class="headerlink" title="fun_body"></a>fun_body</h2><p>现在重点看第 416 的 fun_body 函数。</p>
 <p>做语法分析的时候，这个函数的代码如下：</p>
-<img src="image-20251016144329455.png" srcset="/img/loading.gif" lazyload alt="image-20251016144329455" style="zoom:50%;" />
+<p><img src="image-20251016144329455.png" srcset="/img/loading.gif" lazyload alt="image-20251016144329455" style="zoom:50%;" /></p>
 <p>现在它的代码如下。基本框架没有变，但是加入了很多东西。</p>
 <p>后面不再贴图对比现在的代码和之前的代码了，有心的同学可以打开以前的代码和现在的代码做对比，体会语义分析到底增加了什么。</p>
-<img src="image-20251016143256864.png" srcset="/img/loading.gif" lazyload alt="image-20251016143256864" style="zoom:50%;" />
+<p><img src="image-20251016143256864.png" srcset="/img/loading.gif" lazyload alt="image-20251016143256864" style="zoom:50%;" /></p>
 <p>第 509 行，如果 if (scope == SCOPE_LOCAL) 成立，说明是局部作用域，那么只能是函数声明。</p>
 <p>第 523 行创建函数符号，第 525 调用 decl_fun() 把函数符号以声明的身份加入函数表。</p>
 <p>如果是全局作用域，执行第 528 行，创建函数符号；然后又分成两种情况，声明就调用 decl_fun()，定义就调用 def_fun()</p>
 <p>第 535 行，cur_fun 是符号表里面的一个指针（fun_t * 类型），当语义分析分析到函数定义的时候，就让它指向当前正在分析的函数。</p>
-<h2 id="fun-t">fun_t</h2>
-<p>我们先看看 fun_t 类型</p>
-<img src="image-20251016141851743.png" srcset="/img/loading.gif" lazyload alt="image-20251016141851743" style="zoom:50%;" />
+<h2 id="fun-t"><a href="#fun-t" class="headerlink" title="fun_t"></a>fun_t</h2><p>我们先看看 fun_t 类型</p>
+<p><img src="image-20251016141851743.png" srcset="/img/loading.gif" lazyload alt="image-20251016141851743" style="zoom:50%;" /></p>
 <p>第 16 行，用来加入哈希表的哈希表节点。</p>
 <p>第 22 行，is_ext 这个字段用来指示是函数定义还是函数声明，声明的话为 ture；</p>
 <p>注意，不是说函数名字前面有 extern 就是声明；</p>
@@ -447,24 +443,22 @@
 <p>因为我不想再定义一个什么字段来表示一个函数符号是声明还是定义，所以就借用了 is_ext 这个字段。</p>
 <p>第 27 行，前面说的 para_decl() 收集完函数参数后，头节点最终要给到这个 para_list_head；如果 para_list_head 值为空，则说明参数列表是空；</p>
 <p>第 30 行，函数定义或者声明所在的作用域，如果是函数定义，作用域是 0</p>
-<h2 id="创建函数符号">创建函数符号</h2>
-<img src="image-20251016144038038.png" srcset="/img/loading.gif" lazyload alt="image-20251016144038038" style="zoom:50%;" />
+<h2 id="创建函数符号"><a href="#创建函数符号" class="headerlink" title="创建函数符号"></a>创建函数符号</h2><p><img src="image-20251016144038038.png" srcset="/img/loading.gif" lazyload alt="image-20251016144038038" style="zoom:50%;" /></p>
 <p>第 246 行，如果遗漏了函数名字，就释放参数链表，释放头节点，返回 NULL；</p>
 <p>但是 para_item 函数已经把参数都加到变量表了，这里选择保留这些变量，考虑到后面解析的时候还要用，否则会报告错误，说变量未定义。</p>
 <p>第 259 行，如果没有收集到有效的参数，肯定是语法有错误，也要标记 err_flag 为1</p>
-<img src="image-20251016150318174.png" srcset="/img/loading.gif" lazyload alt="image-20251016150318174" style="zoom:50%;" />
+<p><img src="image-20251016150318174.png" srcset="/img/loading.gif" lazyload alt="image-20251016150318174" style="zoom:50%;" /></p>
 <p>第 269 行，获得作用域。</p>
 <p>第 277 行，统计参数的个数。</p>
 <p>有同学会问，如果没有收集到有效的参数，fun-&gt;para_len 为 0；如果参数列表是 void，fun-&gt;para_len 也为 0；如何区分呢？</p>
 <p>因为前者标记 err_flag 为1了，在后面的查找中会跳过这些有错误的函数符号，所以不会有问题。</p>
-<h2 id="decl-fun">decl_fun</h2>
-<p>下面该介绍 decl_fun 函数了，它的作用是把函数声明加入函数表。</p>
+<h2 id="decl-fun"><a href="#decl-fun" class="headerlink" title="decl_fun"></a>decl_fun</h2><p>下面该介绍 decl_fun 函数了，它的作用是把函数声明加入函数表。</p>
 <p>这里的声明就是狭义声明，不包括函数定义。</p>
-<img src="image-20251016151208899.png" srcset="/img/loading.gif" lazyload alt="image-20251016151208899" style="zoom:50%;" />
+<p><img src="image-20251016151208899.png" srcset="/img/loading.gif" lazyload alt="image-20251016151208899" style="zoom:50%;" /></p>
 <p>第 395 行，设置 is_ext 为 true；表示这是一个声明。</p>
 <p>然后，我们要在变量表里面查一遍，看看有没有作用域相同的同名变量。其中的原因在上一节说过了。</p>
 <p>第 401 行，<code>！var-&gt;err_flag</code>的意思式跳过语法分析或语义分析有错误的变量</p>
-<p><code>0 == strcmp(var-&gt;name, fun-&gt;name)</code>是对比函数的名字和变量的名字。</p>
+<p> <code>0 == strcmp(var-&gt;name, fun-&gt;name)</code>是对比函数的名字和变量的名字。</p>
 <p>如果 401 为真，则比较它们的作用域，也就是第 402 行，</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">in_same_scope</span><span class="hljs-params">(<span class="hljs-type">scope_path_t</span> *p1, <span class="hljs-type">scope_path_t</span> *p2)</span><br>&#123;<br>	assert(p1 &amp;&amp; p2);<br>	<span class="hljs-type">int</span> i = p1-&gt;path_len;<br>	<span class="hljs-type">int</span> j = p2-&gt;path_len;<br>	<span class="hljs-keyword">return</span> ((i == j) &amp;&amp; (p1-&gt;path[i<span class="hljs-number">-1</span>] == p2-&gt;path[j<span class="hljs-number">-1</span>]));<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>因为每个作用域的路径是唯一的，不存在这样的情况：</p>
@@ -475,12 +469,12 @@
 <p>这两个作用域肯定相同，因为 3 相邻的外层括号是确定的，所以 b 等于 d, 同理，  a 等于c</p>
 <p>这就是上面代码的意思。</p>
 <p>再回到上面的代码，如果发现名字一样且作用域一样的变量，就 break，然后报错 “xxx 作为不同的类型重声明”</p>
-<img src="image-20251016153640468.png" srcset="/img/loading.gif" lazyload alt="image-20251016153640468" style="zoom:50%;" />
+<p><img src="image-20251016153640468.png" srcset="/img/loading.gif" lazyload alt="image-20251016153640468" style="zoom:50%;" /></p>
 <p>下面该查找函数表了，依然是找同一个名字的函数，另外还要比较作用域；</p>
 <p>当跳出循环的时候，有没有同名的函数，用 found 指示；</p>
 <p>有没有作用域一样的同名函数，用 same_scope 指示。</p>
 <p>并且，declared_fun 这个变量指示某个名字相同的函数，当 same_scope 为 1 的时候， declared_fun 指示第一个遇到的同名且同作用域的函数符号。</p>
-<img src="image-20251016154153699.png" srcset="/img/loading.gif" lazyload alt="image-20251016154153699" style="zoom:50%;" />
+<p><img src="image-20251016154153699.png" srcset="/img/loading.gif" lazyload alt="image-20251016154153699" style="zoom:50%;" /></p>
 <p>当 found 为 1，说明有同名的函数符号，那么先要检查类型</p>
 <p>为了简化表达，这里的类型一致指函数返回值类型一样，参数列表的个数、类型也一样。</p>
 <p>如果定义了函数 xxx, 那么所有的 xxx 的函数声明，要和定义类型一致</p>
@@ -490,11 +484,10 @@
 <p>如果连检查都没有通过，对不起，报错，并销毁内存，返回。</p>
 <p>如果通过了检查，第 441 行要判断是不是存在同名且同作用域的函数符号，如果是，销毁内存并返回。</p>
 <p>需要注意，如果已经存在函数定义了，那么全局作用域的声明就不添加了。</p>
-<h2 id="def-fun">def_fun</h2>
-<img src="image-20251016161647344.png" srcset="/img/loading.gif" lazyload alt="image-20251016161647344" style="zoom:50%;" />
+<h2 id="def-fun"><a href="#def-fun" class="headerlink" title="def_fun"></a>def_fun</h2><p><img src="image-20251016161647344.png" srcset="/img/loading.gif" lazyload alt="image-20251016161647344" style="zoom:50%;" /></p>
 <p>折叠起来的代码是查询变量表，和前文同理。</p>
 <p>第 477 到 485 也和前面的代码类似，不再解释。</p>
-<img src="image-20251016161918978.png" srcset="/img/loading.gif" lazyload alt="image-20251016161918978" style="zoom:50%;" />
+<p><img src="image-20251016161918978.png" srcset="/img/loading.gif" lazyload alt="image-20251016161918978" style="zoom:50%;" /></p>
 <p>首先，还是类型检查，这个和前文一样。但是类型不一致要标记 err_flag 为1</p>
 <p>如果类型检查通过了，就看看是不是存在同名且同作用域的函数符号；如果存在，还分 2 种情况，声明和定义。、</p>
 <p>如果是声明（这肯定是一个全局的声明），替换掉声明。因为我的设计是同一个作用域，不允许现 2个名字一样的符号。</p>
@@ -503,11 +496,10 @@
 <p>第 510 行，让符号表的 cur_fun 指向这个函数符号。虽然现在看不出 cur_fun 有什么作用，后面就知道了。</p>
 <p>我们趁热打铁。</p>
 <p>啃下 decl_var 和 def_var</p>
-<h2 id="decl-var">decl_var</h2>
-<img src="image-20251016163447342.png" srcset="/img/loading.gif" lazyload alt="image-20251016163447342" style="zoom:50%;" />
+<h2 id="decl-var"><a href="#decl-var" class="headerlink" title="decl_var"></a>decl_var</h2><p><img src="image-20251016163447342.png" srcset="/img/loading.gif" lazyload alt="image-20251016163447342" style="zoom:50%;" /></p>
 <p>decl_var 用来把变量的声明（不是定义）加入变量表。</p>
 <p>老规矩，先扫一下函数表，看看相同作用域有没有同名的函数符号。如果有，就报错，释放内存，返回。</p>
-<img src="image-20251016192155411.png" srcset="/img/loading.gif" lazyload alt="image-20251016192155411" style="zoom:50%;" />
+<p><img src="image-20251016192155411.png" srcset="/img/loading.gif" lazyload alt="image-20251016192155411" style="zoom:50%;" /></p>
 <p>先看第 232 的宏 IS_GLOBAL(x)</p>
 <p>它的定义是 <code>#define IS_GLOBAL(x)  (x-&gt;scope_path.path_len == 1)</code></p>
 <p>因为全局变量的作用域是 0，数组长度是 1，所以用<code>x-&gt;scope_path.path_len == 1</code>来判断是不是全局变量。</p>
@@ -516,21 +508,15 @@
 <p>第 230 行，查找变量表中同名的符号，如果它是声明或者是全局变量的定义，就把它的地址记录在 decl_var 中。</p>
 <p>满足条件的符号可能不止一个，我们记录其中任何一个就行。</p>
 <p>第 234 行，查看是否有作用域相同的符号，一旦发现，记录下这个符号的地址，保存在 same_scp_var 中。</p>
-<img src="image-20251016192703087.png" srcset="/img/loading.gif" lazyload alt="image-20251016192703087" style="zoom:50%;" />
+<p><img src="image-20251016192703087.png" srcset="/img/loading.gif" lazyload alt="image-20251016192703087" style="zoom:50%;" /></p>
 <p>如果第 241 行成立，所有确实有同一个作用域的同名符号。我们分析一下这个符号的类型，逃不过以下 4 种：</p>
 <ol>
-<li>
-<p>全局的定义</p>
+<li><p>全局的定义</p>
 </li>
-<li>
-<p>局部的定义</p>
+<li><p>局部的定义</p>
 </li>
-<li>
-<p>全局的声明</p>
-</li>
-<li>
-<p>局部的声明</p>
-</li>
+<li>全局的声明</li>
+<li>局部的声明</li>
 </ol>
 <p>如果是局部的定义，就要报错，例如</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">&#123;<br>    <span class="hljs-type">int</span> x;<br>    <span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> x;<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -544,36 +530,28 @@
 <p>这时候也要做类型检查，要是类型冲突，就报错，是否内存，返回。</p>
 <p>要是类型检查通过，则执行 264~266，把当前的符号加入变量表。</p>
 <p>有人问要是 decl_var 为 NULL 呢？要是能执行到第 256 行且 decl_var 为 NULL，那说明找不到同名的声明，也找不到同名的全局变量的定义，这都不需要类型检查，而且这个要加入的声明还没有作用域冲突的问题，那就直接添加到变量表。</p>
-<h2 id="def-var">def_var</h2>
-<p>此函数的作用是把一个变量的定义加入变量表。</p>
-<img src="image-20251016195515741.png" srcset="/img/loading.gif" lazyload alt="image-20251016195515741" style="zoom:50%;" />
+<h2 id="def-var"><a href="#def-var" class="headerlink" title="def_var"></a>def_var</h2><p>此函数的作用是把一个变量的定义加入变量表。</p>
+<p><img src="image-20251016195515741.png" srcset="/img/loading.gif" lazyload alt="image-20251016195515741" style="zoom:50%;" /></p>
 <p>扫描函数表检测冲突的代码已经折叠。</p>
 <p>第 300 行，遇到同名的符号且在一个作用域的，记录下此符号的地址，然后 break</p>
-<img src="image-20251016195818479.png" srcset="/img/loading.gif" lazyload alt="image-20251016195818479" style="zoom:50%;" />
+<p><img src="image-20251016195818479.png" srcset="/img/loading.gif" lazyload alt="image-20251016195818479" style="zoom:50%;" /></p>
 <p>如果 307 行为真，还是那 4 种情况</p>
 <ol>
-<li>
-<p>全局的定义</p>
+<li><p>全局的定义</p>
 </li>
-<li>
-<p>局部的定义</p>
+<li><p>局部的定义</p>
 </li>
-<li>
-<p>全局的声明</p>
-</li>
-<li>
-<p>局部的声明</p>
-</li>
+<li>全局的声明</li>
+<li>局部的声明</li>
 </ol>
 <p>不管是全局的定义还是局部的定义，都不能重复定义，这就是 308~312，报错，释放空间，返回。</p>
 <p>接下来就剩声明了。如果是局部作用域里面的声明，和前文一样，报错，释放空间，返回。</p>
 <p>如果是全局的声明，要检查类型，类型不一致，报错，释放空间，返回。要是通过了检查，先删除旧的声明，再把新的符号加入变量表（335~337）</p>
 <p>这样做是为了保证全局作用域不会出现 2 个同名的符号。</p>
 <p>刚才翻过了四座大山。后面还有三座小山。</p>
-<h2 id="查找符号">查找符号</h2>
-<img src="image-20251016200945420.png" srcset="/img/loading.gif" lazyload alt="image-20251016200945420" style="zoom:50%;" />
-<p>上节课已经展示过这个代码了，现在我们要研究一下第 892 行的</p>
-<p>void *get_var_or_fun(const char *name, int *symbol_type)</p>
+<h2 id="查找符号"><a href="#查找符号" class="headerlink" title="查找符号"></a>查找符号</h2><p><img src="image-20251016200945420.png" srcset="/img/loading.gif" lazyload alt="image-20251016200945420" style="zoom:50%;" /></p>
+<p>上节课已经展示过这个代码了，现在我们要研究一下第 892 行的 </p>
+<p>void <em>get_var_or_fun(const char </em>name, int *symbol_type)  </p>
 <p>但是，讲这个函数之前，先要看看 get_var</p>
 <p>这个函数的目的是根据符号的名字，去变量表中查找变量。如果有多个同名变量，就遵循就近原则，找到离当前作用域最近的那个变量。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a = <span class="hljs-number">0</span>; <span class="hljs-comment">// 0</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> a = <span class="hljs-number">1</span>;  <span class="hljs-comment">// 0/1</span><br>    &#123;<br>        <span class="hljs-type">int</span> a = <span class="hljs-number">2</span>;   <span class="hljs-comment">//  0/1/2</span><br>        &#123;           <br>            <span class="hljs-type">int</span> b; <span class="hljs-comment">//  0/1/2/3</span><br>            a++;<br>        &#125;<br><br>        &#123;<br>            <span class="hljs-type">int</span> a; <span class="hljs-comment">// 0/1/2/4</span><br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -596,16 +574,16 @@
 <p>也就是看 c 是否等于 z;</p>
 <p>如果相等，那么 b 肯定等于 y, a 肯定等于 x</p>
 <p>把上面的步骤翻译成代码，就是下面的函数：</p>
-<img src="image-20251016201147209.png" srcset="/img/loading.gif" lazyload alt="image-20251016201147209" style="zoom:50%;" />
+<p><img src="image-20251016201147209.png" srcset="/img/loading.gif" lazyload alt="image-20251016201147209" style="zoom:50%;" /></p>
 <p>第 362 行，获取当前的作用域。这个函数前面讲过。</p>
 <p>第 366 遍历遍历表，第 367 查找同名的变量。</p>
 <p>第 370 ~ 371 用来判断是不是前缀</p>
 <p>第 372 ~ 375 用来找最长的前缀。</p>
 <p>最后，返回找到的变量（也可能找不到）</p>
 <p>get_fun 函数和上面的基本一样，就不解释了。</p>
-<img src="image-20251016204659540.png" srcset="/img/loading.gif" lazyload alt="image-20251016204659540" style="zoom:50%;" />
+<p><img src="image-20251016204659540.png" srcset="/img/loading.gif" lazyload alt="image-20251016204659540" style="zoom:50%;" /></p>
 <p>现在看看 get_var_or_fun</p>
-<img src="image-20251016204957404.png" srcset="/img/loading.gif" lazyload alt="image-20251016204957404" style="zoom:50%;" />
+<p><img src="image-20251016204957404.png" srcset="/img/loading.gif" lazyload alt="image-20251016204957404" style="zoom:50%;" /></p>
 <p>第 551~552，分别去变量表和函数表查一下，如果都返回 NULL，对不起，找不到。</p>
 <p>如果都能找到，那还要 PK 一下作用域，长度大的是更近的作用域，见 558~564；</p>
 <p>有人问会不会作用域一样长？不会！</p>
@@ -620,25 +598,24 @@
 <p>作用域管理、符号表管理基本说完了，也穿插讲了语义分析。</p>
 <p>接下来会讲中间代码生成，这里面也会穿插语义分析。</p>
 <p>符号表，语义分析，中间代码生成，这三个兄弟是分不开了。</p>
-<h2 id="成果展示">成果展示</h2>
-<p>测试 1：</p>
+<h2 id="成果展示"><a href="#成果展示" class="headerlink" title="成果展示"></a>成果展示</h2><p>测试 1：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> bar;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>; <span class="hljs-comment">// 会报错</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>  <span class="hljs-comment">// 会报错</span><br>&#123;<br>    <br>&#125;<br></code></pre></td></tr></table></figure>
 <p>第 1 行，定义了变量 bar</p>
 <p>第 2 行又声明了函数类型的 bar，不可以；</p>
 <p>第 3 行同理。</p>
-<img src="image-20251017104407180.png" srcset="/img/loading.gif" lazyload alt="image-20251017104407180" style="zoom:67%;" />
+<p><img src="image-20251017104407180.png" srcset="/img/loading.gif" lazyload alt="image-20251017104407180" style="zoom:67%;" /></p>
 <p>测试 2：</p>
 <p>测试函数参数的收集；</p>
 <p>测试函数声明的作用域；</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>; <br><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>  <br>&#123;<br>    a++;<br>    b++;<br>    c--;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    &#123;<br>        <span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>; <br>        &#123;<br>            <span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>; <br>            &#123;<br>                 <span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b, <span class="hljs-type">int</span> c)</span>; <br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<img src="image-20251017104919960.png" srcset="/img/loading.gif" lazyload alt="image-20251017104919960" style="zoom:50%;" />
-<img src="image-20251017104952368.png" srcset="/img/loading.gif" lazyload alt="image-20251017104952368" style="zoom:50%;" />
+<p><img src="image-20251017104919960.png" srcset="/img/loading.gif" lazyload alt="image-20251017104919960" style="zoom:50%;" /></p>
+<p><img src="image-20251017104952368.png" srcset="/img/loading.gif" lazyload alt="image-20251017104952368" style="zoom:50%;" /></p>
 <p>测试 3：</p>
 <p>测试符号查找，根据就近原则，是否能找到正确的符号。</p>
 <p>首先在 primary_expr 函数中添加下图的代码。</p>
-<img src="image-20251017105317625.png" srcset="/img/loading.gif" lazyload alt="image-20251017105317625" style="zoom:50%;" />
+<p><img src="image-20251017105317625.png" srcset="/img/loading.gif" lazyload alt="image-20251017105317625" style="zoom:50%;" /></p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> x;<br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> x;<br>    &#123;<br>        <span class="hljs-type">int</span> x;<br>        &#123;<br>            <span class="hljs-type">int</span> x;<br>            &#123;<br>                 x++;  <span class="hljs-comment">// 解析到这里就会调用 primary_expr 函数</span><br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<img src="image-20251017105603803.png" srcset="/img/loading.gif" lazyload alt="image-20251017105603803" style="zoom:50%;" />
+<p><img src="image-20251017105603803.png" srcset="/img/loading.gif" lazyload alt="image-20251017105603803" style="zoom:50%;" /></p>
 <p>确实找到了第 8 行的 x;</p>
 <p>囿于篇幅，就展示到这里吧。欢迎读者下载代码动手实践，捣鼓捣鼓挺好玩的！</p>
 <p>下节内容预告：</p>
@@ -716,6 +693,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2026/04/17/%E7%AC%AC12%E5%A4%A9%EF%BC%9A%E4%B8%AD%E9%97%B4%E4%BB%A3%E7%A0%81%E7%94%9F%E6%88%90%E4%B9%8B%E8%A1%A8%E8%BE%BE%E5%BC%8F/" title="第12天：中间代码生成之表达式">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">第12天：中间代码生成之表达式</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
