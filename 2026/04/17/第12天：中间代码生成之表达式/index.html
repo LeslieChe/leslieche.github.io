@@ -372,7 +372,7 @@
         
         
         
-          173 分钟
+          172 分钟
         
       </span>
     
@@ -416,8 +416,7 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第12天：中间代码生成之表达式">第12天：中间代码生成之表达式</h1>
-<p>终于来到了中间代码生成环节。前面我们说过，符号表管理、语义分析和中间代码生成是纠缠在一起的三兄弟，所以本文还会看到他们三个难解难分的戏码。</p>
+                <h1 id="第12天：中间代码生成之表达式"><a href="#第12天：中间代码生成之表达式" class="headerlink" title="第12天：中间代码生成之表达式"></a>第12天：中间代码生成之表达式</h1><p>终于来到了中间代码生成环节。前面我们说过，符号表管理、语义分析和中间代码生成是纠缠在一起的三兄弟，所以本文还会看到他们三个难解难分的戏码。</p>
 <p>有人问，为什么要生成中间代码呢？直接生成某个平台的机器码不好吗？我理解你这种“一步到位”的急切盼望，但是，我们不能一步到位。</p>
 <p>现代编译器通常采用“前后端分离”的设计架构，这极大地提升了其灵活性和可移植性。简单来说，前端负责“理解”源代码，将其转化为一种中间表示；后端则负责“翻译”，将这种中间表示优化并转换为目标机器代码。</p>
 <p>如果你追求一步到位，那就损失了灵活性和可移植性。比如现在我们直接生成 x86 平台的机器码，可是过几天想换成 ARM 平台，怎么办？那就要大修大改，甚至推倒重来。所以我们先生成中间代码，再把中间代码转换成目标机器代码。如果想换个硬件平台，那就再为这个硬件平台开发一个后端，或者使用现成的后端。</p>
@@ -432,24 +431,23 @@
 <p>源码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span> (x &lt; <span class="hljs-number">0</span>) <br>	y = -x;<br></code></pre></td></tr></table></figure>
 <p>把这两行代码翻译成语法分析树和抽象语法树，如下图：</p>
-<img src="image-20251025110924016.png" srcset="/img/loading.gif" lazyload alt="image-20251025110924016" style="zoom:50%;" />
-<img src="image-20251025110946473.png" srcset="/img/loading.gif" lazyload alt="image-20251025110946473" style="zoom:50%;" />
+<p><img src="image-20251025110924016.png" srcset="/img/loading.gif" lazyload alt="image-20251025110924016" style="zoom:50%;" /></p>
+<p><img src="image-20251025110946473.png" srcset="/img/loading.gif" lazyload alt="image-20251025110946473" style="zoom:50%;" /></p>
 <p>可以看到，抽象语法树包含的元素比语法分析树少了很多，可以认为抽象语法树是对语法分析树的简化。语法分析树完全依赖文法规则，而抽象语法树可以跨文法复用（例如不同语言的类似结构可能生成相同的 AST）。</p>
-<h2 id="三地址代码（Three-Address-Code-TAC）">三地址代码（Three-Address Code, TAC）</h2>
-<p>csub 使用的中间表示是三地址代码。</p>
+<h2 id="三地址代码（Three-Address-Code-TAC）"><a href="#三地址代码（Three-Address-Code-TAC）" class="headerlink" title="三地址代码（Three-Address Code, TAC）"></a>三地址代码（Three-Address Code, TAC）</h2><p>csub 使用的中间表示是三地址代码。</p>
 <p>三地址代码（或者叫三地址码）得名于其指令格式——每条指令最多包含<strong>三个地址</strong>（即两个操作数和一个结果）。它的核心特点是结构简单、接近机器指令，是编译器优化和代码生成的关键桥梁。</p>
 <p>三地址码有如下特征：</p>
 <ol>
 <li>以指令为单位</li>
-<li>每条指令只有有限数量的运算分量 (通常≤3)</li>
+<li>每条指令只有有限数量的运算分量 (通常≤3) </li>
 <li>支持基本数据类型及其运算</li>
-<li>支持复合数据类型 (如数组、结构体) 及其操作</li>
+<li>支持复合数据类型 (如数组、结构体) 及其操作 </li>
 <li>支持函数</li>
 </ol>
 <p>运算分量指：</p>
 <ol>
-<li>变量：源程序中变量</li>
-<li>常量：源程序中出现或生成的常量</li>
+<li>变量：源程序中变量 </li>
+<li>常量：源程序中出现或生成的常量 </li>
 <li>编译器生成的临时变量 (可与源程序变量等同视之)</li>
 </ol>
 <p>三地址码的指令格式统一为：</p>
@@ -463,8 +461,7 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">t1 = b + c<br>t2 = d - e<br>t3 = t1 * t2<br>a  = t3 + <span class="hljs-number">4</span><br></code></pre></td></tr></table></figure>
 <p>再比如</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 源代码</span><br><span class="hljs-keyword">if</span> (x &gt; <span class="hljs-number">0</span>) &#123;<br>    y = x;<br>&#125; <span class="hljs-keyword">else</span> &#123;<br>    y = -x;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>三地址代码如下：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span> x &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">goto</span> L1    <br>    <span class="hljs-keyword">goto</span> L2             <br>L1:<br>    y = x              <br>    <span class="hljs-keyword">goto</span> L3            <br>L2:<br>    y = -x            <br>L3:                   <br></code></pre></td></tr></table></figure>
+<p>三地址代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span> x &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">goto</span> L1    <br>    <span class="hljs-keyword">goto</span> L2             <br>L1:<br>    y = x              <br>    <span class="hljs-keyword">goto</span> L3            <br>L2:<br>    y = -x            <br>L3:                   <br></code></pre></td></tr></table></figure></p>
 <p>注意：在三地址码中，一条指令的右侧最多有一个运算符，也就是说不能出现组合的算术表达式。因此，像<code>x + y * z</code>这样的源语言表达式要被翻译成如下的三地址指令序列：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">t1 = y * z<br>t2 = x + t1<br></code></pre></td></tr></table></figure>
 <p>这里的 t1 和 t2 是编译器产生的临时变量。</p>
@@ -475,6 +472,7 @@
 <p>op 字段存放“+”，arg1 中存放 y，arg2 中存放 z，result 中存放 x</p>
 <p>需要注意，对于像 x = y 这样的赋值语句， op 是 “=”，而对大部分其他双目运算符而言，赋值运算符是隐含表示的。</p>
 <p>下面列出 csub 用到的所有四元式（一共 33 个）。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -554,7 +552,9 @@
 <td>res</td>
 <td>x</td>
 <td>y</td>
-<td>res = x &amp;&amp; y<br>res = x || y</td>
+<td>res = x &amp;&amp; y<br>res = x \</td>
+<td>\</td>
+<td>y</td>
 </tr>
 <tr>
 <td>IR_OP_LEA</td>
@@ -649,8 +649,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>如果某个格子是空白，说明不需要这个参数。</p>
-<p>例如最后一行的 return x ； 仅仅用到了 op  和 arg1；第一行的定义标签，仅用到了 op 和 result</p>
+<p>例如最后一行的 return x ； 仅仅用到了 op  和 arg1；第一行的定义标签，仅用到了 op 和 result </p>
 <p>还需要说明，IR_OP_ASSIGN 、IR_OP_STORE 和 IR_OP_LOAD 这 3 个操作。</p>
 <p>以 x86 汇编为例，请看下面的代码</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs assembly">mov eax, ebx        ; IR_OP_ASSIGN =&gt;  eax = ebx<br>mov eax, [ebx]      ; IR_OP_LOAD =&gt;  eax = *ebx<br>mov [eax], ebx      ; IR_OP_STORE  =&gt; *eax = ebx<br></code></pre></td></tr></table></figure>
@@ -659,16 +660,15 @@
 <p>意思是将寄存器 ebx 中的值直接复制给寄存器 eax;执行后， eax 的值是 0x1000</p>
 <p>第 2 行，mov eax, [ebx]</p>
 <p>意思是将 ebx 代表的内存地址处的内容复制到寄存器 eax; 执行后，eax 的值是 0x1234</p>
-<p>第 3 行， mov [eax], ebx</p>
+<p>第 3 行， mov [eax], ebx  </p>
 <p>意思是将 ebx 的值复制到寄存器 eax 代表的内存地址处; 执行后，eax 的值不变，仍然是 0x2000,但是  0x2000 处存储的内容是 0x1000</p>
-<h2 id="inter-inst-t">inter_inst_t</h2>
-<p>为了描述四元式，我们需要定义一个结构体。</p>
+<h2 id="inter-inst-t"><a href="#inter-inst-t" class="headerlink" title="inter_inst_t"></a>inter_inst_t</h2><p>为了描述四元式，我们需要定义一个结构体。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">inter_inst</span></span><br><span class="hljs-class">&#123;</span><br>	operator_e op;  <span class="hljs-comment">// 操作符</span><br>	<span class="hljs-type">var_t</span> *result; <span class="hljs-comment">// 运算结果</span><br>	<span class="hljs-type">var_t</span> *arg1;   <span class="hljs-comment">// 参数1</span><br>	<span class="hljs-type">var_t</span> *arg2;   <span class="hljs-comment">// 参数2</span><br>	<span class="hljs-comment">//...</span><br>&#125;<span class="hljs-type">inter_inst_t</span>;<br></code></pre></td></tr></table></figure>
 <p>上面就是根据四元式的字段设计的结构体，不过还需要再完善一下。</p>
 <p>首先，如果这个指令是标签的话，需要存储标签的名字，所以增加一个字段 <code>char label[GEN_NAME_MAX_LEN];</code></p>
-<p>其次，arg1 字段可以表示变量，也可能表示函数（例如标记函数 fun 的出入口、表示函数调用），因为 arg1 字段已经设计成 var_t * 类型了，所以不得不为函数再开一个字段 <code>fun_t *fun;</code></p>
+<p>其次，arg1 字段可以表示变量，也可能表示函数（例如标记函数 fun 的出入口、表示函数调用），因为 arg1 字段已经设计成 var_t <em> 类型了，所以不得不为函数再开一个字段 `fun_t </em>fun;`</p>
 <p>再次，对于 goto 指令，应该保存跳转的目标地址，所以再加上 <code>struct inter_inst *jmp_target;</code></p>
-<p>最后，函数代码被翻译成中间代码序列，为了把中间代码按照顺序存储起来，可以用链表这种结构，所以加上 <code>struct list_head entry; </code></p>
+<p>最后，函数代码被翻译成中间代码序列，为了把中间代码按照顺序存储起来，可以用链表这种结构，所以加上 <code>struct list_head entry;</code></p>
 <p>还有，我们给每条指令一个唯一的编号，就是第 11 行的 inst_id，这是为了后面看效果的时候叙述方便。</p>
 <p>这样，结构体就变为下面的样子：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">inter_inst</span></span><br><span class="hljs-class">&#123;</span><br>	<span class="hljs-type">char</span> label[GEN_NAME_MAX_LEN];  <span class="hljs-comment">// 标签名字</span><br>	operator_e op;  <span class="hljs-comment">// 操作符</span><br>	<span class="hljs-type">var_t</span> *result; <span class="hljs-comment">// 运算结果</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">inter_inst</span> *<span class="hljs-title">jmp_target</span>;</span> <span class="hljs-comment">// 跳转标号</span><br>	<span class="hljs-type">var_t</span> *arg1; <span class="hljs-comment">// 参数1</span><br>	<span class="hljs-type">var_t</span> *arg2; <span class="hljs-comment">// 参数2</span><br>	<span class="hljs-type">fun_t</span> *fun;  <span class="hljs-comment">// 函数,个别情况才使用</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">entry</span>;</span> <span class="hljs-comment">// 用于加入链表</span><br>	<span class="hljs-type">int</span> inst_id; <span class="hljs-comment">// 指令的编号，为了调试</span><br>	<span class="hljs-comment">//...</span><br>&#125;<span class="hljs-type">inter_inst_t</span>;<br></code></pre></td></tr></table></figure>
@@ -683,67 +683,61 @@
 <li>无条件跳转和带条件跳转</li>
 </ol>
 <p>这节课我们学习前 3 种。</p>
-<h2 id="new-general-inst">new_general_inst</h2>
-<p>new_general_inst 函数用来构造单目运算表达式或者双目运算表达式。</p>
-<img src="image-20251102191117887.png" srcset="/img/loading.gif" lazyload alt="image-20251102191117887" style="zoom:50%;" />
+<h2 id="new-general-inst"><a href="#new-general-inst" class="headerlink" title="new_general_inst"></a>new_general_inst</h2><p>new_general_inst 函数用来构造单目运算表达式或者双目运算表达式。</p>
+<p><img src="image-20251102191117887.png" srcset="/img/loading.gif" lazyload alt="image-20251102191117887" style="zoom:50%;" /></p>
 <p>第 17 行分配内存，第 21~24 填写各个字段。</p>
 <p>第 25 行，给指令分配编号，inst_id 是一个 int 类型的全局变量，从 0 开始递增。</p>
-<h2 id="new-fun-inst">new_fun_inst</h2>
-<p>new_fun_inst 函数用来构造和函数有关的指令。 op 可以是下面四种操作：</p>
-<p>IR_OP_PROC</p>
+<h2 id="new-fun-inst"><a href="#new-fun-inst" class="headerlink" title="new_fun_inst"></a>new_fun_inst</h2><p>new_fun_inst 函数用来构造和函数有关的指令。 op 可以是下面四种操作：</p>
+<p>IR_OP_PROC </p>
 <p>IR_OP_CALL</p>
 <p>IR_OP_FUN_ENTRY</p>
 <p>IR_OP_FUN_EXIT</p>
 <p>除了 IR_OP_CALL，其他三个都用不到 result 这个参数。</p>
 <p>IR_OP_CALL 和 IR_OP_PROC  的区别是前者有返回值（用 result 这个字段记录返回值），后者没有返回值（相当于这个函数的返回类型是 void）</p>
-<img src="image-20251102191711499.png" srcset="/img/loading.gif" lazyload alt="image-20251102191711499" style="zoom:50%;" />
-<h2 id="new-push-arg-inst">new_push_arg_inst</h2>
-<p>new_push_arg_inst 函数用来构造参数传递指令。</p>
-<img src="image-20251102192309981.png" srcset="/img/loading.gif" lazyload alt="image-20251102192309981" style="zoom:50%;" />
+<p><img src="image-20251102191711499.png" srcset="/img/loading.gif" lazyload alt="image-20251102191711499" style="zoom:50%;" /></p>
+<h2 id="new-push-arg-inst"><a href="#new-push-arg-inst" class="headerlink" title="new_push_arg_inst"></a>new_push_arg_inst</h2><p>new_push_arg_inst 函数用来构造参数传递指令。</p>
+<p><img src="image-20251102192309981.png" srcset="/img/loading.gif" lazyload alt="image-20251102192309981" style="zoom:50%;" /></p>
 <p>例如下面的源码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">int</span> x1, <span class="hljs-type">int</span> x2)</span>; <span class="hljs-comment">// 声明</span><br><br>res = foo(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>); <span class="hljs-comment">// 调用</span><br></code></pre></td></tr></table></figure>
 <p>转换为三地址代码就是：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">arg <span class="hljs-number">2</span><br>arg <span class="hljs-number">1</span><br>t1 = foo()<br>res = t1<br></code></pre></td></tr></table></figure>
-<h2 id="add-inst">add_inst</h2>
-<p>还记得 fun_body 函数吗？</p>
-<img src="image-20251025160320880.png" srcset="/img/loading.gif" lazyload alt="image-20251025160320880" style="zoom:50%;" />
+<h2 id="add-inst"><a href="#add-inst" class="headerlink" title="add_inst"></a>add_inst</h2><p>还记得 fun_body 函数吗？</p>
+<p><img src="image-20251025160320880.png" srcset="/img/loading.gif" lazyload alt="image-20251025160320880" style="zoom:50%;" /></p>
 <p>第 520 行，发现了函数定义，调用 def_fun(),def_fun 函数的最后，有</p>
-<p>sym_tab_g.cur_fun = fun;</p>
+<p>sym_tab_g.cur_fun = fun;  </p>
 <p>也就是说 sym_tab_g.cur_fun 指向当前分析的函数。</p>
 <p>当函数分析结束，执行第 522 行，又让 sym_tab_g.cur_fun 指向 NULL；</p>
 <p>所以，编译器当前分析的是什么函数，还是说当前没有分析函数（例如在分析全局变量），我们看 sym_tab_g.cur_fun 的值就可以了。</p>
 <p>在分析函数的时候，会生成若干条中间指令（由前面介绍的 new_general_inst 等函数创建），我们需要把这些指令保存起来。</p>
 <p>在 fun_t 结构体里面，增加了  struct list_head inter_code; 就是下面的第 33 行，表示中间代码链表的头节点。</p>
-<img src="image-20251028190007113.png" srcset="/img/loading.gif" lazyload alt="image-20251028190007113" style="zoom:50%;" />
+<p><img src="image-20251028190007113.png" srcset="/img/loading.gif" lazyload alt="image-20251028190007113" style="zoom:50%;" /></p>
 <p>下面看 add_inst 函数。此函数的功能是：如果当前在分析某个函数，就把指令添加到这个函数的指令序列中。如果没有分析函数，则释放这条指令占用的内存。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">add_inst</span><span class="hljs-params">(<span class="hljs-type">inter_inst_t</span> *inst)</span><br>&#123;<br>    assert(inst);<br>	<span class="hljs-keyword">if</span>(sym_tab_g.cur_fun) &#123; <span class="hljs-comment">// 分析函数的时候，才生成指令。全局作用域不需要指令</span><br>		list_add_tail(&amp;inst-&gt;entry, &amp;sym_tab_g.cur_fun-&gt;inter_code);<br>	&#125; <span class="hljs-keyword">else</span> &#123;<br>		<span class="hljs-built_in">free</span>(inst);<br>	&#125;	<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>有的读者会对第 4 行的注释“全局作用域不需要指令”表示不理解，没有关系，到了后面自然会明白。</p>
-<h2 id="讲代码之前的热身">讲代码之前的热身</h2>
-<p>现在我们从一个场景切入，开始代码的讲解。</p>
+<h2 id="讲代码之前的热身"><a href="#讲代码之前的热身" class="headerlink" title="讲代码之前的热身"></a>讲代码之前的热身</h2><p>现在我们从一个场景切入，开始代码的讲解。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 文件作用域</span><br><span class="hljs-type">int</span> b = <span class="hljs-number">2</span>;   <br><span class="hljs-type">int</span> *pb = &amp;b;  <br></code></pre></td></tr></table></figure>
 <p>对于第 3 行“&amp;b”的解析，入口在 var_init 函数里面。</p>
-<img src="image-20251025161534328.png" srcset="/img/loading.gif" lazyload alt="image-20251025161534328" style="zoom:50%;" />
+<p><img src="image-20251025161534328.png" srcset="/img/loading.gif" lazyload alt="image-20251025161534328" style="zoom:50%;" /></p>
 <p>第 324 行，调用 expr() 解析 “&amp;b”</p>
 <p>expr() 函数的调用链如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c">expr()<br>    assign_expr()<br>    	logical_or_expr()<br>    		relation_expr()<br>    			add_expr()<br>    				mul_expr()<br>    					unary_expr()<br></code></pre></td></tr></table></figure>
 <p>unary_expr() 代码如下：</p>
-<img src="image-20251025163347890.png" srcset="/img/loading.gif" lazyload alt="image-20251025163347890" style="zoom:50%;" />
+<p><img src="image-20251025163347890.png" srcset="/img/loading.gif" lazyload alt="image-20251025163347890" style="zoom:50%;" /></p>
 <p>因为匹配到了 “&amp;”，所以第 807 条件成立，第 810 行，递归调用 unary_expr()，当再次进入 unary_expr()，执行第 822 行，解析后缀表达式，post_expr()的代码就不贴了，只需要明白里面查询了符号表，查到了 b 这个变量，然后执行第 824 行，unary_expr() 返回。</p>
 <p>这时候应该执行第 811~812 行，因为 sym_info.sym_type 等于 SYMBOL_TYPE_VAR，所以条件不成立，执行第 819 行的 gen_1_op_left 函数。</p>
 <p>gen_1_op_left 的作用是生成一元运算表达式的中间代码。</p>
-<img src="image-20251025163932341.png" srcset="/img/loading.gif" lazyload alt="image-20251025163932341" style="zoom:50%;" />
+<p><img src="image-20251025163932341.png" srcset="/img/loading.gif" lazyload alt="image-20251025163932341" style="zoom:50%;" /></p>
 <p>第 874 行做类型检查，由此可见，生成中间代码的过程中也可能做语义分析。</p>
 <p>剩下就是根据传入的参数 operator 判断是什么操作符，分别调用对应的函数。</p>
 <p>这些函数我们在后文都会讲。</p>
-<h2 id="gen-lea">gen_lea</h2>
-<p>现在请看第 880 行的 gen_lea，这是生成取地址的中间代码。</p>
+<h2 id="gen-lea"><a href="#gen-lea" class="headerlink" title="gen_lea"></a>gen_lea</h2><p>现在请看第 880 行的 gen_lea，这是生成取地址的中间代码。</p>
 <p>先复习一下 C 语言：&amp;a 属于地址表达式，操作数 a 应该为左值。&amp;a 的结果是 a 的地址，但不是左值。如果 a 的类型是 T，那么&amp;a 的结果类型是“指向T的指针”</p>
-<img src="image-20251025164640294.png" srcset="/img/loading.gif" lazyload alt="image-20251025164640294" style="zoom:50%;" />
+<p><img src="image-20251025164640294.png" srcset="/img/loading.gif" lazyload alt="image-20251025164640294" style="zoom:50%;" /></p>
 <p>第 149 行判断参数 val 是不是基本类型，为了简化语法，csub 仅支持给 char 和 int 类型的变量取地址，如果是其他类型要报错。</p>
 <p>第 155 行，判断 val 是不是左值，是才可以取地址。例如 <code>int a = 100;</code>你可以给 a 取地址，但是不能给 100 取地址。</p>
 <p>第 160 ~ 162 先不管，这个需要讲完解引用后才能理解。</p>
 <p>163 开始的代码是重点。第 163 行，创建一个临时变量，因为要用它来保存结果。 new_tmp_var 函数后面说，这里仅需要知道 tmp-&gt;is_ptr 是真（说明是指针）。</p>
-<p>第 168 行，生成中间代码： tmp = &amp;val;</p>
+<p>第 168 行，生成中间代码： tmp = &val;</p>
 <p>意思是 val 的地址保存在临时变量 tmp 中，换句话就是 tmp 指向 val</p>
 <p>我给 var_t 类型里面增加了一个字段：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">var_info</span>&#123;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">hlist_node</span> <span class="hljs-title">hnode</span>;</span> <br>    <span class="hljs-type">int</span> index; <span class="hljs-comment">// 变量编号</span><br>    <span class="hljs-type">int</span> err_flag;  <span class="hljs-comment">// 没有通过语法或语义检查</span><br>    <span class="hljs-type">bool</span> is_ext;<br>    <span class="hljs-comment">//...</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">var_info</span> *<span class="hljs-title">init_val</span>;</span> <span class="hljs-comment">// 带有初始化, 对常量无效</span><br>    <span class="hljs-class"><span class="hljs-keyword">union</span> &#123;</span><br>		<span class="hljs-type">int</span> int_val;<br>		<span class="hljs-type">char</span> char_val;<br>        <span class="hljs-type">char</span> *string_val; <span class="hljs-comment">// 字符串常量用字符数组存储，指向字符数组的首地址</span><br>        <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">var_info</span> *<span class="hljs-title">pointing_to</span>;</span> <span class="hljs-comment">// 如果是某个变量的地址</span><br>	&#125;;<br>    <span class="hljs-type">int</span> line_num; <span class="hljs-comment">// 名字所在的行号，为了报错用</span><br>	<span class="hljs-comment">//指向当前变量的指针</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">var_info</span> *<span class="hljs-title">pointed_by</span>;</span> <span class="hljs-comment">// 对这个指针解引用，得到 var_info </span><br>   <br>	<span class="hljs-type">fun_t</span> *fun; <span class="hljs-comment">// 局部变量所属的函数</span><br>    <span class="hljs-type">char</span> *note; <span class="hljs-comment">// 为了调试</span><br>    <span class="hljs-type">bool</span> init_by_constant; <span class="hljs-comment">// 使用常量初始化  </span><br>&#125;<span class="hljs-type">var_t</span>;<br></code></pre></td></tr></table></figure>
@@ -758,17 +752,17 @@
 <p>你注意，这是在文件作用域，此时符号表的 sym_tab_g.cur_fun 是 NULL，这条指令（ tmp = &amp;val）生成后又被丢弃了。</p>
 <p>问题来了，既然都丢弃了指令，那么如何给变量取地址呢？</p>
 <p>请看第 170 行，虽然指令丢弃了，但是创建的这个变量还在，会把此变量的地址返回给 var_init 的第 324 行。</p>
-<img src="image-20251025161534328.png" srcset="/img/loading.gif" lazyload alt="image-20251025161534328" style="zoom:50%;" />
+<p><img src="image-20251025161534328.png" srcset="/img/loading.gif" lazyload alt="image-20251025161534328" style="zoom:50%;" /></p>
 <p>也就是说，tmp 的地址赋值给了 init_val;</p>
-<p>然后 init_val 又赋值给了 var-&gt;init_val</p>
+<p>然后 init_val 又赋值给了 var-&gt;init_val </p>
 <p>这里剧透一下，对于全局变量的初始化，不是靠指令，而是靠构造数据段。</p>
-<p>比如 int *pb = &amp;b;  这句话如果是在函数里面，那么要靠 LEA 汇编指令</p>
+<p>比如 int *pb = &b;  这句话如果是在函数里面，那么要靠 LEA 汇编指令</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">lea eax, [ebx]  <br></code></pre></td></tr></table></figure>
 <p>假设 ebx 的值是 0x100，第 1 行的意思不是读取 0x100 地址处的内容，而是取 0x100 地址处的内容的地址，也就是把 0x100 赋值给 eax</p>
 <p>但是，对于下面的代码</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 文件作用域</span><br><span class="hljs-type">int</span> b = <span class="hljs-number">2</span>;   <br><span class="hljs-type">int</span> *pb = &amp;b;  <br></code></pre></td></tr></table></figure>
 <p>因为是文件作用域，不在函数里面，即使生成了对变量 b 取地址的指令，也会丢弃。那如何获得 b 的地址呢？</p>
-<p>事实上，对于全局变量，在生成汇编代码的时候，我们会构造数据段</p>
+<p> 事实上，对于全局变量，在生成汇编代码的时候，我们会构造数据段</p>
 <figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs css">global <span class="hljs-selector-tag">b</span><br>	<span class="hljs-selector-tag">b</span> <span class="hljs-selector-tag">dd</span> <span class="hljs-number">2</span><br><br>global pb<br>	pb <span class="hljs-selector-tag">dd</span> <span class="hljs-selector-tag">b</span> <br></code></pre></td></tr></table></figure>
 <p>第 2 行的意思是变量 b 的初始值是 2；</p>
 <p>第 5 行的意思是 pb 变量的初始值就是变量 b 的地址。你看，这和 lea 指令没有任何关系。</p>
@@ -777,23 +771,21 @@
 <p>查找 pb 的 init_val 字段，得到的是前文分析 gen_lea 函数时提到的那个 tmp, 根据 tmp-&gt;pointing_to 得到 tmp 指向的变量,其实就是 b</p>
 <p>所以，全局变量的初始化不靠指令，而是靠查符号表。</p>
 <p>有点跑题了，我们再回到代码讲解上。</p>
-<h2 id="new-tmp-var">new_tmp_var</h2>
-<img src="image-20251025192733336.png" srcset="/img/loading.gif" lazyload alt="image-20251025192733336" style="zoom:50%;" />
+<h2 id="new-tmp-var"><a href="#new-tmp-var" class="headerlink" title="new_tmp_var"></a>new_tmp_var</h2><p><img src="image-20251025192733336.png" srcset="/img/loading.gif" lazyload alt="image-20251025192733336" style="zoom:50%;" /></p>
 <p>此函数用来创建临时变量。前文说了，在三地址码中，不能出现组合的算术表达式，所以要创建很多临时变量保存中间结果。</p>
 <p>第一个参数是变量的类型，第二参数表示是不是指针。</p>
 <p>第 408 行，获得临时变量的作用域。第 409 行，初始化哈希表节点，因为临时变量也要加入变量表。</p>
 <p>第 410 行，为临时变量生成一个唯一的名字。</p>
 <p><code>#define GEN_NAME_TMP_VAR_PREFIX   &quot;.t&quot;</code></p>
-<p>例如 “.t1”“.t2”</p>
+<p>例如 “.t1”“.t2”   </p>
 <p>以“.” 开头是为了避免和用户定义的标识符冲突</p>
 <p>第 413 行，临时变量默认不是左值。如果需要修改，可以在调用此函数后专门修改 is_left 字段，比如后面要讲的 gen_deref() 函数</p>
 <p>有人问，临时变量的值是什么？这是一个好问题，后文会解答。</p>
-<h2 id="gen-deref">gen_deref</h2>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> a = <span class="hljs-number">1</span>;<br>	<span class="hljs-type">int</span> *p = &amp;a;  <span class="hljs-comment">// 对 a 取地址</span><br>	<span class="hljs-type">int</span> b = *p <span class="hljs-comment">// 对 p 解引用</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="gen-deref"><a href="#gen-deref" class="headerlink" title="gen_deref"></a>gen_deref</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> a = <span class="hljs-number">1</span>;<br>	<span class="hljs-type">int</span> *p = &amp;a;  <span class="hljs-comment">// 对 a 取地址</span><br>	<span class="hljs-type">int</span> b = *p <span class="hljs-comment">// 对 p 解引用</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>第 5 行，等号右边的 *p 表示对 p 解引用。</p>
 <p><strong>解引用（Dereference）</strong> 是指通过指针访问或修改该指针所指向的内存地址中存储的数据。</p>
 <p>注意，对于基本类型不能解引用。</p>
-<img src="image-20251029202439013.png" srcset="/img/loading.gif" lazyload alt="image-20251029202439013" style="zoom:50%;" />
+<p><img src="image-20251029202439013.png" srcset="/img/loading.gif" lazyload alt="image-20251029202439013" style="zoom:50%;" /></p>
 <p>gen_deref 函数的作用是为解引用表达式生成中间代码。</p>
 <p>首先，参数 val 肯定不是基本类型，应该是一个指针或者数组。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> c[<span class="hljs-number">3</span>];<br>*c = <span class="hljs-number">100</span>; <span class="hljs-comment">// c 自动转换为指针</span><br></code></pre></td></tr></table></figure>
@@ -805,40 +797,37 @@
 <p>我们仅支持一级指针，所以对指针解引用，得到的是基本类型，所以第二个参数是 false</p>
 <p>第 205 行，先不管，这是为数组的初始化准备的，后面会讲。</p>
 <p>第 206 行，解引用后得到的是左值。</p>
-<p>第 210 行，非常关键， *val 表示 val 指向的变量，如果 *val 是 tmp,说明 val 指向 tmp,也就是 tmp 被 val 所指；</p>
+<p>第 210 行，非常关键， <em>val 表示 val 指向的变量，如果 </em>val 是 tmp,说明 val 指向 tmp,也就是 tmp 被 val 所指；</p>
 <p>pointed_by 这个字段是我专门为解引用操作加的，是 struct var_info * 类型；</p>
 <p>所以如果某个变量 var 的 pointed_by  不为空，说明它是某个变量的解引用，表达式可以写成 *p</p>
-<p>p 是什么变量呢，那就看 var-&gt;pointed_by-&gt;name</p>
+<p>p 是什么变量呢，那就看 var-&gt;pointed_by-&gt;name  </p>
 <p>有人说，好奇怪啊，这个解引用不生成什么指令吗？前面的取地址操作都有指令啊。</p>
 <p>解引用确实不生成指令，对变量 p 解引用，仅仅是生成一个临时变量来表示 *p,意思是 p 指向的值或者地址 p 处的内容</p>
 <p>我们再回头看 gen_lea 函数中的</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span>(val-&gt;pointed_by) &#123; <span class="hljs-comment">// 被某个指针所指</span><br>		<span class="hljs-keyword">return</span> val-&gt;pointed_by;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>如果 val 被某个变量指向，那么对 val 取地址，得到的自然就是指向它的变量，所以返回 val-&gt;pointed_by；</p>
-<h2 id="copy-var-outline">__copy_var_outline</h2>
-<p>为什么会有这个奇怪的函数，名字前面还有2个下划线</p>
-<img src="image-20251025203836204.png" srcset="/img/loading.gif" lazyload alt="image-20251025203836204" style="zoom:50%;" />
+<h2 id="copy-var-outline"><a href="#copy-var-outline" class="headerlink" title="__copy_var_outline"></a>__copy_var_outline</h2><p>为什么会有这个奇怪的函数，名字前面还有2个下划线</p>
+<p><img src="image-20251025203836204.png" srcset="/img/loading.gif" lazyload alt="image-20251025203836204" style="zoom:50%;" /></p>
 <p>前面加 __ 是个人习惯，表明这是一个内部使用的函数。</p>
 <p>此函数的作用是创建一个变量 v 的“模子”，准确讲，调用此函数后，得到的临时变量 var 仅仅拥有了 v 的类型；当 v 是基本类型时，var 的类型和 v 一样；如果 v 是数组或指针，则创建一个同类型的指针。</p>
 <p>为什么当 v 是数组时要创建指针呢？</p>
-<p>这是因为在 C 标准中，除去以下两种情况，数组的名字会自动转换为指向首个元素的指针（注意，不是左值）</p>
+<p>这是因为在 C 标准中，除去以下两种情况，数组的名字会自动转换为指向首个元素的指针（注意，不是左值） </p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a[<span class="hljs-number">100</span>];<br><span class="hljs-type">int</span> b = <span class="hljs-keyword">sizeof</span>(a);   <span class="hljs-comment">// 不会发生转换</span><br><span class="hljs-type">int</span> (*p)[<span class="hljs-number">100</span>] = &amp;a;  <span class="hljs-comment">// 不会发生转换</span><br>a++;  <span class="hljs-comment">// 非法，因为 a 转换后不是左值</span><br></code></pre></td></tr></table></figure>
 <p>第 2 行，如果 sizeof 的操作数是数组名字，那么它就代表这个数组。</p>
 <p>第 3 行，如果数组名字作为 &amp; 运算符的操作数，那么它也代表数组。</p>
 <p>除去这两种，其他情况数组名字都会自动转换为指向首个元素的指针。</p>
 <p>第 4 行是错误的写法，确切说，数组转换为指针类型的值，而不是转换为一个指针类型的变量。</p>
 <p>光创建变量 v 的“模子”还不够，还需要让这个变量有 v 的值，要形神兼备。</p>
-<h2 id="gen-copy-assign">gen_copy_assign</h2>
-<img src="image-20251102193738393.png" srcset="/img/loading.gif" lazyload alt="image-20251102193738393" style="zoom:50%;" />
+<h2 id="gen-copy-assign"><a href="#gen-copy-assign" class="headerlink" title="gen_copy_assign"></a>gen_copy_assign</h2><p><img src="image-20251102193738393.png" srcset="/img/loading.gif" lazyload alt="image-20251102193738393" style="zoom:50%;" /></p>
 <p>此函数的作用是创建变量 val 的副本，但是结果不是左值</p>
 <p>第 457 行，调用 __copy_var_outline 函数，创建一个和 val 同样类型的变量 tmp（不是左值）。</p>
 <p>先看第 469 行，生成赋值表达式“tmp = val”；这样，tmp 就拥有了和 val 同样的值。但是有个问题，如果 val 不是一个普通的变量（val-&gt;pointed_by 不是 NULL，第 460 行的条件成立），那么说明它被某个变量所指向，假设这个变量的名字是 p,</p>
 <p>这种情况不能用 IR_OP_ASSIGN，而应该用 IR_OP_LOAD；原因如下：</p>
-<p>想一想 val 这个变量是怎么来的？是作为表达式 *p 的结果而被创建的，它存在的意义就是为了表示 *p，你要是问 val 的值是什么，那就是问 *p 的值是什么？要获得 *p 的值，当然要用 IR_OP_LOAD，这样生成的中间指令是  tmp = *p;意思是 p 是一个地址，把 p 地址存储的内容赋值给 tmp，这就是我们想要的。如果用 IR_OP_ASSIGN，那么生成的中间指令是 tmp = p; 意思是把地址赋值给 tmp，显然不是我们想要的。</p>
+<p>想一想 val 这个变量是怎么来的？是作为表达式 <em>p 的结果而被创建的，它存在的意义就是为了表示 </em>p，你要是问 val 的值是什么，那就是问 <em>p 的值是什么？要获得 </em>p 的值，当然要用 IR_OP_LOAD，这样生成的中间指令是  tmp = *p;意思是 p 是一个地址，把 p 地址存储的内容赋值给 tmp，这就是我们想要的。如果用 IR_OP_ASSIGN，那么生成的中间指令是 tmp = p; 意思是把地址赋值给 tmp，显然不是我们想要的。</p>
 <p>gen_copy_assign 函数说完了，肯定有读者问，为什么会有这个函数？什么场合用它？</p>
-<p>注意:此函数之前的名字是 __gen_copy_assign</p>
+<p>注意:此函数之前的名字是 __gen_copy_assign </p>
 <p>后来我发现这个函数在其他模块也可能用，就把前面的下划线去掉了。所以看到 __gen_copy_assign，其实就是上图的 gen_copy_assign</p>
-<h2 id="gen-pre-inc">gen_pre_inc</h2>
-<p>这个函数用来生成前缀递增表达式的中间代码。</p>
+<h2 id="gen-pre-inc"><a href="#gen-pre-inc" class="headerlink" title="gen_pre_inc"></a>gen_pre_inc</h2><p>这个函数用来生成前缀递增表达式的中间代码。</p>
 <p>先复习一下 C 语言中的“++a”</p>
 <ol>
 <li>这是一个前缀递增表达式</li>
@@ -849,39 +838,37 @@
 <p>注意，这里说的对象和高级语言（C++, Java 等）里面的对象不是一个东西，也没有任何关系。</p>
 <p>C 标准中的对象，是指存储器中的一个区域。</p>
 <p>例如<code>int a = 2;</code> 这句代码声明了标识符 a;当程序运行的时候， a 代表的一个 int 类型对象在内存中被创建（假设占 4 个字节），换句话说， a  就和存储器中一个区域相关联。我们读写变量 a,其实就是读写这块内存。当写入对象 a 时,写入的内容应当是 int 类型的值；当读对象 a 时，读出的内容应当被解释为 int 类型的值。</p>
-<img src="image-20251026170542615.png" srcset="/img/loading.gif" lazyload alt="image-20251026170542615" style="zoom:50%;" />
+<p><img src="image-20251026170542615.png" srcset="/img/loading.gif" lazyload alt="image-20251026170542615" style="zoom:50%;" /></p>
 <p>现在我们看代码。第 746 行，判断是不是左值，不是就报错。</p>
 <p>再看第 765 行，生成中间指令， val = val + 1;   get_step 先不管，后面会说。</p>
 <p>因为 ++a 的结果不是左值，所以不能直接返回 val，需要创建一个副本，第 769 行，调用 gen_copy_assign 创建副本 t1，最后返回 t1；</p>
 <p>如果是 ++*p 这种形式呢？</p>
 <p>步骤如下：</p>
 <ol>
-<li>求 *p 的值，也就是生成中间指令 “t1 = *p”（对应第 753 行）</li>
+<li>求 <em>p 的值，也就是生成中间指令 “t1 = </em>p”（对应第 753 行）</li>
 <li>计算 t1 = t1 + 1（第 755 行）</li>
 <li>计算 *p = t1（第 759 行）</li>
 <li>返回 t1（第 763 行）</li>
 </ol>
-<p>第 4 个步骤，返回 t1 是因为 ++*p 的结果不是左值，所以不能返回 *p</p>
-<p>所以，函数 gen_copy_assign 有 2 个作用，一个是创建变量副本（用 IR_OP_ASSIGN 操作符），另一个是求 *p 的值（用 IR_OP_LOAD 操作，），也就是生成中间指令 “t1 = *p”。</p>
+<p>第 4 个步骤，返回 t1 是因为 ++<em>p 的结果不是左值，所以不能返回 </em>p</p>
+<p>所以，函数 gen_copy_assign 有 2 个作用，一个是创建变量副本（用 IR_OP_ASSIGN 操作符），另一个是求 <em>p 的值（用 IR_OP_LOAD 操作，），也就是生成中间指令 “t1 = </em>p”。</p>
 <p>有读者说，前者好理解，因为要消除左值属性，所以创建一个不是左值的副本。但是后者是什么意思，为什么一定要生成中间指令 t1 = *p ？</p>
-<p>其实这个问题非常好回答，如果去掉上面的第 1 个步骤，那就是求 t1 = *p + 1，前文说一条指令的右侧最多有一个运算符，可是  t1 = *p + 1 不符合这个规则，右边有加法和解引用两种操作。所以，遇到 *p，一般都会调用 gen_copy_assign  函数做解引用。</p>
+<p>其实这个问题非常好回答，如果去掉上面的第 1 个步骤，那就是求 t1 = <em>p + 1，前文说一条指令的右侧最多有一个运算符，可是  t1 = </em>p + 1 不符合这个规则，右边有加法和解引用两种操作。所以，遇到 *p，一般都会调用 gen_copy_assign  函数做解引用。</p>
 <p>有了前面的铺垫，下面我们看 gen_post_inc</p>
-<h2 id="gen-post-inc">gen_post_inc</h2>
-<p>先复习一下 C 语言中的“a++”</p>
+<h2 id="gen-post-inc"><a href="#gen-post-inc" class="headerlink" title="gen_post_inc"></a>gen_post_inc</h2><p>先复习一下 C 语言中的“a++”</p>
 <ol>
 <li>这是一个后缀递增表达式</li>
 <li>a 必须是一个可以修改的左值</li>
 <li>a++ 的结果不是左值，而是 a 指示的对象在递增操作之前的原值，而不是递增后的新值</li>
 <li>这个表达式有副作用，即会修改 a 所指示的对象，将它的存储值变为表达式 a+1 的值</li>
 </ol>
-<img src="image-20251102194614896.png" srcset="/img/loading.gif" lazyload alt="image-20251102194614896" style="zoom:50%;" />
+<p><img src="image-20251102194614896.png" srcset="/img/loading.gif" lazyload alt="image-20251102194614896" style="zoom:50%;" /></p>
 <p>因为 a++ 的结果不是左值，而是 a 指示的对象在递增操作之前的原值</p>
 <p>所以第 867 行，先获得 val 的副本 tmp, 或者做解引用操作 tmp = *val，最后返回的也是这个 tmp。</p>
 <p>先考虑 val 是一个普通的变量，第 842 行生成加法指令，让 val = val + 1</p>
-<p>再考虑 val 是 *p 的情况，因为 tmp 要作为返回值，所以它的值不能 + 1，我们再创建一个 tmp 的副本，也就是 871 行的 t1, 第 873 行让 t1 = t1 + 1;这个结果还要写回到 *p，所以第 878 行用 store 操作把 t1 存储到 p 指向的内存： *p = t1;</p>
+<p>再考虑 val 是 <em>p 的情况，因为 tmp 要作为返回值，所以它的值不能 + 1，我们再创建一个 tmp 的副本，也就是 871 行的 t1, 第 873 行让 t1 = t1 + 1;这个结果还要写回到 </em>p，所以第 878 行用 store 操作把 t1 存储到 p 指向的内存： *p = t1;</p>
 <p>第 874 行，有一个 get_step 函数，马上就讲。</p>
-<h2 id="get-step">get_step</h2>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">var_t</span> *<span class="hljs-title function_">get_step</span><span class="hljs-params">(<span class="hljs-type">var_t</span> *v)</span> <br>&#123;<br>    assert(v);<br>    <span class="hljs-keyword">if</span>(IS_BASE(v))<br>        <span class="hljs-keyword">return</span> sym_tab_g.one;<br>	<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(TYPE_IS_CHAR(v)) <span class="hljs-comment">// char * 类型的指针</span><br>		<span class="hljs-keyword">return</span> sym_tab_g.one;<br>	<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(TYPE_IS_INT(v)) <span class="hljs-comment">// int * 类型的指针</span><br>		<span class="hljs-keyword">return</span> sym_tab_g.four;<br>	<span class="hljs-keyword">else</span> <br>        assert(<span class="hljs-number">0</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="get-step"><a href="#get-step" class="headerlink" title="get_step"></a>get_step</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">var_t</span> *<span class="hljs-title function_">get_step</span><span class="hljs-params">(<span class="hljs-type">var_t</span> *v)</span> <br>&#123;<br>    assert(v);<br>    <span class="hljs-keyword">if</span>(IS_BASE(v))<br>        <span class="hljs-keyword">return</span> sym_tab_g.one;<br>	<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(TYPE_IS_CHAR(v)) <span class="hljs-comment">// char * 类型的指针</span><br>		<span class="hljs-keyword">return</span> sym_tab_g.one;<br>	<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(TYPE_IS_INT(v)) <span class="hljs-comment">// int * 类型的指针</span><br>		<span class="hljs-keyword">return</span> sym_tab_g.four;<br>	<span class="hljs-keyword">else</span> <br>        assert(<span class="hljs-number">0</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>此函数用来获得变量 v 的步长。</p>
 <p>为什么会有这个函数呢？</p>
 <p>考虑 x86 32 位机器，请看下面的例子</p>
@@ -891,34 +878,31 @@
 <p>如果传入变量 p, get_step 应该返回 4；</p>
 <p>如果传入变量 q, get_step 应该返回 1；</p>
 <p>所以，如果生成加法指令，应该写：</p>
-<p>inter_inst_t *inst = new_general_inst(IR_OP_ADD,  val, val, get_step(val));</p>
+<p> inter_inst_t *inst = new_general_inst(IR_OP_ADD,  val, val, get_step(val));</p>
 <p>最后一个参数不是 1，而是 get_step(val)；</p>
 <p>符号表初始化的时候创建了几个特殊的变量</p>
-<img src="image-20251026200741528.png" srcset="/img/loading.gif" lazyload alt="image-20251026200741528" style="zoom:50%;" />
+<p><img src="image-20251026200741528.png" srcset="/img/loading.gif" lazyload alt="image-20251026200741528" style="zoom:50%;" /></p>
 <p>第 46 行表示 void 类型的特殊变量，47 ~ 49 表示常量 0、1、4</p>
 <p>创建这些特殊变量的代码是</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">create_special_vars</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	sym_tab_g.void_var = new_void_var();<br>	<span class="hljs-type">int</span> tmp = <span class="hljs-number">0</span>;<br>	sym_tab_g.zero = new_literal(&amp;tmp, NUM);<br>	tmp = <span class="hljs-number">1</span>;<br>	sym_tab_g.one = new_literal(&amp;tmp, NUM);<br>	tmp = <span class="hljs-number">4</span>;<br>	sym_tab_g.four = new_literal(&amp;tmp, NUM);<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>为了方便，当中间代码中需要用常量  0、1、4 的时候，我们可以直接使用  sym_tab_g.zero、sym_tab_g.one、sym_tab_g.four</p>
-<h2 id="gen-mul">gen_mul</h2>
-<img src="image-20251026201601347.png" srcset="/img/loading.gif" lazyload alt="image-20251026201601347" style="zoom:50%;" />
+<h2 id="gen-mul"><a href="#gen-mul" class="headerlink" title="gen_mul"></a>gen_mul</h2><p><img src="image-20251026201601347.png" srcset="/img/loading.gif" lazyload alt="image-20251026201601347" style="zoom:50%;" /></p>
 <p>此函数的作用是生成乘法表达式的中间代码。</p>
 <p>第 308 行，首先创建一个变量 tmp, 用来保存计算结果，第 310 行把 tmp 加入符号表，至于原因前文已经解释了。</p>
 <p>第 312 行，生成乘法指令，第 314 行把指令加入对应的函数指令序列。</p>
 <p>二元运算的其他代码类似，非常好理解，本文不再赘述。</p>
-<h2 id="gen-add">gen_add</h2>
-<img src="image-20251026202006052.png" srcset="/img/loading.gif" lazyload alt="image-20251026202006052" style="zoom:50%;" />
+<h2 id="gen-add"><a href="#gen-add" class="headerlink" title="gen_add"></a>gen_add</h2><p><img src="image-20251026202006052.png" srcset="/img/loading.gif" lazyload alt="image-20251026202006052" style="zoom:50%;" /></p>
 <p>此函数的作用是生成加法表达式的中间代码。</p>
 <p>因为牵扯到操作数是指针，所以要分情况讨论。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a, b;<br>a + b;<br><span class="hljs-type">int</span> *p, *q;<br>p + <span class="hljs-number">3</span>;<br><span class="hljs-number">3</span> + p;<br>p + q; <span class="hljs-comment">// 非法</span><br></code></pre></td></tr></table></figure>
 <p>首先，第 6 行，两个指针相加，非法。对应上面的 360 行，报错。</p>
 <p>其次，两个基本类型相加，这个最简单，直接构造加法指令就行。对应 358 行，先生成一个中间变量，用来保存结果，然后执行第 366 行，生成加法指令。</p>
 <p>比较麻烦的是其中一个是指针，一个是基本类型。这种情况要获得指针的步长，例如 p+3, p 的步常是 4，所以反映到中间指令上，不是给 p 的值增加 3， 而是 4*3  = 12；所以要先构造乘法表达式，例如第 353 行的</p>
-<p><code>lval = gen_mul(lval, get_step(rval)); // 形如 3 + p </code></p>
-<p>或者第 356 行的</p>
+<p><code>lval = gen_mul(lval, get_step(rval)); // 形如 3 + p</code></p>
+<p>或者第 356 行的 </p>
 <p><code>rval = gen_mul(rval, get_step(lval)); // 形如 p + 3</code></p>
 <p>假设指针变量的步长是 n，先把 lval 或 rval 扩大为原来的 n 倍， 再执行 366 行的 lval + rval</p>
-<h2 id="gen-sub">gen_sub</h2>
-<img src="image-20251026203348369.png" srcset="/img/loading.gif" lazyload alt="image-20251026203348369" style="zoom:50%;" />
+<h2 id="gen-sub"><a href="#gen-sub" class="headerlink" title="gen_sub"></a>gen_sub</h2><p><img src="image-20251026203348369.png" srcset="/img/loading.gif" lazyload alt="image-20251026203348369" style="zoom:50%;" /></p>
 <p>此函数的作用是生成减法表达式的中间代码。和加法是类似的，但是还有点不一样。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> *p, *q;<br><span class="hljs-type">char</span> *m;<br>p - q; <span class="hljs-comment">// 合法</span><br>p - <span class="hljs-number">3</span>; <span class="hljs-comment">// 合法</span><br><span class="hljs-number">3</span> - p; <span class="hljs-comment">// 非法</span><br>m - p; <span class="hljs-comment">// 非法</span><br></code></pre></td></tr></table></figure>
 <p>第 5 行，非法，不存在这样的用法。所以有第 378 行的报错。</p>
@@ -926,8 +910,7 @@
 <p>两个指针相减，也要考虑步长，例如在数值上 p = 0x2004, q = 0x2000</p>
 <p>p - q  的结果不是 4， 而是 4/4 = 1</p>
 <p>所以第 394 行获得步长，第 404 行生成除法指令。</p>
-<h2 id="gen-assign">gen_assign</h2>
-<img src="image-20251026205447385.png" srcset="/img/loading.gif" lazyload alt="image-20251026205447385" style="zoom:50%;" />
+<h2 id="gen-assign"><a href="#gen-assign" class="headerlink" title="gen_assign"></a>gen_assign</h2><p><img src="image-20251026205447385.png" srcset="/img/loading.gif" lazyload alt="image-20251026205447385" style="zoom:50%;" /></p>
 <p>此函数用来生成赋值表达式的中间代码。错误处理部分已经折叠。</p>
 <p>赋值也分为四种情况：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">a = b;   <span class="hljs-comment">// 1</span><br>*a = b;  <span class="hljs-comment">// 2</span><br>a = *b;  <span class="hljs-comment">// 3</span><br>*a = *b; <span class="hljs-comment">// 4</span><br></code></pre></td></tr></table></figure>
@@ -936,7 +919,7 @@
 <p>这是因为赋值表达式的结果不是左值</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a, b;<br>(a = b)++; <span class="hljs-comment">// 非法</span><br></code></pre></td></tr></table></figure>
 <p>所以，执行完 457 后，不能返回 lval ，要返回 lval 的副本</p>
-<p>如果是情况 4， *a = *b 的情况，那么先执行 468，得到 tmp = *b;</p>
+<p>如果是情况 4， <em>a = </em>b 的情况，那么先执行 468，得到 tmp = *b;</p>
 <p>注意，这个 tmp 是一个中间变量，是在 gen_copy_assign 函数里面创建的。它的地址作为返回值给了 rval 这个指针，</p>
 <p>可能有的读者会误解第 468 行的意思，说给 rval 创建一个副本再赋值给 rval , 这不是多此一举吗？</p>
 <p>不是这样的。 首先， rval 是一个指针，作为入口参数，指向赋值表达式的右值。</p>
@@ -944,27 +927,26 @@
 <p>然后，rval 这个指针就指向了这个内存地址。</p>
 <p>rval 仅仅是一个 var_t * 类型的局部变量，可以指向这个， 也可以指向那个， 所以要根据上下文理解代码，而不是简单认为 rval 总是指向表达式的右值。</p>
 <p>所以，第 468行执行后， rval 就指向了 *b 的副本。</p>
-<img src="image-20251026211300662.png" srcset="/img/loading.gif" lazyload alt="image-20251026211300662" style="zoom:50%;" />
+<p><img src="image-20251026211300662.png" srcset="/img/loading.gif" lazyload alt="image-20251026211300662" style="zoom:50%;" /></p>
 <p>接下来，根据第 472 行的条件判断，</p>
 <p>如果是真，就是情况 2 和情况 4；否则是情况 1</p>
 <p>情况 1 最简单，直接生成赋值操作的代码。第 485 行，依然要消除左值属性。</p>
 <p>情况 2 和情况 4 的处理方法是一致的，因为后者已经创建了 （*b） 的副本 tmp, 现在要做的就是用 LOAD 操作，把 tmp 或者 b(情况 2 )写入 a 指向的内存。</p>
 <p>第 477 行，依然要消除左值属性。</p>
-<h2 id="gen-arr">gen_arr</h2>
-<p>此函数的作用是生成数组下标表达式的中间代码，例如 array[index]</p>
+<h2 id="gen-arr"><a href="#gen-arr" class="headerlink" title="gen_arr"></a>gen_arr</h2><p>此函数的作用是生成数组下标表达式的中间代码，例如 array[index] </p>
 <p>因为 csub 仅支持一维数组，所以比较简单。</p>
-<img src="image-20251026213704392.png" srcset="/img/loading.gif" lazyload alt="image-20251026213704392" style="zoom:50%;" />
+<p><img src="image-20251026213704392.png" srcset="/img/loading.gif" lazyload alt="image-20251026213704392" style="zoom:50%;" /></p>
 <p>arr[x] 等价于 *(arr + x)</p>
 <p>参数  array 应该是数组或者指针类型（否则第 625 行报错）。参数 index 应该是基本类型（否则第 631 行报错）。</p>
 <p>第三个参数 init 先不管。</p>
 <p>因为 array[index]  等价于 *(array + index)</p>
 <p>第 636 行求  tmp = array + index</p>
 <p>第 637 行求  *tmp</p>
-<h2 id="ABI">ABI</h2>
-<p>ABI（Application Binary Interface，应用程序二进制接口）是程序编译成二进制机器码后，在运行时需要遵守的一套底层规则和约定。它定义了编译后的二进制程序如何与操作系统、库函数以及其他二进制程序模块进行交互。</p>
+<h2 id="ABI"><a href="#ABI" class="headerlink" title="ABI"></a>ABI</h2><p>ABI（Application Binary Interface，应用程序二进制接口）是程序编译成二进制机器码后，在运行时需要遵守的一套底层规则和约定。它定义了编译后的二进制程序如何与操作系统、库函数以及其他二进制程序模块进行交互。</p>
 <p>一份完整的 ABI 覆盖很多内容，包括但不限于调用约定、可执行文件格式、符号修饰、基本类型大小与对齐、寄存器用途分类、栈帧布局等等。</p>
 <p>为什么需要 ABI 呢？理由有很多，对于我们学习编译原理来说，有一条最重要的理由：让不同编译器生成的 .o 文件能链接到一起（或者说编译后的二进制代码可以互相交互）。</p>
 <p>常见 ABI 标准</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -992,10 +974,10 @@
 <tr>
 <td></td>
 <td></td>
-<td></td>
 </tr>
 </tbody>
 </table>
+</div>
 <p>我们这节课只需要了解调用约定。</p>
 <p>1972 年前后，Dennis Ritchie 在 PDP-11 上写 C 编译器时，机器寄存器很少（8 个通用寄存器），参数传递是用最朴素的办法：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">push  arg3<br>push  arg2<br>push  arg1<br>call  foo<br>add   sp, <span class="hljs-number">12</span>        ; 调用者自己清理参数<br></code></pre></td></tr></table></figure>
@@ -1004,12 +986,8 @@
 <li><strong>调用者清理栈</strong>，因为调用者最清楚到底传了几个字节（尤其是变参函数）。</li>
 <li>函数返回时不用管栈，代码量最小。</li>
 </ul>
-<p>这套做法在当时“足够好”，Unix 内核、 utilities 全部用它，源代码、目标文件、汇编接口自然形成事实标准。<br>
-后来人们才给这种“原始”做法起了个名字——<code>cdecl</code>，并把它<strong>固定成一种约定</strong>，以便不同编译器生成的目标文件能互相链接。</p>
-<p>链接器层面的需求——“得给这种惯例起个名字”<br>
-70 年代末，Unix 开始移植到 VAX、68000，商用编译器（Lattice、Microsoft、Borland）也冒了出来。<br>
-不同编译器如果压栈顺序、清栈责任不一致，目标文件就无法静态链接。<br>
-于是各种“调用约定”被命名、标签化：</p>
+<p>这套做法在当时“足够好”，Unix 内核、 utilities 全部用它，源代码、目标文件、汇编接口自然形成事实标准。<br>后来人们才给这种“原始”做法起了个名字——<code>cdecl</code>，并把它<strong>固定成一种约定</strong>，以便不同编译器生成的目标文件能互相链接。</p>
+<p>链接器层面的需求——“得给这种惯例起个名字”<br>70 年代末，Unix 开始移植到 VAX、68000，商用编译器（Lattice、Microsoft、Borland）也冒了出来。<br>不同编译器如果压栈顺序、清栈责任不一致，目标文件就无法静态链接。<br>于是各种“调用约定”被命名、标签化：</p>
 <figure class="highlight delphi"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs delphi"><span class="hljs-keyword">cdecl</span>    —— 就是上面那条“原始 C”套路，兼容 K&amp;R 和变参  <br><span class="hljs-keyword">stdcall</span>  —— Windows 团队搞的新约定，被调者清栈，节省一点体积  <br>fastcall —— 用寄存器传参，再快一点  <br><span class="hljs-keyword">pascal</span>   —— 从左向右压栈，被调者清栈，与 <span class="hljs-number">16</span>-bit Windows <span class="hljs-keyword">Pascal</span> 兼容  <br>…<br></code></pre></td></tr></table></figure>
 <p>其中 <code>cdecl</code> 被 Microsoft、Borland、GCC 一致保留，<strong>唯一目的</strong>是“继续把老 C 代码链进来”。</p>
 <ul>
@@ -1020,6 +998,7 @@
 <p>在 <strong>32位 x86 架构</strong>下，GCC 编译的 C 语言代码<strong>默认遵循 <code>cdecl</code>调用规则</strong>（C Declaration），比如 GCC 的 <code>string.h</code>标准库函数（如 <code>strcpy</code>, <code>memcpy</code>, <code>strlen</code>等）<strong>默认遵循 <code>cdecl</code>调用规则</strong>。</p>
 <p>为了能调用 gcc 标准库，我们也要遵循 C Declaration</p>
 <p><code>cdecl</code>定义了一整套从参数传递到寄存器管理的完整约定。以下是其核心规则：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1061,12 +1040,12 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>假设调用了  foo(a, b, c)</p>
 <p>栈布局如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c">高地址<br>+----------------+<br>| 参数<span class="hljs-number">3</span> (ebp+<span class="hljs-number">16</span>) | ← 第三个参数 c<br>+----------------+<br>| 参数<span class="hljs-number">2</span> (ebp+<span class="hljs-number">12</span>) | ← 第二个参数 b<br>+----------------+<br>| 参数<span class="hljs-number">1</span> (ebp+<span class="hljs-number">8</span>)  | ← 第一个参数 a<br>+----------------+<br>| 返回地址 (ebp+<span class="hljs-number">4</span>)| ← call 指令压入<br>+----------------+<br>| 旧ebp (ebp)    | ← 当前ebp<br>+----------------+<br>| 局部变量<span class="hljs-number">1</span>       | ← ebp<span class="hljs-number">-4</span><br>+----------------+<br>| 局部变量<span class="hljs-number">2</span>       | ← ebp<span class="hljs-number">-8</span><br>+----------------+<br>低地址<br></code></pre></td></tr></table></figure>
 <p>这节课我们只需要掌握函数参数传递的顺序是<strong>从右到左</strong>依次压入栈中就可以了。</p>
-<h2 id="函数调用">函数调用</h2>
-<img src="image-20251027154919957.png" srcset="/img/loading.gif" lazyload alt="image-20251027154919957" style="zoom:50%;" />
+<h2 id="函数调用"><a href="#函数调用" class="headerlink" title="函数调用"></a>函数调用</h2><p><img src="image-20251027154919957.png" srcset="/img/loading.gif" lazyload alt="image-20251027154919957" style="zoom:50%;" /></p>
 <p>上面是解析后缀表达式的代码。和之前的代码很不一样了，先看第 836 行，基本表达式的返回值是 sym_info_t 类型</p>
 <p>为什么要有这个类型呢？这是因为 primary_expr 函数需要查符号表，查到的符号可能是函数，也可能是变量，所以我设计了这个结构体，它有 2 个字段，</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">symbol_info</span> &#123;</span><br>	<span class="hljs-type">void</span> *p_sym;<br>	<span class="hljs-type">int</span> sym_type;<br>&#125; <span class="hljs-type">sym_info_t</span>;<br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> SYMBOL_TYPE_VAR  1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> SYMBOL_TYPE_FUN  2</span><br></code></pre></td></tr></table></figure>
@@ -1075,21 +1054,20 @@
 <p>第 858 行，如果遇到“（”，说明是函数调用，此时查看 sym_type，如果不是函数就报错；</p>
 <p>如果是函数就执行第 865 行解析实际参数，realarg()函数会把实参保存到一个链表里面，并返回此链表的头节点；如果返回 NULL，说明参数列表是空的。</p>
 <p>第 866 行检查实际参数的个数、类型和形式参数的个数、类型是不是匹配，如果匹配，则调用 gen_call 函数，生成函数调用的中间代码。</p>
-<img src="image-20251027155829460.png" srcset="/img/loading.gif" lazyload alt="image-20251027155829460" style="zoom:50%;" />
+<p><img src="image-20251027155829460.png" srcset="/img/loading.gif" lazyload alt="image-20251027155829460" style="zoom:50%;" /></p>
 <p>第 662 行，如果 head 不等于 NULL，说明有参数传递，第 665 行，逆向传递实际参数。list_for_each_entry_reverse 是一个宏，功能是逆向遍历链表。</p>
 <p>第 667 行构造传递参数的中间指令。</p>
-<img src="image-20251027155958343.png" srcset="/img/loading.gif" lazyload alt="image-20251027155958343" style="zoom:50%;" />
-<p>如果参数是 *a  的形式，需要调用第 645 行的 gen_copy_assign，得到 tmp = *a;</p>
+<p><img src="image-20251027155958343.png" srcset="/img/loading.gif" lazyload alt="image-20251027155958343" style="zoom:50%;" /></p>
+<p>如果参数是 <em>a  的形式，需要调用第 645 行的 gen_copy_assign，得到 tmp = </em>a;</p>
 <p>第 646 行，调用 new_push_arg_inst 函数，把参数入栈（后面生成汇编代码的时候会用 push 指令）。</p>
-<img src="image-20251027160133152.png" srcset="/img/loading.gif" lazyload alt="image-20251027160133152" style="zoom:50%;" />
+<p><img src="image-20251027160133152.png" srcset="/img/loading.gif" lazyload alt="image-20251027160133152" style="zoom:50%;" /></p>
 <p>我们继续看 gen_call 函数</p>
-<img src="image-20251102200157269.png" srcset="/img/loading.gif" lazyload alt="image-20251102200157269" style="zoom:50%;" />
+<p><img src="image-20251102200157269.png" srcset="/img/loading.gif" lazyload alt="image-20251102200157269" style="zoom:50%;" /></p>
 <p>如果函数的返回类型是 void，则执行第 714 行，生成 PROC 中间指令，因为没有返回值，所以最后一个参数是 NULL</p>
 <p>第 717 行，返回符号表中的一个特殊变量，表示函数的返回值是 void</p>
 <p>如果函数有返回值，则第 719 行创建一个变量，其类型就是函数返回值的类型，是不是指针要看函数声明的时候带不带指针。</p>
 <p>第 721 行生成 CALL 指令，后面生成机器的码的时候，会翻译成 x86 汇编的 call 指令。</p>
-<h2 id="局部变量初始化">局部变量初始化</h2>
-<p>生成中间代码的函数大部分都讲了。下面我们把注意力移到局部变量的初始化上。</p>
+<h2 id="局部变量初始化"><a href="#局部变量初始化" class="headerlink" title="局部变量初始化"></a>局部变量初始化</h2><p>生成中间代码的函数大部分都讲了。下面我们把注意力移到局部变量的初始化上。</p>
 <p>首先，要明白初始化不是赋值语句。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> a = <span class="hljs-number">9</span>; <span class="hljs-comment">// 初始化</span><br>    <span class="hljs-type">int</span> b;<br>    b = <span class="hljs-number">7</span>; <span class="hljs-comment">// 赋值语句</span><br>    <span class="hljs-type">int</span> c = a * b; <span class="hljs-comment">// 初始化</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>虽然第 3 行和第 5 行都有等号，但是不一样，前者是初始化，后者是赋值语句。</p>
@@ -1097,7 +1075,7 @@
 <p>那我们生成中间代码的时候，如何处理第 3 行这类代码呢？</p>
 <p>要分情况，如果是常量，那么可以不生成中间代码，仅用  IR_OP_DECL 声明变量就可以，当生成汇编代码的时候，检查每一个用 IR_OP_DECL 声明的变量，如果它有初始化值，就直接生成汇编指令，例如  <code>mov …, 9</code></p>
 <p>如果不是常量，例如第 6 行，虽然有初始化值，但是这个值是一个表达式，需要计算。那就需要生成中间代码。</p>
-<img src="image-20251027162010026.png" srcset="/img/loading.gif" lazyload alt="image-20251027162010026" style="zoom:50%;" />
+<p><img src="image-20251027162010026.png" srcset="/img/loading.gif" lazyload alt="image-20251027162010026" style="zoom:50%;" /></p>
 <p>当调用 add_var 把局部变量加入符号表的时候，add_var 调用 def_var， def_var 调用上面的  gen_var_init；</p>
 <p>gen_var_init 函数的作用是为局部变量（不包括数组）生成初始化语句。</p>
 <p>第 957 行生成 DECL 中间指令，声明这个局部变量。</p>
@@ -1105,29 +1083,27 @@
 <p>我们生成的各种临时变量，都没有初始化式，在这里就返回了。</p>
 <p>第 964 行，如果是用常量初始化，则标记 init_by_constant 字段为 true;</p>
 <p>第 966 行判断初始值是不是数组，如果是数组且被初始化的变量是字符指针，则需要把字符串的名字保存到 var-&gt;string_val 字段中。（为什么这么做，后面就明白了）</p>
-<p>如果不是 966 的情况，就把  init_val-&gt;int_val 赋值给  var-&gt;int_val</p>
+<p>如果不是 966 的情况，就把  init_val-&gt;int_val 赋值给  var-&gt;int_val </p>
 <p>第 971 行，如果初始化值不是字面量，则分为两种情况，一个是全局变量，一个是局部变量。</p>
 <p>如果是全局变量，它一定是用某个地址初始化的，不然前面就会报错。也标记 init_by_constant 字段为 true;</p>
 <p>对于 964~973 的代码，现在不理解也没有关系。</p>
 <p>如果是局部变量，则调用 gen_init_inter_code 生成赋值语句来完成初始化。</p>
-<img src="image-20251027170427366.png" srcset="/img/loading.gif" lazyload alt="image-20251027170427366" style="zoom:50%;" />
+<p><img src="image-20251027170427366.png" srcset="/img/loading.gif" lazyload alt="image-20251027170427366" style="zoom:50%;" /></p>
 <p>有人问为什么不调用 gen_assign 函数呢？</p>
 <p>其实可以，但是 gen_assign 里面有的东西对初始化来说不需要，例如消除左值属性。</p>
 <p>上面的代码和 gen_assign 很像，只是把 gen_assign  前面的类型检查和消除左值属性的代码去掉了。</p>
 <p>另外，增加了 “Hack”  部分，因为 IR_OP_LOAD、IR_OP_STORE 和 IR_OP_ASSIGN 操作都用不上最后一个参数，所以这里把字符串 “init”传递给 inst-&gt;arg2，</p>
 <p>在打印中间代码的时候，判断上面 3 个操作的 inst-&gt;arg2 参数，如果不为空，就标记出来，告诉我们这不是赋值，是初始化。</p>
 <p>如果局部变量是数组，我们有专门的初始化函数。</p>
-<img src="image-20251027200917185.png" srcset="/img/loading.gif" lazyload alt="image-20251027200917185" style="zoom:50%;" />
+<p><img src="image-20251027200917185.png" srcset="/img/loading.gif" lazyload alt="image-20251027200917185" style="zoom:50%;" /></p>
 <p>数组初始化有两种情况，一是类似于<code>char arr[] = &quot;hello&quot;;</code></p>
 <p>这样的话 init_val 就不是空，执行第 1036 行的 <code>__gen_arr_init_by_string</code></p>
 <p>二是类似于 <code>int a[3] = {1, 2, 3};</code></p>
 <p>这种情况执行第 1038 行的 <code>__gen_arr_init_by_list</code></p>
 <p><code>__gen_arr_init_by_string</code> 和 <code>__gen_arr_init_by_list</code> 就不具体讲了，留给读者分析。</p>
-<h2 id="成果展示">成果展示</h2>
-<h3 id="初始化">初始化</h3>
-<p>测试源码：</p>
+<h2 id="成果展示"><a href="#成果展示" class="headerlink" title="成果展示"></a>成果展示</h2><h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h3><p>测试源码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span><br>&#123;<br>    <span class="hljs-type">int</span> b = <span class="hljs-number">100</span>;<br>    <span class="hljs-type">int</span> *p = &amp;b;<br>    <span class="hljs-type">int</span> a = x;<br>&#125;<br></code></pre></td></tr></table></figure>
-<img src="image-20251029153240824.png" srcset="/img/loading.gif" lazyload alt="image-20251029153240824" style="zoom:50%;" />
+<p><img src="image-20251029153240824.png" srcset="/img/loading.gif" lazyload alt="image-20251029153240824" style="zoom:50%;" /></p>
 <p>函数表蓝色的是函数名、作用域、参数。</p>
 <p>参数里面有个 3，这个 3 表示变量表里面 index = 3 的符号。类型是 int，名字是 x, 大小是 4 字节，作用域是 /0/1</p>
 <p>参数下面就是这个函数的中间代码。</p>
@@ -1138,11 +1114,10 @@
 <p>然后是初始化的操作， p = .t1（后面标注了 init，说明是初始化）</p>
 <p>最后声明了变量 a, 初始化为 x</p>
 <p>同时，变量表里面的绿色部分也体现出作为初始化的变量。当一个变量有初始化值的时候，打印完此变量，紧接着会打印初始化值。</p>
-<h3 id="前自增">前自增</h3>
-<p>测试源码</p>
+<h3 id="前自增"><a href="#前自增" class="headerlink" title="前自增"></a>前自增</h3><p>测试源码</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span><br>&#123;<br>    <span class="hljs-type">int</span> y = ++x;<br>    <span class="hljs-type">int</span> *p = &amp;x;<br>    <span class="hljs-type">int</span> *q = ++p;<br>    y = ++*p;<br>&#125;<br></code></pre></td></tr></table></figure>
-<img src="image-20251102201149291.png" srcset="/img/loading.gif" lazyload alt="image-20251102201149291" style="zoom:50%;" />
-<img src="image-20251102201220735.png" srcset="/img/loading.gif" lazyload alt="image-20251102201220735" style="zoom:50%;" />
+<p><img src="image-20251102201149291.png" srcset="/img/loading.gif" lazyload alt="image-20251102201149291" style="zoom:50%;" /></p>
+<p><img src="image-20251102201220735.png" srcset="/img/loading.gif" lazyload alt="image-20251102201220735" style="zoom:50%;" /></p>
 <p>解释一下：</p>
 <p>1：标记函数入口（下节课讲）</p>
 <p>3~7，完成 int y = ++x;</p>
@@ -1157,10 +1132,9 @@
 <p>22: 把结果赋值给 y</p>
 <p>24: 赋值表达式的结果不是左值。不过这里没有用到 .t7（后面会做中间代码优化，希望把这句优化掉）</p>
 <p>2、25: 生成函数返回点和出口（下节课讲）</p>
-<h3 id="后自减">后自减</h3>
-<p>测试源码</p>
+<h3 id="后自减"><a href="#后自减" class="headerlink" title="后自减"></a>后自减</h3><p>测试源码</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span><br>&#123;<br>    <span class="hljs-type">int</span> y = x--;<br>    <span class="hljs-type">int</span> *p = &amp;x;<br>    <span class="hljs-type">int</span> *q = p--;<br>    y = *p--;<br>    x = (*p)--;<br>&#125;<br></code></pre></td></tr></table></figure>
-<img src="image-20251102203201959.png" srcset="/img/loading.gif" lazyload alt="image-20251102203201959" style="zoom:50%;" />
+<p><img src="image-20251102203201959.png" srcset="/img/loading.gif" lazyload alt="image-20251102203201959" style="zoom:50%;" /></p>
 <p>4： 因为是后缀递减，所以先保存 x 的原值</p>
 <p>5：修改 x 的值，减去 1</p>
 <p>7：完成 y 的初始化，y 的值是 x 的原值</p>
@@ -1168,33 +1142,32 @@
 <p>11: p = .t3 ；完成 p 的初始化</p>
 <p>13~14:完成 p 的后缀递减，并且保存了 p 的原值（在 .t4 里面）</p>
 <p>16： 完成 q 的初始化</p>
-<p>代码 “y = *p–;”</p>
+<p>代码 “y = *p—;”</p>
 <p>后缀表达式的优先级高，所以先求 <code>p--</code> ， 再解引用</p>
 <p>18~19 :完成 <code>p--</code> ， p 的原值保存在 .t5</p>
 <p>20~21：对 .t5 解引用</p>
 <p>24~26 求 *p，结果在  .t9 中</p>
-<p>(*p)–; 此表达式的值是 *p, 它的副作用是让 *p 的值减去1</p>
+<p>(<em>p)—; 此表达式的值是 </em>p, 它的副作用是让 *p 的值减去1</p>
 <p>28~30：完成副作用</p>
 <p>31： x 的值应该是 .t9</p>
-<h3 id="连续取地址解引用">连续取地址解引用</h3>
-<p>测试源码</p>
+<h3 id="连续取地址解引用"><a href="#连续取地址解引用" class="headerlink" title="连续取地址解引用"></a>连续取地址解引用</h3><p>测试源码</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> a;<br>    <span class="hljs-type">int</span> *q;<br>    *q = *&amp;*&amp;*&amp;*&amp;a;<br>&#125;<br></code></pre></td></tr></table></figure>
-<img src="image-20251029200753318.png" srcset="/img/loading.gif" lazyload alt="image-20251029200753318" style="zoom:50%;" />
-<img src="image-20251029200821466.png" srcset="/img/loading.gif" lazyload alt="image-20251029200821466" style="zoom:50%;" />
+<p><img src="image-20251029200753318.png" srcset="/img/loading.gif" lazyload alt="image-20251029200753318" style="zoom:50%;" /></p>
+<p><img src="image-20251029200821466.png" srcset="/img/loading.gif" lazyload alt="image-20251029200821466" style="zoom:50%;" /></p>
 <p>为了便于叙述，指令左边有编号。</p>
 <p>0~1 声明了变量 a 和 q</p>
 <p>2: 声明 .t1 = *q</p>
-<p>然后求一元表达式<code> *&amp;*&amp;*&amp;*&amp;a;</code></p>
+<p>然后求一元表达式<code>*&amp;*&amp;*&amp;*&amp;a;</code></p>
 <p>3~4:声明 .t2 = &amp;a  这是第一次对 a 取地址</p>
-<p>然后求解<code> *&amp;a</code>, 因为 *和&amp; 相抵消，所以结果还是 a, 这一步没有生成新的变量</p>
+<p>然后求解<code>*&amp;a</code>, 因为 *和&amp; 相抵消，所以结果还是 a, 这一步没有生成新的变量</p>
 <p>下面求解 .t3 = <code>&amp;*&amp;a</code>， 因为 *&amp;a 的结果是 a, 所以 .t3 =  &amp;a</p>
-<p>然后求解<code> *&amp;*&amp;a</code>,因为 *和&amp; 相抵消，所以结果还是 a,这一步没有生成新的变量</p>
+<p>然后求解<code>*&amp;*&amp;a</code>,因为 *和&amp; 相抵消，所以结果还是 a,这一步没有生成新的变量</p>
 <p>接下来求解 .t4 = <code>&amp;*&amp;*&amp;a</code>， 因为 <code>*&amp;*&amp;a</code> 的结果是 a, 所以 .t4 =  &amp;a</p>
 <p>再求解<code>*&amp;*&amp;*&amp;a</code>,因为 *和&amp; 相抵消，所以结果还是 a,这一步没有生成新的变量</p>
 <p>再求解 .t5 = <code>&amp;*&amp;*&amp;*&amp;a</code>， 因为 <code>*&amp;*&amp;*&amp;a</code> 的结果是 a, 所以 .t5 =  &amp;a</p>
-<p>最后求解<code> *&amp;*&amp;*&amp;*&amp;a;</code>  因为 *和&amp; 相抵消，所以结果还是 a,这一步没有生成新的变量</p>
+<p>最后求解<code>*&amp;*&amp;*&amp;*&amp;a;</code>  因为 *和&amp; 相抵消，所以结果还是 a,这一步没有生成新的变量</p>
 <p>接下来执行指令 11， *q = a</p>
-<p>最后是 12~13, 声明  .t6 = *q; 这一步是为了获得 *q 的副本，因为赋值表达式的结果不是左值。</p>
+<p>最后是 12~13, 声明  .t6 = <em>q; 这一步是为了获得 </em>q 的副本，因为赋值表达式的结果不是左值。</p>
 <p>本文到这里就结束了。中间代码生成还没有完，后面会讲如何生成 if 语句、if-else 语句、while 语句…的中间代码。</p>
 
                 

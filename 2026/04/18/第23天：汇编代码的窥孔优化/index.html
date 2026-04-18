@@ -1,0 +1,975 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="一文搞懂窥孔优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第23天：汇编代码的窥孔优化">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC23%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="一文搞懂窥孔优化">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC23%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/image-20260123101236848.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC23%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/image-20260418153532406.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC23%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/image-20260123163441306.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC23%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/image-20260418154118817.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC23%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/image-20260123163740416.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC23%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/image-20260123165803073.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC23%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/image-20260123170559550.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC23%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/image-20260418154920899.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC23%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/image-20260123172520903.png">
+<meta property="article:published_time" content="2026-04-18T07:26:26.000Z">
+<meta property="article:modified_time" content="2026-04-18T08:03:10.102Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC23%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/image-20260123101236848.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第23天：汇编代码的窥孔优化 - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/download/" target="_self">
+                <i class="iconfont icon-gitee-fill"></i>
+                <span>代码下载</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/download/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-gitee-fill"></i>
+                  <span>代码下载</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第23天：汇编代码的窥孔优化"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-18 15:26" pubdate>
+          2026年4月18日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          41 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第23天：汇编代码的窥孔优化</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="汇编代码的窥孔优化"><a href="#汇编代码的窥孔优化" class="headerlink" title="汇编代码的窥孔优化"></a>汇编代码的窥孔优化</h1><p>上节课我们生成了汇编代码，算是一个阶段性的胜利。不过我提醒自己不要得意，能否再向前迈一步呢？</p>
+<p>请看下面的图：</p>
+<p><img src="image-20260123101236848.png" srcset="/img/loading.gif" lazyload alt="image-20260123101236848" style="zoom:50%;" /></p>
+<p>是不是有点眼花缭乱？不要着急，我为读者解读。</p>
+<p>先看左边的 62~63 行</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">0</span><br><span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">16</span>], <span class="hljs-built_in">eax</span><br></code></pre></td></tr></table></figure>
+<p>熟悉汇编代码的读者肯定看出来了，这 2 条指令可以合并为 1 条</p>
+<p>就是右边的第 63 行</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">mov</span> <span class="hljs-built_in">dword</span> [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">16</span>], <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<p>同理，左边的第 65~66 也可以化简成右边的第 65 行</p>
+<p>再看左边第 78~79 行，先把 eax 的值写入内存 [ebp-24]，然后又从 [ebp-24] 把值拿出来给 eax ，后面这步实属多余。</p>
+<p>所以，第 79 行可以删除。</p>
+<p>所以，我说的 “再向前迈一步” 的意思看看生成的汇编代码还能不能化简，尽可能让它变得简洁。</p>
+<p>目标明确了，如何做呢？</p>
+<p>前面为读者讲解了四种优化方法，分别是常量传播，复写传播，活跃变量分析，懒惰代码移动。</p>
+<p>现在为读者讲解我的最后一招：“窥孔优化”</p>
+<h2 id="什么是窥孔优化"><a href="#什么是窥孔优化" class="headerlink" title="什么是窥孔优化"></a>什么是窥孔优化</h2><p>窥孔优化（Peephole Optimization）是编译原理中的一种局部代码优化技术，它通过分析一小段连续的指令（称为”窥孔”窗口），识别并替换其中的低效或冗余指令序列，从而生成更高效的代码。</p>
+<p>名字中的 “<strong>窥孔</strong>”（peephole）是一个形象的比喻：想象你通过一个小孔观察代码，只看局部片段，不关心全局结构。</p>
+<p><strong>优点</strong>：</p>
+<ul>
+<li><p><strong>实现简单</strong>：只需维护一个滑动窗口，算法复杂度低</p>
+</li>
+<li><p><strong>独立性强</strong>：不依赖全局信息，可独立应用于代码段</p>
+</li>
+<li><p><strong>多次应用</strong>：可多次遍历代码，每次优化可能产生新的优化机会</p>
+</li>
+</ul>
+<p><strong>局限性</strong>：</p>
+<ul>
+<li><strong>局部性限制</strong>：窗口大小有限，无法识别跨窗口的优化机会</li>
+<li><strong>优化范围小</strong>：只能进行局部优化，无法进行全局数据流分析</li>
+<li><strong>可能错过优化</strong>：某些优化需要更广的上下文信息</li>
+</ul>
+<p>窥孔优化的步骤如下：</p>
+<p>1、确定窗口大小，比如 2（可以装 2 条连续的指令）。根据窗口的大小，拿个纸板，挖出一个孔</p>
+<p>2、想象我们的汇编指令是一条很长的纸带，把孔对准纸带的开始位置</p>
+<p>3、看看小孔里面的 2 条指令，是不是有优化的可能。如果有，就优化，例如替换成一条新的指令</p>
+<p>4、把孔向下移动，执行第 3 步；或者遇到纸带的结尾，结束整个过程。</p>
+<p>以上只是形象的说法，并不是让你真的找个纸板去打孔，不过你非要这样做我也拦不住。</p>
+<p>需要注意第 3 步，是不是有优化的可能？说起来很轻松，实际上是要做模式匹配，就是判断窗口中的代码是不是具有某种特征。</p>
+<p>还是前面的那个例子</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">0</span>  <span class="hljs-comment">;  指令 1</span><br><span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">16</span>], <span class="hljs-built_in">eax</span>  <span class="hljs-comment">; 指令 2</span><br></code></pre></td></tr></table></figure>
+<p>我们需要判断：</p>
+<p>1、指令 1 的源操作数是一个数字或者寄存器的名字</p>
+<p>2、指令 2 的源操作数和指令 1 的目的操作数是同一个寄存器</p>
+<p>当以上 2 个条件都满足的时候，我们用指令 1 的源操作数去替换指令 2 的源操作数；再把指令 1 删除。</p>
+<h2 id="窗口结构体"><a href="#窗口结构体" class="headerlink" title="窗口结构体"></a>窗口结构体</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">slide_window</span>&#123;</span><br>	<span class="hljs-type">int</span> size; <span class="hljs-comment">// 窗口大小，最小值是 1</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> *<span class="hljs-title">code_head</span>;</span> <span class="hljs-comment">// 代码序列</span><br>	<span class="hljs-type">void</span> **inst; <span class="hljs-comment">// 窗口内的指令（数组）</span><br>	<span class="hljs-type">void</span> *begin; <span class="hljs-comment">// 窗口的起始位置</span><br>&#125;<span class="hljs-type">window_t</span>;<br></code></pre></td></tr></table></figure>
+<p>首先，要有一个窗口。slide_window 是滑动窗口的意思。</p>
+<p>第 3 行的 code_head 用于指向指令链表的头节点。</p>
+<p>第 5 行的 begin 表示当前窗口滑动到哪里了，它指向窗口内的第一条有效指令。</p>
+<p>第 4 行的 inst 是一个 void ** 类型的指针，我的设计是这样的：</p>
+<p>假设窗口大小是 3。我们用数组来“装”这 3 条指令。</p>
+<p><img src="image-20260418153532406.png" srcset="/img/loading.gif" lazyload alt="image-20260418153532406" style="zoom:50%;" /></p>
+<p>​                         </p>
+<p>如图所示，中间的 3 个连续的框子代表数组。数组中的元素是 void * 类型，仅保存指令的地址。</p>
+<p>因为窥孔优化不但可以用于汇编代码的优化，对于之前生成的中间指令，也可以用。</p>
+<p>只要指令是一条一条线性排列的，就可以用窥孔优化。</p>
+<p>所以，是 void <em> 类型，而不是某个具体类型的指针（例如 x86_inst_t </em>）窗口大小也是不确定的，根据你的优化策略来。</p>
+<p>例如你发现了一种模式，能把具有某种特征的 4 条连续指令合并成一条，那窗口大小就是 4。</p>
+<p>所以数组大小不确定，需要动态分配内存。</p>
+<p>假设窗口大小是 3，如果是为整型数组分配内存，代码如下面第 1 行。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> *arr = (<span class="hljs-type">int</span> *)<span class="hljs-built_in">malloc</span>(<span class="hljs-keyword">sizeof</span>(<span class="hljs-type">int</span>) * <span class="hljs-number">3</span>);<br><br><span class="hljs-type">void</span> **arr = (<span class="hljs-type">int</span> *)<span class="hljs-built_in">malloc</span>(<span class="hljs-keyword">sizeof</span>(<span class="hljs-type">void</span> *) * <span class="hljs-number">3</span>);<br></code></pre></td></tr></table></figure>
+<p>现在是为 void * 类型的数组分配内存，照猫画虎，就是上面第 3 行。</p>
+<p>所以，才会有 void **inst 这个字段。</p>
+<h2 id="窗口的初始化"><a href="#窗口的初始化" class="headerlink" title="窗口的初始化"></a>窗口的初始化</h2><p><img src="image-20260123163441306.png" srcset="/img/loading.gif" lazyload alt="image-20260123163441306" style="zoom:50%;" /></p>
+<p>第 157，为结构体 window_t 分配内存。</p>
+<p>第 161，根据窗口大小，分配数组的内存。</p>
+<p>第 165，填写 code_head,让它指向指令序列链表的头节点。</p>
+<p>第 166，填写窗口大小（必须是 &gt;= 1）</p>
+<p>第 167 行，给窗口里面填指令</p>
+<p>initial_fill_window 这个参数是一个指向函数的指针，马上就讲。</p>
+<p>之所以设计成指向函数的指针，是因为前面说了，窥孔优化不单单可以用于汇编指令。</p>
+<p>可能有的读者忘了 base_node_t 是什么，我们复习一下。</p>
+<p><img src="image-20260418154118817.png" srcset="/img/loading.gif" lazyload alt="image-20260418154118817" style="zoom:50%;" /></p>
+<p>为了把不同类型的结构体（简称大结构体）加入链表，我们在大结构体里嵌入了 base_node_t 类型的结构体，名字叫 base，且它是大结构体的第一个成员，如上面第 7 行。</p>
+<p>同以前的用法一样，base_node_t 的 struct list_head 用于形成链表，base_node_t 是用户节点。</p>
+<p>因为 base 是大结构体的第一个成员，所以它的地址就是大结构体的地址；可以把 base（base_node_t 类型） 看成是某个指令（x86_inst_t 类型）的化身。</p>
+<h2 id="首次填充窗口"><a href="#首次填充窗口" class="headerlink" title="首次填充窗口"></a>首次填充窗口</h2><p>对于汇编指令的窥孔优化，我们用 asm_fill_window 函数填充窗口。</p>
+<p><img src="image-20260123163740416.png" srcset="/img/loading.gif" lazyload alt="image-20260123163740416" style="zoom:50%;" /></p>
+<p>window_init 函数执行到第 167 行的时候，win-&gt;begin 等于 NULL，说明是第一次装指令。</p>
+<p>第 52 行，遍历汇编指令链表，第 53 行跳过其他类型的节点。</p>
+<p>第 56 行，跳过死代码，因为窥孔优化可以做多遍，在此过程中，有的指令被标记为死代码。</p>
+<p>第 58 行，记录指令的地址到数组</p>
+<p>第 59~60，一旦装满，就 break;</p>
+<p>如果窗口移动到了链表的末尾，或者指令本来就特别少，可能会出现指令不够的情况，第 78 行判断是否装载成功。</p>
+<p>如果失败，则返回 false 给调用者，以便结束此轮优化。</p>
+<p>首次填充窗口完毕，就可以做模式识别和优化了。不管能不能优化，接下来需要移动窗口。</p>
+<h2 id="窗口的滑动"><a href="#窗口的滑动" class="headerlink" title="窗口的滑动"></a>窗口的滑动</h2><p><img src="image-20260123165803073.png" srcset="/img/loading.gif" lazyload alt="image-20260123165803073" style="zoom:50%;" /></p>
+<p>此函数第二个参数表示要滑过多少条指令，可正可负，如果是负数，表示窗口往上滑动。</p>
+<p>窗口滑动的本质是移动 begin 指针，让 begin 指向后面的指令或者先前的指令。</p>
+<p>第 131~142 行，是 step 是正数的情况。</p>
+<p>第 129 行，得到用户节点 base 的地址，就是 &amp;begin-&gt;base，这个地址在数值上等于窗口内第一条指令的地址（因为base是大结构体的第一个成员）133 行的第一个参数 node,可以认为它代表窗口内的第一条指令；</p>
+<p>list_for_each_entry_continue 宏的作用是跳过 node，从 node 的下一个位置开始遍历（从零开始计数）；</p>
+<p>第 136 行得到下一条指令的地址，相当于向下滑动 1 个位置；</p>
+<p>第 139 行更新 win-&gt;begin；</p>
+<p>第 140 行让 i 增加 1；</p>
+<p>一直循环，一旦要移动的步数 step 等于计数器 i，就 break</p>
+<p>例如参数 step 是 2，那么此函数执行后，begin 会向后移动 2 个有效位置。</p>
+<p>再打开刚才折叠的代码</p>
+<p><img src="image-20260123170559550.png" srcset="/img/loading.gif" lazyload alt="image-20260123170559550" style="zoom:50%;" /></p>
+<p>如果参数 step 是负数，说明要向前移动。</p>
+<p>list_for_each_entry_continue_reverse 表示从 node 的前一个节点开始遍历，而且是逆序遍历。</p>
+<p>第 159 行的返回值表示实际移动了多少步，因为接近指令序列末尾的时候， i 可能小于 step。</p>
+<h2 id="再次填充窗口"><a href="#再次填充窗口" class="headerlink" title="再次填充窗口"></a>再次填充窗口</h2><p>每次滑动窗口后，都需要重新填充窗口。注意，窗口滑动后，win-&gt;begin 已经指向了新的位置。</p>
+<p>asm_fill_window 函数的另一半代码如下：</p>
+<p><img src="image-20260418154920899.png" srcset="/img/loading.gif" lazyload alt="image-20260418154920899" style="zoom:50%;" /></p>
+<p>第 63~66 表示从 begin 指示的位置开始装载指令；</p>
+<p>list_for_each_entry_from(pos, head, member) 表示从 pos 开始遍历，而不是从第一个节点！</p>
+<p>其他的代码不再赘述。</p>
+<h2 id="控制程序"><a href="#控制程序" class="headerlink" title="控制程序"></a>控制程序</h2><p>接下我们看控制程序</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">asm_peephole_optimization</span><span class="hljs-params">(<span class="hljs-type">fun_t</span> *fun)</span><br>&#123;<br>    assert(fun);<br>    <span class="hljs-type">window_t</span> *win = window_init(&amp;fun-&gt;asm_code, <span class="hljs-number">2</span>, asm_fill_window);<br>    <span class="hljs-keyword">if</span> (!win)<br>        <span class="hljs-keyword">return</span>;<br><br>    <span class="hljs-keyword">do</span> &#123;<br>        asm_optimize_template_2_insts(win);<br>        <br>      <span class="hljs-comment">// 每次移动一个指令</span><br>    &#125; <span class="hljs-keyword">while</span> (asm_move_and_fill_window(win, <span class="hljs-number">1</span>));  <span class="hljs-comment">// 直到窗口移动不了或者指令填充失败</span><br><br>    window_destroy(win);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>第 4 行，完成窗口的初始化，指令窗口大小为 2， 填充窗口用的函数是 asm_fill_window，此函数已经介绍了。</p>
+<p>第 8 行开始是 do-while 循环。</p>
+<p>asm_optimize_template_2_insts 这个函数马上就讲，功能就是做特征匹配，若匹配上了就优化。</p>
+<p>第 10 行 asm_move_and_fill_window 这个函数代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">bool</span> <span class="hljs-title function_">asm_move_and_fill_window</span><span class="hljs-params">(<span class="hljs-type">window_t</span> *win, <span class="hljs-type">int</span> step)</span><br>&#123;<br>	<span class="hljs-keyword">if</span>(asm_window_move(win, step) == step)<br>		<span class="hljs-keyword">return</span> asm_fill_window(win);<br>	<span class="hljs-keyword">else</span> <br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>先调用 asm_window_move 移动窗口，如果返回值和参数 step 指定的步数相等，说明移动成功</p>
+<p>如果第 3 行的 “==” 不成立，说明到了代码序列的末尾，移动不了了，那就返回 false（第 6 行）</p>
+<p>移动成功后调用 asm_fill_window 往窗口填充新的指令（第 4 行），并返回此函数的结果，如果填充过程出现了问题，也会返回 false;</p>
+<p>下面为读者介绍 asm_optimize_template_2_insts 函数，优化的细节在这里面。</p>
+<p><img src="image-20260123172520903.png" srcset="/img/loading.gif" lazyload alt="image-20260123172520903" style="zoom:50%;" /></p>
+<p>第 360 行的注释打开如下：</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">        inst1 : <span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">48</span>], <span class="hljs-built_in">eax</span><br>        inst2 : <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">48</span>]<br>        优化为:<br>        <span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">48</span>], <span class="hljs-built_in">eax</span><br>特征：op1 == <span class="hljs-keyword">mov</span> &amp;&amp; op2 == <span class="hljs-keyword">mov</span><br>     inst1_arg1 和 inst2_arg2 相同<br>     inst1_arg2 和 inst2_arg1 相同<br></code></pre></td></tr></table></figure>
+<p>假设窗口里面有 2 个指令，</p>
+<p> inst1 : <code>mov [ebp-48], eax</code></p>
+<p> inst2 : <code>mov eax, [ebp-48]</code></p>
+<p>很明显，第二条是多余的，可以不要。</p>
+<p>指令的特征我也写出来了，如上面第 5~7 行。</p>
+<p>代码就更简单了，如上面第 370 到 373，首先判断 2 个指令的操作码都是 “mov”，其次 inst1-&gt;arg1 和 inst2-&gt;arg2 相同，inst1-&gt;arg2 和 inst2-&gt;arg1 相同如果符合条件，就可以优化了。</p>
+<p>第 380 行把第二条指令标记为 is_dead</p>
+<p>第 385 行，此时 begin 是指向 inst1 的，因为 inst2 是死指令，如果不移动窗口，asm_fill_window 会把 inst2 后面的那条有效指令（称为inst3）填进来;</p>
+<p>这是对的，因为 inst 1 和 inst3 组合到一起说不定也能优化。</p>
+<p>但是我们的控制程序写的是 <code>while (asm_move_and_fill_window(win, 1));</code></p>
+<p>也就是说窗口会向后移动一个指令，这和我们的期待不符，我们希望不要移动。</p>
+<p>这个也好办，第 385 行，我们调用 <code>asm_window_move(win, -1);</code></p>
+<p>先往前面移动一个，等执行 <code>asm_move_and_fill_window</code> 的时候，再往后移动一个，等于原地不动。</p>
+<p>本文到这里就结束了，下节课我们把窥孔优化用在中间代码上，哈哈，更好玩。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第23天：汇编代码的窥孔优化</div>
+      <div>https://leslieche.github.io/2026/04/18/第23天：汇编代码的窥孔优化/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月18日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/04/18/%E7%AC%AC24%E5%A4%A9%EF%BC%9A%E4%B8%AD%E9%97%B4%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/" title="第24天：中间代码的窥孔优化">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">第24天：中间代码的窥孔优化</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/" title="第22天：生成代码段和数据段">
+                        <span class="hidden-mobile">第22天：生成代码段和数据段</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"LeslieChe/comment_for_blog","repo-id":"R_kgDOR6CL3g","category":"General","category-id":"DIC_kwDOR6CL3s4C6Ez9","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":1,"input-position":"top","lang":"zh-CN","strict":0,"theme":"preferred_color_scheme","loading":"lazy"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

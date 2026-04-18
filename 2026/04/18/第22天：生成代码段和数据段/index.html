@@ -1,0 +1,1132 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="什么是 section？如何生成 .text .data">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第22天：生成代码段和数据段">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="什么是 section？如何生成 .text .data">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/image-20260109113254221.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/image-20260109120001320.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/image-20260109115758311.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/image-20260109120235541.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/image-20260109191806219.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/image-20260109192544956.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/image-20260109195011624.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/image-20260109195654697.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/image-20260110124141374.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/image-20260110125226533.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/image-20260110151927041.png">
+<meta property="article:published_time" content="2026-04-18T07:16:42.000Z">
+<meta property="article:modified_time" content="2026-04-18T07:23:19.580Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC22%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5/image-20260109113254221.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第22天：生成代码段和数据段 - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/download/" target="_self">
+                <i class="iconfont icon-gitee-fill"></i>
+                <span>代码下载</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/download/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-gitee-fill"></i>
+                  <span>代码下载</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第22天：生成代码段和数据段"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-18 15:16" pubdate>
+          2026年4月18日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          11k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          89 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第22天：生成代码段和数据段</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第22天：生成代码段和数据段"><a href="#第22天：生成代码段和数据段" class="headerlink" title="第22天：生成代码段和数据段"></a>第22天：生成代码段和数据段</h1><p>上一节我们讲了如何把中间指令翻译成汇编代码，这一节我们解决以下问题：</p>
+<p>1、如何生成数据段</p>
+<p>2、如何生成字符串表（包含在数据段中）</p>
+<p>3、如何生成代码段</p>
+<h2 id="什么是section"><a href="#什么是section" class="headerlink" title="什么是section"></a>什么是section</h2><p>简单说，section 是 NASM 汇编器中的段（section）声明指令，用于定义程序中不同类型的段，如代码段、数据段、未初始化数据段等。</p>
+<p>问题来了，程序为什么要分段，混成一疙瘩可以吗？</p>
+<p>混成一疙瘩也不是不行，但是会带来很多麻烦。</p>
+<p>根据局部性原理，CPU 倾向于将代码和数据分别存储在不同的指令缓存 (I-Cache) 和数据缓存 (D-Cache) 中。将它们分段存放，可以显著提高缓存的命中率，从而加快处理速度。如果混成一疙瘩，如何区分代码和数据呢？</p>
+<p>通过分段，操作系统可以为不同的内存区域设置不同的<strong>访问权限</strong>： </p>
+<ul>
+<li><strong>代码段 (Code/Text Segment)</strong>：通常设为<strong>只读</strong>和<strong>可执行</strong>。这能防止程序在运行时意外或被恶意地修改自身的指令。</li>
+<li><strong>数据段 (Data Segment)</strong>：设为<strong>可读写</strong>但<strong>不可执行</strong>（NX/DEP 技术）。这可以防止缓冲区溢出攻击，避免黑客通过在变量（数据）中注入恶意代码并诱导 CPU 执行。</li>
+</ul>
+<p>要是混成一疙瘩，还怎么分别管理呢？</p>
+<p>还有，<strong><code>.bss</code> 段（Block Started by Symbol）</strong></p>
+<ul>
+<li>存放<strong>未初始化或零初始化</strong>的全局/静态变量</li>
+<li><strong>在可执行文件中不占空间</strong>（只记录大小）</li>
+<li>加载时由操作系统分配并清零</li>
+</ul>
+<p>下表列出了一些典型的段</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>段名</th>
+<th>全称 / 含义</th>
+<th>内容</th>
+<th>内存属性</th>
+<th>是否占磁盘</th>
+<th>典型用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>.text</code></strong></td>
+<td>Text / Code</td>
+<td><strong>CPU 指令（机器码）</strong></td>
+<td><strong>R-X</strong>（只读 + 可执行）</td>
+<td>是</td>
+<td>函数代码</td>
+</tr>
+<tr>
+<td><strong><code>.rodata</code></strong></td>
+<td>Read-Only Data</td>
+<td><strong>只读数据</strong>（字符串常量、<code>const</code> 全局变量）</td>
+<td><strong>R—</strong>（只读）</td>
+<td>是</td>
+<td><code>&quot;Hello&quot;;</code> <code>const int x = 5;</code></td>
+</tr>
+<tr>
+<td><strong><code>.data</code></strong></td>
+<td>Initialized Data</td>
+<td><strong>已初始化的全局/静态变量</strong></td>
+<td><strong>RW-</strong>（可读写）</td>
+<td>是</td>
+<td><code>int a = 10;</code> <code>char buf[] = &quot;abc&quot;;</code></td>
+</tr>
+<tr>
+<td><strong><code>.bss</code></strong></td>
+<td>Block Started by Symbol</td>
+<td><strong>未初始化或零初始化的全局/静态变量</strong></td>
+<td><strong>RW-</strong>（可读写）</td>
+<td>否（只记录大小）</td>
+<td><code>int b;</code>  <code>static char big[1000];</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>按理说，字符串应该在 .rodata 段，未初始化或零初始化的全局变量应该在 .bss 段，但是我们为了降低难度，把这二者都放到 .data 段。</p>
+<p>带来的影响有2个</p>
+<p>1、字符串可以修改</p>
+<p>2、对磁盘的占用变大</p>
+<p>不过这两点不影响我们学习编译原理。</p>
+<p>所以，我们只生成 2 个段，.data 段和 .text 段；前者用来放全局变量和字符串表，后者用来放函数的代码。</p>
+<h2 id="生成-text-段"><a href="#生成-text-段" class="headerlink" title="生成 .text 段"></a>生成 .text 段</h2><p><img src="image-20260109113254221.png" srcset="/img/loading.gif" lazyload alt="image-20260109113254221" style="zoom:50%;" /></p>
+<p>第一个参数是文件指针，第二个参数是否开启优化。优化指我们前面学习的常量传播、复习传播、活跃变量分析、懒惰代码移动这四种优化。</p>
+<p>第 854 行，输出 “section .text”，说明下面的内容是 .text 段；</p>
+<p>第 858~864 行，遍历哈希表中的所有节点，如果是 extern 声明的函数，不需要输出代码（也没有代码），输出 extern xxx 就可以了</p>
+<p>如果是已经定义的函数，第 863 行，输出“global xxx”</p>
+<p>用 global 声明函数是因为默认情况下，我们在 NASM 中定义的标签是 <strong>局部符号（local symbol）</strong>。局部符号 <strong>只能在当前 <code>.asm</code> 文件内部使用</strong>。</p>
+<p>但是 c 语言中的函数天生就是对其他文件可见的（除非用 static 修饰，但是我们不支持这个特性）</p>
+<p>所以要用 global 声明，这样其他文件的代码就可以调用我们的函数了。</p>
+<p>底层原理（链接视角）</p>
+<ul>
+<li><p>每个 <code>.o</code> 文件有一个 <strong>符号表（symbol table）</strong></p>
+</li>
+<li><p>默认符号是 <strong>LOCAL</strong>（仅本文件可见）</p>
+</li>
+<li><p><code>global</code> 将符号标记为 <strong>GLOBAL / EXTERN</strong>（外部可见）</p>
+</li>
+<li><p>链接器在合并多个 <code>.o</code> 时，靠这个信息解析跨文件引用</p>
+<p><img src="image-20260109120001320.png" srcset="/img/loading.gif" lazyload alt="image-20260109120001320" style="zoom:50%;" /></p>
+</li>
+</ul>
+<p>第 865~871 是从 fun-&gt;dfg-&gt;bbs_head 抽取中间代码，忽略不可达的块和标记为 dead 的指令。</p>
+<p>第 869 是从 fun-&gt;inter_code 中抽取中间代码，fun-&gt;inter_code 这个链表上的代码是没有经过优化的中间代码。</p>
+<p><img src="image-20260109115758311.png" srcset="/img/loading.gif" lazyload alt="image-20260109115758311" style="zoom:50%;" /></p>
+<p>它们都是调用 to_intel_32_asm 完成翻译，翻译出来的汇编指令在 fun-&gt;asm_code 链表中。</p>
+<p>上面第 876 行，调用 gen_asm_inst 函数把fun-&gt;asm_code 链表中的汇编指令写入文件。</p>
+<p><img src="image-20260109120235541.png" srcset="/img/loading.gif" lazyload alt="image-20260109120235541" style="zoom:50%;" /></p>
+<p>注意，fun-&gt;asm_code 这个链表上有两种数据类型，一个是汇编指令，一个是中间指令。</p>
+<p>第 904 行，把汇编指令写入文件。</p>
+<p>第 902~903  目的是跳过无效的汇编，这是窥孔优化的内容，后面会讲，现在不用管。</p>
+<p>第 907 行，写“;” 到文件，汇编代码注释用“;”，相当于 c 的 “//”</p>
+<p>第 908 行，把中间代码作为注释写入文件。</p>
+<h2 id="全局变量的初始化"><a href="#全局变量的初始化" class="headerlink" title="全局变量的初始化"></a>全局变量的初始化</h2><p>在讨论如何生成 .data 段之前，我们必须复习一下全局变量的初始化。</p>
+<p><img src="image-20260109191806219.png" srcset="/img/loading.gif" lazyload alt="image-20260109191806219" style="zoom:50%;" /></p>
+<p>在语法分析的时候，对于定义的变量，都已经加入了符号表。在加入符号表之后，还会调用 gen_var_init 函数。</p>
+<p>第 988 行，如果是常量，就返回。</p>
+<p>第 991 行，如果是局部变量，添加形如 “decl xxx” 的中间指令。</p>
+<p>第 992 行，如果变量没有初始化值，则返回。</p>
+<p>否则，根据是否为全局变量做不同的处理。</p>
+<p>第 1030 行，对于局部变量，生成赋值语句。</p>
+<p>有人问为啥全局变量没有赋值语句，这是因为全局变量的初始化不是靠指令，而是靠汇编文件中的 .data 段。</p>
+<p>对于全局变量，要分情况讨论。</p>
+<p><img src="image-20260109192544956.png" srcset="/img/loading.gif" lazyload alt="image-20260109192544956" style="zoom:50%;" /></p>
+<p>第 998~1001 已经写了注释，初始化值分为几类：</p>
+<p>1、常量；例如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_CONST     0x01</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_VAR_ADDR  0x02</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_STR_ADDR  0x04</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_EXPR      0x08 <span class="hljs-comment">// 没有用到</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_LIST      0x10</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_STR       0x20</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_ARR_NAME  0x40</span><br><br><br><span class="hljs-type">int</span> monkey = <span class="hljs-number">1</span>; <span class="hljs-comment">// 整型</span><br><span class="hljs-type">char</span> cat = <span class="hljs-string">&#x27;A&#x27;</span>; <span class="hljs-comment">// 字符型</span><br><span class="hljs-type">char</span> *name = <span class="hljs-string">&quot;Chezi&quot;</span>; <span class="hljs-comment">// 字符串</span><br></code></pre></td></tr></table></figure>
+<p>第 1010 行，把常量的值拷贝到变量的 int_val 字段</p>
+<p>并且设置 var-&gt;init_by = INIT_BY_CONST;</p>
+<p>第 1004 行，如果变量是 char * 类型且初始化值是数组，说明如上面第 3 行的代码，设置 var-&gt;string_val 为字符串的名字；</p>
+<p>并且设置 var-&gt;init_by = INIT_BY_STR_ADDR;</p>
+<p>2、某个全局变量的地址</p>
+<p>3、全局数组的名字</p>
+<p>这两种情况例如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> *p_monkey = &amp;monkey; <span class="hljs-comment">// 某个全局变量的地址</span><br><span class="hljs-type">int</span> arr[] = &#123;<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>&#125;;<br><span class="hljs-type">int</span> *dog = arr; <span class="hljs-comment">// 全局数组的名字</span><br></code></pre></td></tr></table></figure>
+<p>在生成中间代码的时候， &amp;monkey 会创建一个新的变量，假设叫 tmp，并且让 tmp-&gt;pointing_to 指向变量 monkey</p>
+<p>然后把 p_monkey 的 init_val 设置为 tmp</p>
+<p>所以代码第 1015 行，var-&gt;pointing_to = init_val-&gt;pointing_to;</p>
+<p>其实就是设置 p_monkey 的 pointing_to 字段为变量 monkey</p>
+<p>这样变量 tmp 就没有用了，它就是一个搭桥的，第 1017 行删除变量 tmp，“过河拆桥”。</p>
+<p>第 1018 行设置 var-&gt;init_by = INIT_BY_VAR_ADDR; 意思是用变量的地址初始化</p>
+<p>第 1019 行，针对 “int *dog = arr;” 这种情况，设置 var-&gt;arr_name 为数组的名字，并且设置 var-&gt;init_by = INIT_BY_ARR_NAME;</p>
+<p>对于全局数组的初始化，在 gen_arr_init 函数中</p>
+<p><img src="image-20260109195011624.png" srcset="/img/loading.gif" lazyload alt="image-20260109195011624" style="zoom:50%;" /></p>
+<p>此函数和 gen_var_init 类似，在把数组加入符号表后，就会调用它。</p>
+<p>第 1088 行，添加形如 “decl xxx” 的中间指令。</p>
+<p>第 1089 行，判断数组有没有初始化，如果没有初始化，就返回。</p>
+<p>我们要关注的是第 1093 到 1096 行。用列表初始化和用字符串初始化有什么区别呢？举个简单的例子你就明白了：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> arr[] = &#123;<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>&#125;;  <span class="hljs-comment">// INIT_BY_LIST  用列表初始化</span><br><span class="hljs-type">int</span> arr[] = <span class="hljs-string">&quot;hello&quot;</span>;  <span class="hljs-comment">// INIT_BY_STR 用字符串初始化</span><br></code></pre></td></tr></table></figure>
+<p>当 gen_var_init 和 gen_arr_init 函数中为全局变量设置好初始化类型后，再看数据段的生成，就会简单很多。</p>
+<h2 id="生成-data-段"><a href="#生成-data-段" class="headerlink" title="生成 .data 段"></a>生成 .data 段</h2><p>数据段里面有字符串表和全局变量。全局变量分为数组和普通变量。</p>
+<p>先来一个直观的认识。请看下面的代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">char</span> str_list[<span class="hljs-number">20</span>] = &#123;<span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, <span class="hljs-number">1000</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>&#125;; <span class="hljs-comment">// 数组</span><br><span class="hljs-type">int</span> monkey = <span class="hljs-number">3</span>; <span class="hljs-comment">// 普通变量</span><br><span class="hljs-type">int</span> *p_monkey = &amp;monkey; <span class="hljs-comment">// 带初始化的指针</span><br></code></pre></td></tr></table></figure>
+<p>上面的代码对应的汇编代码不唯一，我们的编译器会生成这样的代码：</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">section</span> .data<br><br><span class="hljs-meta">global</span> str_list<br>	str_list <span class="hljs-built_in">db</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, -<span class="hljs-number">24</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">12</span> <span class="hljs-built_in">db</span> <span class="hljs-number">0</span><br><br><span class="hljs-meta">global</span> monkey<br>	monkey <span class="hljs-built_in">dd</span> <span class="hljs-number">3</span><br>	<br><span class="hljs-meta">global</span> p_monkey<br>	p_monkey <span class="hljs-built_in">dd</span> monkey<br></code></pre></td></tr></table></figure>
+<p>因为是全局变量，名字前面用 global 修饰，例如第 3、7、10 行。</p>
+<p>然后要换行，为变量指定初始值。</p>
+<p>需要注意的是第 11 行，p_monkey 是一个指针，它的值是变量 monkey 的地址，在汇编代码中，全局变量的名字就是它的地址，所以写“dd monkey”</p>
+<p><code>db</code> 和 <code>dd</code> 是 <strong>数据定义伪指令（data definition directives）</strong>，用于在程序的数据段中<strong>分配并初始化内存</strong>。</p>
+<p>它们的名称来源于：</p>
+<ul>
+<li><strong><code>db</code> = Define Byte</strong>（定义字节）</li>
+<li><strong><code>dd</code> = Define Doubleword</strong>（定义双字）注意，一个字等于2字节，双字就是4个字节</li>
+</ul>
+<p>第 8 行的 monkey 是整型，占 4 字节，所以用 dd;</p>
+<p>dd 或者 db 后面是初始化值。</p>
+<p>对于数组，dd 或者 db 后面可以用一串值，用逗号分开。</p>
+<p>例如</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> str_list<br>	str_list <span class="hljs-built_in">db</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, -<span class="hljs-number">24</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<p>但是连续写 12 个 0 实在太麻烦，读起来也不知道是几个零。解决办法是用 “times 12 db 0”（需要换行）</p>
+<p><code>times 12 db 0</code> 是一条 <strong>重复数据定义指令</strong>，它的含义是：</p>
+<blockquote>
+<p>连续分配 12 个字节（bytes），每个字节的初始值都为 0。</p>
+</blockquote>
+<p>另外，在 <strong>NASM（Netwide Assembler）</strong> 中，<code>db</code> 后面跟一个字符串（用单引号 <code>&#39;...&#39;</code> 或双引号 <code>&quot;...&quot;</code> 包裹）表示：<strong>将该字符串的每个字符按其 ASCII 码值依次存入内存，每个字符占 1 个字节</strong>。</p>
+<p>例如：</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">msg <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;Hello&quot;</span> <br>msg <span class="hljs-built_in">db</span> <span class="hljs-string">&#x27;World&#x27;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>&quot;Hello&quot;</code> → 存储为 5 个字节：<code>48 65 6C 6C 6F</code>（即 <code>&#39;H&#39; &#39;e&#39; &#39;l&#39; &#39;l&#39; &#39;o&#39;</code> 的 ASCII 码）</li>
+<li>需要注意，末尾没有 <code>\0</code>（空字符）（这与 C 语言不同，C 字符串会自动加 <code>\0</code>）</li>
+</ul>
+<p>如果我们要和 C 风格字符串兼容（例如调用 <code>printf</code>），<strong>必须显式加 0</strong>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">msg db <span class="hljs-string">&quot;Hello&quot;</span>, <span class="hljs-number">0</span>        <br></code></pre></td></tr></table></figure>
+<p>另外，对于转义字符，NASM 也和 C 不一样。如果 C 代码中定义了字符串</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">char</span> arr[] = <span class="hljs-string">&quot;hello\nworld&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>如果翻译成</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">global arr<br>	arr db  <span class="hljs-string">&quot;hello\nworld&quot;</span>, <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<p>这样是不行的，因为 nasm 会把 “\n” 当成 2 个字符 “\” 和 “n”</p>
+<p>那如何在汇编文件里面表示换行呢？就用 ASCII 码，<code>0xA</code> 或 10</p>
+<p>所以要这样写：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">arr db  <span class="hljs-string">&quot;hello&quot;</span>, <span class="hljs-number">10</span>, <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<p>为了解决这个问题，我设计了函数 cstr_to_nasm_str</p>
+<p>用一个 for 循环，逐个处理字符串中的每个字符(不包括末尾的 \0)。</p>
+<p>当正在输出字符串的时候，称为字符模式（CHAR_MODE），当正在输出 ASCII 码的时候，称为 ASCII 码模式（ASCII_MODE）</p>
+<p>对于特殊字符：<code>\t, \n, \&quot;, \0</code>，我们输出 ASCII 码；对于其他字符，当作普通字符，输出字符本身。</p>
+<p>伪代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs c">mode = ASCII_MODE; <span class="hljs-comment">// 最开始的模式</span><br><span class="hljs-keyword">for</span>(ch = 字符串的每一个字符) &#123;<br>	<span class="hljs-keyword">if</span>(ch 是特殊字符) &#123;<br>	    <span class="hljs-keyword">if</span>(mode == ASCII_MODE) &#123;<br>	        输出 ch 的 ASCII 码;<br>	    &#125; <span class="hljs-keyword">else</span> &#123;<br>	        结束 CHAR_MODE; <span class="hljs-comment">// (用 ”,);</span><br>	        输出 ch 的 ASCII 码;<br>	        mode = ASCII_MODE;<br>	    &#125;<br>	&#125; <span class="hljs-keyword">else</span> &#123; <span class="hljs-comment">// 普通字符</span><br>	    <span class="hljs-keyword">if</span>(mode == ASCII_MODE) &#123;<br>	        结束 ASCII_MODE; <span class="hljs-comment">// 用 ,“（如果是第一个字符，仅输出 “ ）</span><br>	        输出 ch; <span class="hljs-comment">// (%c)</span><br>	        mode = CHAR_MODE;<br>	    &#125; <span class="hljs-keyword">else</span> &#123;<br>	        输出 ch; <span class="hljs-comment">// (%c)</span><br>	    &#125;<br>	    <span class="hljs-keyword">if</span>(ch 是最后一个字符)<br>	        输出 ”<br>	&#125;<br>&#125;<br><br>输出 <span class="hljs-string">&quot;, 0\n&quot;</span><br></code></pre></td></tr></table></figure>
+<p>假设我们要处理  “hello\nworld” 这个字符串</p>
+<p>首先处理‘h’</p>
+<p>因为是 ASCII_MODE 且它是普通字符，所以执行 13~15，因为是第一个字符，输出 <code>“</code></p>
+<p>再输出‘H’</p>
+<p>然后 mode = CHAR_MODE;</p>
+<p>再处理 e, 因为是 CHAR_MODE 且它是普通字符，输出‘e’</p>
+<p>…</p>
+<p>再处理 o, 因为是 CHAR_MODE 且它是普通字符，输出‘o’</p>
+<p>现在处理 ‘\n’，因为是特殊字符，且是 CHAR_MODE，执行第 7~9，输出 <code>”,</code></p>
+<p>再输出 10;  设置 mode = ASCII_MODE;</p>
+<p>现在处理‘n’，因为是普通字符且是 ASCII_MODE，输出<code>,“</code></p>
+<p>再输出‘n’；设置mode = CHAR_MODE;</p>
+<p>…</p>
+<p>现在处理‘d’,因为普通字符且是 CHAR_MODE，输出‘d’；且它是最后一个字符，输出<code>”</code></p>
+<p>for 循环结束。</p>
+<p>最后输出 “, 0\n”</p>
+<p>以上是对字符串的处理。如果是字符，要怎么处理呢？</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">char</span> euler[] = &#123;<span class="hljs-string">&#x27;a&#x27;</span>, <span class="hljs-string">&#x27;b&#x27;</span>, <span class="hljs-string">&#x27;\\&#x27;</span>, <span class="hljs-string">&#x27;\n&#x27;</span>,<span class="hljs-string">&#x27;\0&#x27;</span>&#125;;<br></code></pre></td></tr></table></figure>
+<p>在 nasm 中，“\” 并不是什么特殊的字符。</p>
+<p>所以可以这样翻译：</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">euler <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;ab\&quot;, 10, 0</span><br><span class="hljs-string">euler db &#x27;a&#x27;, &#x27;b&#x27;, &#x27;\&#x27;, 10, 0  ; 这样写也可以    </span><br></code></pre></td></tr></table></figure>
+<p>如果字符里面有单引号</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">euler <span class="hljs-built_in">db</span> <span class="hljs-string">&#x27;a&#x27;</span>, <span class="hljs-string">&#x27;b&#x27;</span>, <span class="hljs-string">&#x27;&#x27;&#x27;</span>, <span class="hljs-number">0</span>  <span class="hljs-comment">; 不能这样写</span><br>euler <span class="hljs-built_in">db</span> <span class="hljs-string">&#x27;a&#x27;</span>, <span class="hljs-string">&#x27;b&#x27;</span>, <span class="hljs-number">39</span>, <span class="hljs-number">0</span>   <span class="hljs-comment">; 可以这样写， 单引号的 ASCII 码是 39</span><br>euler <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;ab&#x27;&quot;</span>, <span class="hljs-number">0</span>          <span class="hljs-comment">; 也可以这样写</span><br></code></pre></td></tr></table></figure>
+<p>我打算用下面的函数解决此类问题</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">show_char_in_nasm</span><span class="hljs-params">(<span class="hljs-type">char</span> ch, FILE *file)</span><br>&#123;<br>    <span class="hljs-keyword">if</span> (ch == <span class="hljs-string">&#x27;\&#x27;&#x27;</span> || !<span class="hljs-built_in">isprint</span>(ch))<br>        <span class="hljs-built_in">fprintf</span>(file, <span class="hljs-string">&quot;%d&quot;</span>, ch);<br>    <span class="hljs-keyword">else</span><br>        <span class="hljs-built_in">fprintf</span>(file, <span class="hljs-string">&quot;\&#x27;%c\&#x27;&quot;</span>, ch);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>当需要逐个输出字符，如果是单引号或者是不可打印字符就输出 ASCII 码，否则输出用一对单引号包裹的字符。</p>
+<p>以上都是铺垫，现在可以看代码了。</p>
+<p><img src="image-20260109195654697.png" srcset="/img/loading.gif" lazyload alt="image-20260109195654697" style="zoom:50%;" /></p>
+<p>第 714 行，输出 “section .data”；声明这是数据段。</p>
+<p>第 717 行，统计所有全局变量，把全局变量收集到 glb_vars_head 链表。</p>
+<p>第 718 行，遍历链表，如果是 extern，那就输出 extern xxx;如果是本文件定义的，就输出 global xxx</p>
+<p>对于没有初始化值的全局变量，我们直接给它赋值 0，所以 728 行，先根据类型输出 db 或者 dd</p>
+<p>然后就是折叠的部分，先不讲。</p>
+<p>我们看第 793 行，处理字符串表，先输出注释 “; 字符串表”</p>
+<p>然后是字符串的名字，再然后是 db, 再然后就是 cstr_to_nasm_str 函数。cstr_to_nasm_str 函数的伪代码已经讲了，这里跳过。</p>
+<p>现在我们集中精力看折叠的部分。折叠的部分用 if-else 分成两种情况，数组和非数组。</p>
+<p>数组又分成三种情况。</p>
+<p><img src="image-20260110124141374.png" srcset="/img/loading.gif" lazyload alt="image-20260110124141374" style="zoom:50%;" /></p>
+<p>用字符串初始化、用列表初始化、没有初始化。</p>
+<p>如果用字符串初始化，那就先调用 cstr_to_nasm_str 函数输出字符串。这还没有完，因为我们允许数组元素个数大于字符串的长度，此时需要补齐后面的零。</p>
+<p>int zero_cnt = var-&gt;ele_num - strlen(var-&gt;init_val-&gt;string_val) - 1;</p>
+<p>这句代码是求 0 的个数，用数组元素的个数减去字符串的长度，再减去1是因为末尾还有一个零，这个零是 cstr_to_nasm_str 函数加的。</p>
+<p>剩下就好办了，第735~736，输出 times xx 0</p>
+<p>第 738 行，删除字符串，是因为已经生成了数组初始化的代码，这个字符串就没有用了。</p>
+<p>第 767~768 是针对没有初始化的情况，我们强制赋值为 0</p>
+<p><img src="image-20260110125226533.png" srcset="/img/loading.gif" lazyload alt="image-20260110125226533" style="zoom:50%;" /></p>
+<p>第 739~765 是用列表初始化的情况。列表的每个值已经保存到了 arr_init_val 这个链表中。</p>
+<p>第 741 行遍历链表，取出每个值，根据值的类型，分为整型和字符型，如果是前者，则以 ASCII 码的形式输出（第 746 行）</p>
+<p>如果是字符型，调用 show_char_in_nasm 输出。</p>
+<p>如果不是最后一个节点，还需要输出一个逗号（第 749 行）</p>
+<p>第 759 行，同样要补齐后面的零。</p>
+<p>数组说完了，下面说非数组的初始化。</p>
+<p><img src="image-20260110151927041.png" srcset="/img/loading.gif" lazyload alt="image-20260110151927041" style="zoom:50%;" /></p>
+<p>继续举例子。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> monkey = <span class="hljs-number">3</span>; <span class="hljs-comment">// INIT_BY_CONST</span><br><span class="hljs-type">int</span> *p_monkey = &amp;monkey; <span class="hljs-comment">// INIT_BY_VAR_ADDR</span><br><span class="hljs-type">char</span> *pstr = <span class="hljs-string">&quot;Hello&quot;</span>; <span class="hljs-comment">// INIT_BY_STR_ADDR</span><br><span class="hljs-type">int</span> <span class="hljs-built_in">list</span>[<span class="hljs-number">20</span>] = &#123;<span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, <span class="hljs-number">1000</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>&#125;; <br><span class="hljs-type">int</span> *plist = <span class="hljs-built_in">list</span>; <span class="hljs-comment">// INIT_BY_ARR_NAME</span><br></code></pre></td></tr></table></figure>
+<p>这段代码生成的汇编如下</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">section</span> .data<br><span class="hljs-meta">global</span> monkey<br>	monkey <span class="hljs-built_in">dd</span> <span class="hljs-number">3</span><br><span class="hljs-meta">global</span> p_monkey<br>	p_monkey <span class="hljs-built_in">dd</span> monkey<br><span class="hljs-meta">global</span> pstr<br>	pstr <span class="hljs-built_in">dd</span> @str99	<br><span class="hljs-meta">global</span> plist<br>	plist <span class="hljs-built_in">dd</span> list<br><span class="hljs-meta">global</span> list<br>	list <span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, <span class="hljs-number">1000</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">12</span> <span class="hljs-built_in">dd</span> <span class="hljs-number">0</span><br><br><span class="hljs-comment">; 字符串表</span><br>@str99 <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;Hello&quot;</span>, <span class="hljs-number">0</span><br><br></code></pre></td></tr></table></figure>
+<p>最简单的情况如 “int monkey = 3;” 直接输出初始化值，汇编代码第 3 行。</p>
+<p>如果是指向变量的指针，如 int *p_monkey = &monkey; 那应该输出所指向变量的名字，如汇编代码第 5 行。</p>
+<p>如果是指向字符串的指针，如 char *pstr = “Hello”;  应该输出字符串的名字，如汇编代码第 7 行，</p>
+<p>如果是用数组名初始化的指针，如 int *plist = list; 应该输出数组名，如汇编代码第 9 行。</p>
+<p>如果不带有初始化，输出 0 就可以。</p>
+<h2 id="如何测试"><a href="#如何测试" class="headerlink" title="如何测试"></a>如何测试</h2><p>到目前为止，我们的编译器仅实现了把 .c 翻译为.asm,如何验证汇编代码的正确性呢？</p>
+<p>我们可以借助汇编器 nasm 和 gcc;</p>
+<p>首先，我们要准备好要测试的代码，例如</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*  test.c  */</span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">print_int_arr</span><span class="hljs-params">(<span class="hljs-type">int</span> *arr, <span class="hljs-type">int</span> len)</span>; <span class="hljs-comment">// 声明，在别的文件中定义</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">swap</span><span class="hljs-params">(<span class="hljs-type">int</span> *a, <span class="hljs-type">int</span> *b)</span> <span class="hljs-comment">// 交换两个整数</span><br>&#123;<br>    <span class="hljs-type">int</span> tmp = *a;<br>    *a = *b;<br>    *b = tmp;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">bubble_sort</span><span class="hljs-params">(<span class="hljs-type">int</span> *arr, <span class="hljs-type">int</span> n)</span> <span class="hljs-comment">// 冒泡排序</span><br>&#123;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; n - <span class="hljs-number">1</span>; i++) &#123;<br>        <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> j = <span class="hljs-number">0</span>; j &lt; n - <span class="hljs-number">1</span> - i; j++) &#123;<br>            <span class="hljs-keyword">if</span> (arr[j] &gt; arr[j + <span class="hljs-number">1</span>]) &#123;<br>                <span class="hljs-comment">// 交换元素</span><br>                swap(arr + j, arr + j + <span class="hljs-number">1</span>);<br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-built_in">list</span>[<span class="hljs-number">20</span>] = &#123;<span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, <span class="hljs-number">1000</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>&#125;; <span class="hljs-comment">// 待排序的数组</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">test</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> arr_len = <span class="hljs-keyword">sizeof</span>(<span class="hljs-built_in">list</span>) / <span class="hljs-keyword">sizeof</span>(<span class="hljs-built_in">list</span>[<span class="hljs-number">0</span>]); <span class="hljs-comment">// 求元素个数</span><br>    bubble_sort(<span class="hljs-built_in">list</span>, arr_len); <span class="hljs-comment">// 排序</span><br>    print_int_arr(<span class="hljs-built_in">list</span>, arr_len); <span class="hljs-comment">// 打印结果</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这个 test.c， 就是 csub 要编译的文件；它要实现的就是对一个全局数组做排序，并调用 print_int_arr 函数打印结果。</p>
+<p>然后，我们准备一个 gcc_main.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* gcc_main.c */</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">test</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>; <br><span class="hljs-type">void</span> <span class="hljs-title function_">print_int_arr</span><span class="hljs-params">(<span class="hljs-type">int</span> *arr, <span class="hljs-type">int</span> len)</span><br>&#123;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; len; ++i) &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d &quot;</span>, arr[i]);<br>    &#125;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;\n&quot;</span>);<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    test();<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>此文件的作用有 2 个：</p>
+<p>1、实现 print_int_arr 函数，用来打印数组，供 test.c 调用</p>
+<p>2、调用 test.c 里面的 test() 函数。</p>
+<p>我们写一个简单的 Makefile</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs makefile"><span class="hljs-section">test:test.o main.o</span><br>	gcc test.o main.o -m32 -no-pie  -o test<br><br><span class="hljs-section">test.o:test.asm</span><br>	nasm -g -f elf32 test.asm -o test.o<br>    <br><span class="hljs-section">main.o:gcc_main.c</span><br>	gcc gcc_main.c -g -c -m32  -o main.o<br><br><span class="hljs-section">clean:</span><br>	rm -rf *.o test	<br></code></pre></td></tr></table></figure>
+<p>第 5 行的 test.asm 是 cusb 根据 test.c 生成的 test.asm</p>
+<p>我们用 nasm 把它汇编为 test.o</p>
+<p>-g 是生成调试信息， -f elf32 是指定 .o 的输出格式为 32 位 ELF 目标文件</p>
+<p>第 8 行，用 gcc 把 gcc_main.c 编译为 main.o, -c 的意思是只编译，不链接；-m32 是指生成 32 位的代码。</p>
+<p>第 2 行，用 gcc 链接 test.o 和 main.o，生成最后的可执行文件 test;</p>
+<p>如果不加 -no-pie</p>
+<p>则可能输出</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">/usr/bin/ld: test.o: warning: relocation in read-only section `.text&#x27;<br>/usr/bin/ld: warning: creating DT_TEXTREL in a PIE<br></code></pre></td></tr></table></figure>
+<p>这是因为，我们生成的汇编代码不是位置无关代码，需要重定位。</p>
+<p>第一行，链接器发现我们的 <code>.text</code> 段中包含<strong>需要重定位（relocation）的地址引用</strong>。</p>
+<p>第二行，为了重定位，链接器被迫在最终的 ELF 文件中添加一个 <code>DT_TEXTREL</code> 标记。</p>
+<p>如果加了 -no-pie，就可以禁用 PIE，上面的警告也没有了。</p>
+<p>什么是 PIE？</p>
+<ul>
+<li><strong>PIE</strong> 是一种编译/链接技术，让可执行文件像共享库（<code>.so</code>）一样，<strong>可以在内存中的任意地址加载运行</strong>。</li>
+<li>它是现代 Linux 系统实现 <strong>ASLR（Address Space Layout Randomization，地址空间布局随机化）</strong> 的关键机制。</li>
+<li>启用 PIE 后，每次运行程序时，其代码段（<code>.text</code>）、数据段等的基地址都会随机变化。</li>
+</ul>
+<p>禁用 PIE（Position-Independent Executable，位置无关可执行文件）意味着<strong>生成一个传统的、具有固定加载地址的可执行程序</strong>。这对于初学编译和链接原理的同学挺友好。</p>
+<p>执行 make 后，就会生成一个 32 位的可执行程序，运行结果：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">$ ./test<br><span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">3</span> <span class="hljs-number">5</span> <span class="hljs-number">7</span> <span class="hljs-number">7</span> <span class="hljs-number">9</span> <span class="hljs-number">9</span> <span class="hljs-number">22</span> <span class="hljs-number">1000</span> <br></code></pre></td></tr></table></figure>
+<p>说明我们生成的汇编代码基本没有问题。</p>
+<p>生成的 .asm 文件如下（仅截取一小部分）</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> swap<br><span class="hljs-symbol">swap:</span><br><span class="hljs-comment">; peep_hole_optimize</span><br><span class="hljs-comment">;   4	ENTRY</span><br>	<span class="hljs-keyword">push</span> <span class="hljs-built_in">ebp</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebp</span>, <span class="hljs-built_in">esp</span><br>	<span class="hljs-keyword">sub</span> <span class="hljs-built_in">esp</span>, <span class="hljs-number">8</span><br><span class="hljs-comment">;   7	decl tmp</span><br><span class="hljs-comment">;   8	tmp = *a</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">ebp</span>+<span class="hljs-number">8</span>]		<span class="hljs-comment">; a : a</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">eax</span>]<br>	<span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">4</span>], <span class="hljs-built_in">eax</span>		<span class="hljs-comment">; tmp : tmp</span><br><span class="hljs-comment">;  11	decl .t5</span><br><span class="hljs-comment">;  12	.t5 = *b</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">ebp</span>+<span class="hljs-number">12</span>]		<span class="hljs-comment">; b : b</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">eax</span>]<br>	<span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">8</span>], <span class="hljs-built_in">eax</span>		<span class="hljs-comment">; .t5 : *(b)</span><br><span class="hljs-comment">;  13	*a = .t5</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">ecx</span>, [<span class="hljs-built_in">ebp</span>+<span class="hljs-number">8</span>]		<span class="hljs-comment">; a : a</span><br>	<span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ecx</span>], <span class="hljs-built_in">eax</span><br><span class="hljs-comment">;  17	*b = tmp</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">4</span>]		<span class="hljs-comment">; tmp : tmp</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">ecx</span>, [<span class="hljs-built_in">ebp</span>+<span class="hljs-number">12</span>]		<span class="hljs-comment">; b : b</span><br>	<span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ecx</span>], <span class="hljs-built_in">eax</span><br><span class="hljs-comment">;   5 @L1_return:</span><br>@L1_return:<br><span class="hljs-comment">;  20	EXIT</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">esp</span>, <span class="hljs-built_in">ebp</span><br>	<span class="hljs-keyword">pop</span> <span class="hljs-built_in">ebp</span><br>	<span class="hljs-keyword">ret</span><br></code></pre></td></tr></table></figure>
+<p>可以看到，生成的中间指令作为注释插了进来</p>
+<p>另外，第 10 行后面的注释，表示 ebp+8 处存的变量是 a;（冒号左边是变量的名字，冒号右边是变量的注释，有些情况下，名字和注释一样，所以会看到两个 a）</p>
+<p>第 12 行的注释，表示  ebp-4 处存的变量是 tmp</p>
+<p>本文到这里就结束了。下来我们要乘胜追击，把汇编文件翻译为二进制。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第22天：生成代码段和数据段</div>
+      <div>https://leslieche.github.io/2026/04/18/第22天：生成代码段和数据段/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月18日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/04/18/%E7%AC%AC23%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/" title="第23天：汇编代码的窥孔优化">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">第23天：汇编代码的窥孔优化</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/18/%E7%AC%AC21%E5%A4%A9%EF%BC%9A%E6%8A%8A%E4%B8%AD%E9%97%B4%E4%BB%A3%E7%A0%81%E7%BF%BB%E8%AF%91%E4%B8%BA%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/" title="第21天：把中间代码翻译为汇编指令">
+                        <span class="hidden-mobile">第21天：把中间代码翻译为汇编指令</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"LeslieChe/comment_for_blog","repo-id":"R_kgDOR6CL3g","category":"General","category-id":"DIC_kwDOR6CL3s4C6Ez9","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":1,"input-position":"top","lang":"zh-CN","strict":0,"theme":"preferred_color_scheme","loading":"lazy"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
