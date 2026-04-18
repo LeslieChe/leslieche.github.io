@@ -1,0 +1,1032 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="写个汇编器玩玩">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第25天：汇编器的词法分析">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="写个汇编器玩玩">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124121114203.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124162036738.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124162328648.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124163144738.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124163923966.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124170418852.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124192405367.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124192320691.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124190917655.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124192555306.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124193928916.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124194240873.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124200613190.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124203017911.png">
+<meta property="article:published_time" content="2026-04-18T09:10:12.000Z">
+<meta property="article:modified_time" content="2026-04-18T09:38:32.824Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/image-20260124121114203.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第25天：汇编器的词法分析 - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/download/" target="_self">
+                <i class="iconfont icon-gitee-fill"></i>
+                <span>代码下载</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/download/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-gitee-fill"></i>
+                  <span>代码下载</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第25天：汇编器的词法分析"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-18 17:10" pubdate>
+          2026年4月18日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          43 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第25天：汇编器的词法分析</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第25天：汇编器的词法分析"><a href="#第25天：汇编器的词法分析" class="headerlink" title="第25天：汇编器的词法分析"></a>第25天：汇编器的词法分析</h1><p>回顾一下从第一节课到现在我们都做了什么？</p>
+<ol>
+<li>词法分析</li>
+<li>语法分析</li>
+<li>语义分析</li>
+<li>中间代码生成</li>
+<li>中间代码的优化</li>
+<li>把中间代码翻译成汇编代码</li>
+</ol>
+<p>如果读者精力有限，到这里就可以告一段落了。</p>
+<p>上面的步骤 1~4 实现了编译器的前端，步骤 5 属于编译器的中端。如果你看懂了我的大部分代码，相信你对编译原理不再云里雾里了。</p>
+<p>对于学有余力的读者，我们可以“百尺竿头更进一步”：实现一个简易的后端。</p>
+<p><strong>编译器后端</strong>的主要任务是将中间表示<strong>转换为目标平台的</strong>机器代码。</p>
+<p>这个任务又可分成 2 个步骤，第一是把中间代码翻译成汇编代码，我们已经实现了；第二是把汇编代码转换为目标文件。</p>
+<p>如何把把汇编代码转换为目标文件呢？</p>
+<p>答案就是实现一个汇编器。如果把汇编器看成是汇编语言的编译器，那么我们要做是：</p>
+<ol>
+<li>汇编器的词法分析</li>
+<li>汇编器的语法分析</li>
+<li>汇编器的语义分析</li>
+<li>指令生成</li>
+<li>目标文件生成</li>
+</ol>
+<p>步骤 1~2，和之前的方法是一样的，可以说是“换汤不换药”。</p>
+<p>步骤 3 包括符号表管理。</p>
+<p>步骤 4 比较硬核，需要了解 x86 机器码的格式；</p>
+<p>步骤 5 也比较难啃，需要了解 .o 文件的结构。</p>
+<p>读者不用害怕，我会尽己所能为您讲明白。</p>
+<p>接下来，我们要完成汇编器的词法分析。</p>
+<p>需要说明的是，我们要实现的汇编器，功能比较简单，只能汇编 csub 生成的汇编代码。</p>
+<h2 id="汇编器的词法记号"><a href="#汇编器的词法记号" class="headerlink" title="汇编器的词法记号"></a>汇编器的词法记号</h2><p>还记得什么是词法记号吗？词法记号是源代码经词法分析后生成的最小语义单元，也就是说不能再分了。</p>
+<p>根据 csub 生成的汇编代码，我们的汇编器要支持哪些词法记号呢？</p>
+<p>汇编代码包括数据段、代码段。数据段里面有 section, global, extern, db, dd 等<strong>关键字</strong>,还有<strong>标识符</strong>，例如 .text, .data；</p>
+<p>另外，对于数据的定义，肯定少不了<strong>常量</strong>，包括数字常量、字符串常量或者字符常量；</p>
+<p>代码段里面有  global, extern 等关键字，还有以冒号结尾的标识符，标号，各种指令（<strong>指令助记符、寄存器名字</strong>）</p>
+<p>另外还有<strong>界符</strong>，例如冒号、逗号、分号（用于注释）、方括号等。</p>
+<p>把上面的信息归纳一下，如下面的表格</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>词法记号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>标识符</td>
+<td>以<code>.</code> <code>@</code>或大小写字母开头</td>
+</tr>
+<tr>
+<td>常量</td>
+<td>数字（仅支持十进制）、字符（以单引号包裹）、字符串（以双引号包裹）</td>
+</tr>
+<tr>
+<td>关键字</td>
+<td>global, extern, section, db, dw, dd, times, byte, word, dword</td>
+</tr>
+<tr>
+<td>关键字（指令助记符）</td>
+<td>mov,movsx,movzx,add,sub,imul,cmp,lea,<br>call,int,idiv,neg,jmp,je,jne,jge,sete,setne,setg,setge,setl,setle,<br/>push,pop,ret,cdq</td>
+</tr>
+<tr>
+<td>寄存器的名字</td>
+<td>al,cl,dl,bl,eax,ecx,edx,ebx,esp,ebp,esi,edi</td>
+</tr>
+<tr>
+<td>界符</td>
+<td>正号，负号，逗号，冒号，分号，方括号，换行</td>
+</tr>
+<tr>
+<td>其他</td>
+<td>ASS_INVALID；ASS_FILE_END；ASS_COMMENT</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>有几点要注意：</p>
+<p>1、和 C 语言不同，汇编指令以换行作为结束，你不能在同一行书写 2 条汇编指令；</p>
+<p>2、其他包括无效的记号(ASS_INVALID)、文件结束(ASS_FILE_END)、还有注释（ASS_COMMENT）；</p>
+<p>3、虽然生成汇编指令的时候用不上 byte, word, dword 这些关键字，但是做窥孔优化的时候可能用到；</p>
+<p>和之前一样，我们用枚举类型记录所有词法记号。</p>
+<p><img src="image-20260124121114203.png" srcset="/img/loading.gif" lazyload alt="image-20260124121114203" style="zoom:50%;" /></p>
+<p>代码仅截取部分。</p>
+<p>需要注意的是，第 33 行，是我专门加的，为了记录关键字的开始位置。后面会讲为什么这么做。</p>
+<h2 id="扫描器"><a href="#扫描器" class="headerlink" title="扫描器"></a>扫描器</h2><p>在做词法分析之前，肯定需要一个扫描器，我们之前写的那个改一改就可以用。</p>
+<p>不过我打算重新写一个。这次打算把和扫描有关的全局变量都封装到一个结构体里面，例如下面这样。</p>
+<p><img src="image-20260124162036738.png" srcset="/img/loading.gif" lazyload alt="image-20260124162036738" style="zoom:50%;" /></p>
+<p>扫描器的初始化函数是：</p>
+<p><img src="image-20260124162328648.png" srcset="/img/loading.gif" lazyload alt="image-20260124162328648" style="zoom:50%;" /></p>
+<p>第 82 行马上会讲。</p>
+<p>第 88 行，以只读的方式打开文件</p>
+<p>第 94 行设置文件的名字</p>
+<p>第 95 行让行号等于 1</p>
+<p>第 96 行把当前字符设置为空格。</p>
+<p>第 98 设置当前的词法记号为无效符号。</p>
+<p>第 82 行的 ass_check_symbol_num 函数如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">ass_check_symbol_num</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    assert(ASS_TOKEN_CNT == ass_token_names_cnt);<br>    assert(ass_keywords_names_cnt ==<br>           (ASS_TOKEN_CNT - ASS_KEYWORDS_BEGIN - <span class="hljs-number">1</span>));<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里面有 2 个断言。</p>
+<p>ASS_TOKEN_CNT 表示所有词法记号的个数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">ass_token</span>  // 所有词法记号的枚举</span><br><span class="hljs-class">&#123;</span> <br>  ASS_INVALID,           <span class="hljs-comment">// 无效值</span><br>  ASS_FILE_END,          <span class="hljs-comment">// 文件结束</span><br>  ASS_COMMENT,           <span class="hljs-comment">// 注释</span><br>  ASS_ID,                <span class="hljs-comment">// 标识符</span><br><br> <span class="hljs-comment">//   ...                // 省略 </span><br>  ASS_RBRACKET,          <span class="hljs-comment">// 右方括号</span><br>  NEW_LINE,              <span class="hljs-comment">// 换行 </span><br> <span class="hljs-comment">// 关键字</span><br>  ASS_KEYWORDS_BEGIN,   <span class="hljs-comment">// 注意这里</span><br> <span class="hljs-comment">// 8 位寄存器</span><br>  AL,<br>  CL,<br>    <br>  <span class="hljs-comment">// ...     // 省略 </span><br>  <br>  KW_WORD,   <span class="hljs-comment">// word</span><br>  KW_DWORD,  <span class="hljs-comment">// dword</span><br>  ASS_TOKEN_CNT, <span class="hljs-comment">// 注意这里</span><br>&#125; ass_token_e;   <br></code></pre></td></tr></table></figure>
+<p>因为我们还有两个数组，和这里定义的词法记号（或者其中的关键字）一一对应。</p>
+<p><img src="image-20260124163144738.png" srcset="/img/loading.gif" lazyload alt="image-20260124163144738" style="zoom:50%;" /></p>
+<p>ass_token_names 数组里面都是字符串，从第一个字符串到最后一个字符串，和 enum ass_token 是一一对应的关系。</p>
+<p>有时候我们增加了词法记号或者删除了词法记号，这个数组也要跟着修改，如果忘了修改就会出问题。</p>
+<p>assert(ASS_TOKEN_CNT == ass_token_names_cnt); </p>
+<p>就是为了保证 ass_token_names 的字符串个数和 ass_token_e 定义的词法记号个数一样，避免出现仅修改一处而忘记修改另一处的情况。</p>
+<p>因为枚举默认是从 0 开始的，所以 ASS_TOKEN_CNT 就表示了整个列表有多少个枚举成员。</p>
+<p><img src="image-20260124163923966.png" srcset="/img/loading.gif" lazyload alt="image-20260124163923966" style="zoom:50%;" /></p>
+<p>ass_token_names_cnt 的值是靠第 46 行的宏 ARR_ELEM_CNT 计算的。</p>
+<p>这个宏很简单，我们之前多次使用过多次。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> ARR_ELEM_CNT(arr_name) (sizeof(arr_name) / sizeof(arr_name[0]))</span><br></code></pre></td></tr></table></figure>
+<p>第 59 行，ass_keywords_names_cnt 也是这样计算的。</p>
+<p>然后我们再看第二句断言。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">assert(ass_keywords_names_cnt == (ASS_TOKEN_CNT - ASS_KEYWORDS_BEGIN - <span class="hljs-number">1</span>));<br></code></pre></td></tr></table></figure>
+<p>代码第 49 行又是一个数组，里面是关键字的名字。</p>
+<p>同理，关键字的名字和 ass_token_e 的一部分是一一对应的。</p>
+<p>准确讲是从 ASS_KEYWORDS_BEGIN 后面那个成员开始，到 ASS_TOKEN_CNT 之前的成员结束。</p>
+<p>要计算有多少个关键字，可以用(ASS_TOKEN_CNT - ASS_KEYWORDS_BEGIN - 1) 表示。</p>
+<p>如果在 ass_token_e 中增加了关键字，数组 ass_keywords_names 也要跟着修改。</p>
+<p>第二句断言就是为了保证数组 ass_keywords_names 和 ass_token_e 中的关键字一一对应，避免出现仅修改一处而忘记修改另一处的情况。</p>
+<p>接下来看看扫描的函数：</p>
+<p><img src="image-20260124170418852.png" srcset="/img/loading.gif" lazyload alt="image-20260124170418852" style="zoom:50%;" /></p>
+<p>为了叙述方便，</p>
+<p>第一次调用 scan 函数的时候，因为 scanner-&gt;line_len 是 0（扫描器初始化调用了 calloc 函数，会把这个字段清零）</p>
+<p>所以执行第 119~120 行，读 ASS_MAX_LINE_LEN（定义为 80）个字符到 scanner-&gt;line_buf 中；</p>
+<p>假设读取成功，fread 的返回值是 80；</p>
+<p>然后执行第 125 行， scanner-&gt;read_pos = 0；</p>
+<p>第 128 行，scanner-&gt;cur_ch 被赋值为 scanner-&gt;line_buf[0]; scanner-&gt;read_pos 的值变成 1；</p>
+<p>下次调用 scan 函数，scanner-&gt;cur_ch 被赋值为 scanner-&gt;line_buf[1]，scanner-&gt;read_pos 的值变成 2；</p>
+<p>总之，每次调用 scan 函数，得到的字符在 scanner-&gt;cur_ch 中；</p>
+<p>如果文件读到了末尾，scanner-&gt;cur_ch 的值是 END；</p>
+<p>代码就分析到这里。</p>
+<h2 id="词法分析"><a href="#词法分析" class="headerlink" title="词法分析"></a>词法分析</h2><p>轮子有了，可以做词法分析了。</p>
+<p>最早我们学习词法分析的时候，用到了状态转换图。现在，依然是用状态转换图。</p>
+<p>我们把注意力放在和编译器的词法分析不一样的地方，如果类似就不赘述。</p>
+<h3 id="标识符"><a href="#标识符" class="headerlink" title="标识符"></a>标识符</h3><p>我用的 NASM 的版本是 version 2.16.01</p>
+<p>这个版本的 NASM 允许标识符以字母、下划线 <code>_</code>、问号 <code>?</code>、点号 <code>.</code> 或 <strong><code>@</code></strong> 符号<strong>开头</strong>。</p>
+<p>标识符可以包含字母（a-z, A-Z）、数字（0-9）、下划线 <code>_</code>、美元符号 <code>$</code>、井号 <code>#</code>、艾特符号 <code>@</code>、波浪号 <code>~</code>、点号 <code>.</code> 以及问号 <code>?</code>。</p>
+<p><strong>但是，有些字符最好不用做标识符，例如</strong></p>
+<ol>
+<li>美元符号：$$<code>= 当前位置，</code>$$$ = 当前段开始位置</li>
+<li><code>#</code>号，NASM 的预处理器指令可以选用 <code>#</code>或 <code>%</code> 作为前缀。虽然官方文档更推荐使用 %（如 %define），但为了兼容 C 语言预处理器的习惯，NASM 也支持 #</li>
+<li>波浪号 <code>~</code>：波浪号是按位取反运算符</li>
+<li>问号 <code>？</code>：问号主要用于未初始化数据的占位符</li>
+</ol>
+<p>所以，除去<code>$</code> <code>#</code> <code>~</code> <code>?</code>，我们的汇编器可以识别的有效字符是：字母（<code>a-z</code>, <code>A-Z</code>）、数字（<code>0-9</code>）、下划线<code>_</code> 、艾特符号 <code>@</code>、点号 <code>.</code>;</p>
+<p>我们的汇编器要求标识符以字母、下划线<code>_</code>、艾特符号<code>@</code>、点号<code>.</code>开头；</p>
+<p>需要注意：</p>
+<ol>
+<li>NASM 中，以点号 “.” 开头的标签是局部标签，但是为了降低难度，我们把以 “.” 开头的标签当成是普通标签；</li>
+<li><code>.data</code> <code>.text</code> 等在 NASM 官方手册中被列为标准段名。但是我们把它们当作标识符来处理，在语法分析的时候，再识别为段名。</li>
+</ol>
+<h3 id="得到token"><a href="#得到token" class="headerlink" title="得到token"></a>得到token</h3><p><code>__ass_next_token</code> 函数如下：</p>
+<p><img src="image-20260124192405367.png" srcset="/img/loading.gif" lazyload alt="image-20260124192405367" style="zoom:50%;" /></p>
+<p>每调用一次，就得到一个 token;</p>
+<p>如果文件结束，得到的是 ASS_FILE_END;</p>
+<p>第 338~342，忽略空格、tab 等空白字符，注意，没有 ‘\n’;</p>
+<p>第 344~346 行，如果遇到文件结束，返回。</p>
+<p>第 350~350，如果遇到字符、下划线、点号或者 @，说明遇到了标识符，从状态 1 进入状态 2，调用 352 行的 ass_parse_id 做进一步的解析。</p>
+<p>识别标识符的状态转换图如下：</p>
+<p><img src="image-20260124192320691.png" srcset="/img/loading.gif" lazyload alt="image-20260124192320691" style="zoom:50%;" /></p>
+<hr>
+<p><img src="image-20260124190917655.png" srcset="/img/loading.gif" lazyload alt="image-20260124190917655" style="zoom:50%;" /></p>
+<p>第 167 行，检查标识符是不是关键字。</p>
+<p><img src="image-20260124192555306.png" srcset="/img/loading.gif" lazyload alt="image-20260124192555306" style="zoom:50%;" /></p>
+<p>把标识符（在 scanner-&gt;token_id 中）和 ass_keywords_names 数组里面字符串逐一比较，发现匹配说明是关键字，并且设置 scanner-&gt;token 为对应的枚举成员。</p>
+<p>对于数字常量，我们仅考虑十进制非负整数，如果整数前面有正号或者负号，到了语法分析阶段再处理。</p>
+<p>对于字符串常量，由于汇编语言使用了数字代替不可打印的字符，所以不用考虑转义字符。</p>
+<p>第 356 行，我们调用 ass_parse_other_syms 来处理标识符、数字以外的字符或者字符串。</p>
+<p><img src="image-20260124193928916.png" srcset="/img/loading.gif" lazyload alt="image-20260124193928916" style="zoom:50%;" /></p>
+<p>需要注意的是换行，NASM 是一种<strong>面向行</strong>的汇编器。换行符的主要作用是<strong>结束当前的指令或声明</strong>。</p>
+<ul>
+<li>在 C 语言中，你用分号 <code>;</code> 结束语句，所以你可以把所有代码写在一行。</li>
+<li>在 NASM 中，一行通常只能有一条指令。换行符告诉汇编器：“这条 <code>mov</code> 指令到此结束，下一行是新的开始。”</li>
+</ul>
+<p><img src="image-20260124194240873.png" srcset="/img/loading.gif" lazyload alt="image-20260124194240873" style="zoom:50%;" /></p>
+<p>对于注释的处理，和 c 的单行注释有点不同。</p>
+<p>第 258 行，是一个带参数的宏</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> IF_ASS_EOF_GOTO(label)  <span class="hljs-keyword">if</span>(END == scan(scanner)) goto label</span><br></code></pre></td></tr></table></figure>
+<p>如果遇到的文件末尾，则 goto 到第 273 行。</p>
+<p>第 259 表示一直 scan,直到遇到换行。</p>
+<p>第 261，一定要给当前词法记号标记为 NEW_LINE(换行)</p>
+<p>不然语法分析的时候，会认为这行汇编指令缺少换行而报错。</p>
+<p>第 263 和 264 分别是双引号和单引号，我们看 ass_parse_after_quot 函数。</p>
+<p>在 C 语言中，字符串要用双引号包裹，单个字符要用单引号包裹；</p>
+<p>但是在 nasm 中，不管是字符还是字符串，都可以用双引号或单引号包裹。</p>
+<p><img src="image-20260124200613190.png" srcset="/img/loading.gif" lazyload alt="image-20260124200613190" style="zoom:50%;" /></p>
+<p>第 201 行，如果当前读出的字符是单引号或者双引号（和参数 quot_type 匹配）则跳出循环，否则把字符保存在 token_string 数组中；</p>
+<p>第 209 行，用 0 来结束字符串；</p>
+<p>第 214，如果仅有 1 个字符，就用数字常量来表示，因为字符的本质是小整数；我们之前定义的枚举类型 ASS_CHARA 根本用不上，可以删除。如果大于 1 个字符，则用字符串表示。</p>
+<p>到这里，汇编器的词法分析就完成了。因为有之前的基础，所以新内容不多。</p>
+<h2 id="成果展示"><a href="#成果展示" class="headerlink" title="成果展示"></a>成果展示</h2><p>那就来个词法着色吧。</p>
+<p><img src="image-20260124203017911.png" srcset="/img/loading.gif" lazyload alt="image-20260124203017911" style="zoom:50%;" /></p>
+<p>本文到这里就结束了，下节课我们学习汇编器的语法分析。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第25天：汇编器的词法分析</div>
+      <div>https://leslieche.github.io/2026/04/18/第25天：汇编器的词法分析/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月18日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/18/%E7%AC%AC24%E5%A4%A9%EF%BC%9A%E4%B8%AD%E9%97%B4%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/" title="第24天：中间代码的窥孔优化">
+                        <span class="hidden-mobile">第24天：中间代码的窥孔优化</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"LeslieChe/comment_for_blog","repo-id":"R_kgDOR6CL3g","category":"General","category-id":"DIC_kwDOR6CL3s4C6Ez9","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":1,"input-position":"top","lang":"zh-CN","strict":0,"theme":"preferred_color_scheme","loading":"lazy"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
