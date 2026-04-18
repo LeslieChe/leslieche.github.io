@@ -1,0 +1,1598 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="了解一下就行，后面忘了再回来查。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第29天：x86指令格式入门">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC29%E5%A4%A9%EF%BC%9Ax86%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="了解一下就行，后面忘了再回来查。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC29%E5%A4%A9%EF%BC%9Ax86%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260119143710261.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC29%E5%A4%A9%EF%BC%9Ax86%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/pics/image-20260418201524122.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC29%E5%A4%A9%EF%BC%9Ax86%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/pics/image-20260418201548404.png">
+<meta property="article:published_time" content="2026-04-18T12:09:04.000Z">
+<meta property="article:modified_time" content="2026-04-18T12:38:48.481Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC29%E5%A4%A9%EF%BC%9Ax86%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260119143710261.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第29天：x86指令格式入门 - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/download/" target="_self">
+                <i class="iconfont icon-gitee-fill"></i>
+                <span>代码下载</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/download/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-gitee-fill"></i>
+                  <span>代码下载</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第29天：x86指令格式入门"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-18 20:09" pubdate>
+          2026年4月18日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          8.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          74 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第29天：x86指令格式入门</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第29天：x86指令格式入门">第29天：x86指令格式入门</h1>
+<h2 id="1-x86指令的一般格式">1 x86指令的一般格式</h2>
+<img src="image-20260119143710261.png" srcset="/img/loading.gif" lazyload alt="image-20260119143710261" style="zoom:100%;" />
+<p>vol-2,P31</p>
+<p>根据官方的文档，指令格式分为 6 个部分。</p>
+<ol>
+<li>
+<p><strong>前缀</strong>（Prefixes）— 可选（0~4 字节）</p>
+</li>
+<li>
+<p><strong>操作码</strong>（Opcode）— 必需（1~3 字节）</p>
+</li>
+<li>
+<p><strong>ModR/M</strong> — 可选（1 字节）</p>
+</li>
+<li>
+<p><strong>SIB</strong>（Scale-Index-Base）— 可选（1 字节）</p>
+</li>
+<li>
+<p><strong>偏移</strong>（Displacement）— 可选（0/1/4 字节）</p>
+</li>
+<li>
+<p><strong>立即数</strong>（Immediate）— 可选（1/2/4 字节）</p>
+</li>
+</ol>
+<p>其中操作码必须有，它表示指令的功能；其他字段可选。</p>
+<p>x86 采用不定长指令编码，最短的 1 个字节，最长的可达 15 字节。</p>
+<p>下面为读者介绍每个部分。</p>
+<h2 id="2-前缀">2 前缀</h2>
+<p>用于修改指令行为，常见类型：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>字节编码</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>操作数大小重写前缀</strong></td>
+<td><code>0x66</code></td>
+<td>在 32 位模式下切换为 16 位操作（如 <code>mov ax, bx</code>）</td>
+</tr>
+<tr>
+<td><strong>地址大小重写前缀</strong></td>
+<td><code>0x67</code></td>
+<td>切换为 16 位寻址（如 <code>[bx+si]</code>）</td>
+</tr>
+<tr>
+<td><strong>段超越前缀</strong></td>
+<td><code>0x2E</code> (CS), <code>0x36</code> (SS), <code>0x3E</code> (DS), <code>0x26</code> (ES), <code>0x64</code> (FS), <code>0x65</code> (GS)</td>
+<td>指定段寄存器</td>
+</tr>
+<tr>
+<td><strong>锁定/重复前缀</strong></td>
+<td><code>0xF0</code> (LOCK), <code>0xF3</code> (REP/REPE), <code>0xF2</code> (REPNE)</td>
+<td>原子操作或字符串重复</td>
+</tr>
+</tbody>
+</table>
+<p>因为 cusb 生成的汇编代码用不到前缀，所以一笔带过。</p>
+<h2 id="3-操作码">3 操作码</h2>
+<p>操作码长度为 1~3 字节。</p>
+<p>一字节操作码和指令前缀共享指令的第一个字节。CPU 的解码器根据第一个字节的值确定该字节是指令前缀还是操作码。例如碰到指令的第一个字节为 0x66，则识别出这是操作数大小重写前缀；若遇到的是 0xb8，则识别出这是 mov 指令。</p>
+<p>两字节操作码总是以 0x0f（转义前缀）开头，后面跟着另一个字节。例如 jne 指令的操作码为 0f,85</p>
+<p>三字节操作码的转义前缀有两种，一个是“0f,38”，一个是“0f,3a”，后面再跟一个字节。</p>
+<p>csub 生成的汇编指令仅用到 1~2 字节的操作码。</p>
+<p>根据编码特征，可以把常见的操作码分成四大类。</p>
+<h3 id="3-1-操作码独立表示指令功能">3.1 操作码独立表示指令功能</h3>
+<p>如下表，指令编码中仅有操作码。</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>操作码（十六进制），也是指令的编码</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ret</td>
+<td>cb</td>
+</tr>
+<tr>
+<td>nop</td>
+<td>90</td>
+</tr>
+<tr>
+<td>leave</td>
+<td>c9</td>
+</tr>
+</tbody>
+</table>
+<p>还有一类指令，操作码后面跟着操作数；指令编码中先是操作码，然后跟着操作数。</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>操作码（十六进制）</th>
+<th>举例</th>
+<th>指令编码（十六进制）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>int <strong>imm8</strong></td>
+<td>cd</td>
+<td>int 0x80</td>
+<td>cd 80</td>
+</tr>
+<tr>
+<td>jne <strong>rel32</strong></td>
+<td>0f,85</td>
+<td>jne @L100</td>
+<td>0f 85 xx xx xx xx</td>
+</tr>
+<tr>
+<td>jmp <strong>rel32</strong></td>
+<td>e9</td>
+<td>jmp @return</td>
+<td>e9 xx xx xx xx</td>
+</tr>
+<tr>
+<td>call <strong>rel32</strong></td>
+<td>e8</td>
+<td>call foo</td>
+<td>e8 xx xx xx xx</td>
+</tr>
+<tr>
+<td>push <strong>imm32</strong></td>
+<td>68</td>
+<td>push 0x1234</td>
+<td>68 34 12 00 00</td>
+</tr>
+</tbody>
+</table>
+<p>注意：imm8 和 imm32 分别表示 8 和 32 位立即数；rel32 表示 32 位相对地址。</p>
+<h3 id="3-2-ModR-M和SIB字段指定操作数的访问模式">3.2 ModR/M和SIB字段指定操作数的访问模式</h3>
+<p>这类操作码不足以表示指令的全部功能。</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>操作码（十六进制）</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mov <strong>r32, r/m32</strong></td>
+<td>8b</td>
+<td>mov eax, [0x1000]</td>
+</tr>
+<tr>
+<td>mov <strong>r/m32, r32</strong></td>
+<td>89</td>
+<td>mov [0x1000], ecx</td>
+</tr>
+</tbody>
+</table>
+<p>注：r32 表示一个 32 位寄存器，m32 表示一个 32 位的内存操作数，r/m32 表示 32 位寄存器或者 32 位的内存操作数；</p>
+<p>比如说，“mov r32, r/m32” 的操作码是 0x8b</p>
+<p>但是寄存器是哪个？内存地址是多少？</p>
+<p>仅靠 0x8b 不足以说明以上信息，所以需要 ModR/M 和 SIB 字段；</p>
+<p>类似这样的指令还有 add,sub,cmp 等。</p>
+<p>ModR/M 和 SIB 字段后文会详细解释。</p>
+<h3 id="3-3-ModR-M的reg字段对操作码作补充">3.3 ModR/M的reg字段对操作码作补充</h3>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">          ModR/M 字段<br>  <span class="hljs-number">7</span>                           <span class="hljs-number">0</span><br>+---+---+---+---+---+---+---+---+<br>|  mod  |    reg    |     r/m   |<br>+---+---+---+---+---+---+---+---+<br></code></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>操作码（十六进制）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>imul <strong>r/m32</strong></td>
+<td>f7 /5</td>
+</tr>
+<tr>
+<td>idiv <strong>r/m32</strong></td>
+<td>f7 /7</td>
+</tr>
+<tr>
+<td>neg <strong>r/m32</strong></td>
+<td>f7 /3</td>
+</tr>
+<tr>
+<td>add <strong>r/m32, imm32</strong></td>
+<td>81 /0</td>
+</tr>
+<tr>
+<td>sub <strong>r/m32, imm32</strong></td>
+<td>81 /5</td>
+</tr>
+</tbody>
+</table>
+<p>例如上表中的 imul 和 idiv 指令的操作码都是 f7,如何区分呢？</p>
+<p>“/” 后面有一个值，这个值在编码指令的时候会填充到 ModR/M 的 reg 字段。</p>
+<p>当 reg = 5 时表示 imul 指令，当 reg = 7 时表示 idiv 指令；此时 reg 字段相当于是对操作码的扩展。</p>
+<h3 id="3-4-寄存器编号补充操作码">3.4 寄存器编号补充操作码</h3>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>操作码（十六进制）</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>inc <strong>r32</strong></td>
+<td>40 + rd</td>
+<td>inc eax</td>
+</tr>
+<tr>
+<td>dec <strong>r32</strong></td>
+<td>48 + rd</td>
+<td>dec ebx</td>
+</tr>
+<tr>
+<td>push <strong>r32</strong></td>
+<td>50 + rd</td>
+<td>push eax</td>
+</tr>
+<tr>
+<td>pop <strong>r32</strong></td>
+<td>58 + rd</td>
+<td>pop ebx</td>
+</tr>
+<tr>
+<td>mov <strong>r32, imm32</strong></td>
+<td>b8 + rd</td>
+<td>mov eax, 0x12345678</td>
+</tr>
+</tbody>
+</table>
+<p>例如，“inc r32” 指令的操作码是 0x40，当指定了某个寄存器作为操作数后，需要把该寄存器的编号加到操作码中。与其说寄存器的编号补充操作码，不如说操作码里面包含着寄存器的编号。</p>
+<h3 id="3-5-寄存器的编号">3.5 寄存器的编号</h3>
+<p>Intel 指令集的寄存器编号是这样规定的：</p>
+<table>
+<thead>
+<tr>
+<th>编号 (二进制)</th>
+<th>编号 (十进制)</th>
+<th>32位寄存器</th>
+<th>16位寄存器</th>
+<th>8位寄存器</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>000</code></td>
+<td>0</td>
+<td><code>EAX</code></td>
+<td><code>AX</code></td>
+<td><code>AL</code></td>
+</tr>
+<tr>
+<td><code>001</code></td>
+<td>1</td>
+<td><code>ECX</code></td>
+<td><code>CX</code></td>
+<td><code>CL</code></td>
+</tr>
+<tr>
+<td><code>010</code></td>
+<td>2</td>
+<td><code>EDX</code></td>
+<td><code>DX</code></td>
+<td><code>DL</code></td>
+</tr>
+<tr>
+<td><code>011</code></td>
+<td>3</td>
+<td><code>EBX</code></td>
+<td><code>BX</code></td>
+<td><code>BL</code></td>
+</tr>
+<tr>
+<td><code>100</code></td>
+<td>4</td>
+<td><code>ESP</code></td>
+<td><code>SP</code></td>
+<td><code>AH</code></td>
+</tr>
+<tr>
+<td><code>101</code></td>
+<td>5</td>
+<td><code>EBP</code></td>
+<td><code>BP</code></td>
+<td><code>CH</code></td>
+</tr>
+<tr>
+<td><code>110</code></td>
+<td>6</td>
+<td><code>ESI</code></td>
+<td><code>SI</code></td>
+<td><code>DH</code></td>
+</tr>
+<tr>
+<td><code>111</code></td>
+<td>7</td>
+<td><code>EDI</code></td>
+<td><code>DI</code></td>
+<td><code>BH</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-ModR-M">4 ModR/M</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">          ModR/M 字段<br>  <span class="hljs-number">7</span>                           <span class="hljs-number">0</span><br>+---+---+---+---+---+---+---+---+<br>|  mod  |    reg    |     r/m   |<br>+---+---+---+---+---+---+---+---+<br></code></pre></td></tr></table></figure>
+<p>ModR/M 字段长度是 1 字节，包括 mod,reg,r/m 三个字段。</p>
+<p>r/m 字段可以表示内存，也可以表示寄存器;</p>
+<p>reg 字段可以是 opcode 的扩展，也可以表示寄存器;</p>
+<p>有读者问，如果指令是 “mov ecx, edx”，如何确定 r/m 和 reg 的对应关系呢？</p>
+<p>是 ecx 和 r/m 对应，edx 和 reg 对应？</p>
+<p>还是 ecx 和 reg 对应，edx 和 r/m 对应？</p>
+<p>这个问题问得好！</p>
+<p>查一下 Intel 的指令手册，数据传送从 32 位寄存器到 32 位寄存器，只有下面 2 个格式。</p>
+<table>
+<thead>
+<tr>
+<th>Opcode</th>
+<th>Instruction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>89 /r</td>
+<td>MOV r/m32,r32</td>
+</tr>
+<tr>
+<td>8B /r</td>
+<td>MOV r32,r/m32</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>注意：</p>
+<p>opcode 中的 “/r” 表示 ModR/M 同时包含寄存器和 r/m 操作数。</p>
+<p>不管你选择哪种格式，指令格式中的 r/m32 一定要用 ModR/M 的 r/m 字段编码；</p>
+<p>指令格式中的 r32 一定要用 ModR/M 的 reg 字段编码。</p>
+</blockquote>
+<p>为什么这样说呢？</p>
+<p>查阅指令手册</p>
+<img src="pics/image-20260418201524122.png" srcset="/img/loading.gif" lazyload alt="image-20260418201524122" style="zoom:50%;" />
+<p>注意 Op/En 这列，我用蓝色圆圈圈出来的。上面的表格后面，还有一个表格（Instruction Operand Encoding），是操作数的编码说明。</p>
+<img src="pics/image-20260418201548404.png" srcset="/img/loading.gif" lazyload alt="image-20260418201548404" style="zoom:50%;" />
+<p>MR 的意思是，第一个操作数用 r/m 字段编码，第二个操作数用 reg 字段编码；</p>
+<p>RM 与之相反，第一个操作数用 reg 字段编码，第二个操作数用 r/m 字段编码；</p>
+<h3 id="4-1-mod字段的含义">4.1 mod字段的含义</h3>
+<table>
+<thead>
+<tr>
+<th>mod(二进制)</th>
+<th>r/m 的寻址模式</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>00</td>
+<td>寄存器间接寻址</td>
+<td>[eax]</td>
+</tr>
+<tr>
+<td>01</td>
+<td>寄存器基址 + 8 位偏移</td>
+<td>[eax + 4]</td>
+</tr>
+<tr>
+<td>10</td>
+<td>寄存器基址 + 32 位偏移</td>
+<td>[eax + 0x224488]</td>
+</tr>
+<tr>
+<td>11</td>
+<td>寄存器操作数</td>
+<td>eax</td>
+</tr>
+</tbody>
+</table>
+<p>当 mod = 11b 时，r/m 字段表示寄存器操作数，保存了寄存器编号。</p>
+<p>当 mod 取其他值时，r/m 字段表示内存操作数，如上表的前三行。内存操作数中的寄存器（如 eax）依然用 r/m 字段编码，偏移跟在 ModR/M 后面。</p>
+<p>我们举例说明。</p>
+<ol>
+<li>请问 mov ecx, eax 如何编码？</li>
+</ol>
+<p>假设我们选择指令格式 mov r32, r/m32;</p>
+<p>操作码是 8B /r，“r” 说明 ModR/M 同时包含寄存器和 r/m 操作数。</p>
+<p>ecx 的编号是 001b，用 ModR/M 的 reg 字段表示;</p>
+<p>eax 的编号是 000b，用 ModR/M 的 r/m 字段表示;</p>
+<p>另外，因为 eax 是寄存器，所以寻址模式是寄存器操作数，根据上面的表格得知 mod = 11b</p>
+<p>所以 ModR/M = 11 001 000 = 0xc8;</p>
+<p>所以完整的编码是 8b,c8;</p>
+<ol start="2">
+<li>对于 mov ecx, [eax + 4] 如何编码？</li>
+</ol>
+<p>因为偏移 4 用 8 位就足够表示，所以 ModR/M(mod) 就要改成 01b,其他字段不变；</p>
+<p>ModR/M = 01 001（ecx） 000(eax) = 0x48；</p>
+<p>还有一个偏移 4，跟在 ModR/M 后面；</p>
+<p>所以完整编码是 8b,48,04；</p>
+<ol start="3">
+<li>对于 mov ecx, [eax + 0x112288] 如何编码？</li>
+</ol>
+<p>因为 0x112288 用 8 位容纳不了，所以 ModR/M(mod) 就要改成 10b,其他字段不变；</p>
+<p>ModR/M = 10 001 000 = 0x88；</p>
+<p>32 位的偏移跟在 ModR/M 后面；</p>
+<p>所以完整编码是 8b,88,88,22,11,00 (注意，最后的 00 是补齐 32 位)</p>
+<p>x86-32 寻址方式如下表：</p>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>类型</th>
+<th>形式</th>
+<th>示例</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>立即数</td>
+<td><code>imm</code></td>
+<td><code>mov eax, 10</code></td>
+<td>硬编码在指令里</td>
+</tr>
+<tr>
+<td>2</td>
+<td>寄存器</td>
+<td><code>reg</code></td>
+<td><code>mov eax, ebx</code></td>
+<td>mod 字段可以表示</td>
+</tr>
+<tr>
+<td>3</td>
+<td>绝对地址</td>
+<td><code>[addr]</code></td>
+<td><code>mov eax, [my_var]</code></td>
+<td>mod = 00b, r/m = 101b</td>
+</tr>
+<tr>
+<td>4</td>
+<td>寄存器间接</td>
+<td><code>[reg]</code></td>
+<td><code>mov eax, [esi]</code></td>
+<td>mod 字段可以表示，但是 [ebp] 除外，[esp] 也除外</td>
+</tr>
+<tr>
+<td>5</td>
+<td>基址+偏移</td>
+<td><code>[base + disp]</code></td>
+<td><code>mov eax, [ebp + 8]</code></td>
+<td>mod 字段可以表示；但是[esp + disp] 除外</td>
+</tr>
+<tr>
+<td>6</td>
+<td>变址+比例+偏移</td>
+<td><code>[index*scale + disp]</code></td>
+<td><code>mov eax, [edi*4 + 8]</code></td>
+<td>需要 SIB 字段</td>
+</tr>
+<tr>
+<td>7</td>
+<td>基址+变址+比例+偏移</td>
+<td><code>[base + index*scale + disp]</code></td>
+<td><code>mov eax, [ebx + esi*4 + 8]</code></td>
+<td>需要 SIB 字段</td>
+</tr>
+</tbody>
+</table>
+<p>mod 字段可以表示的寻址，仅包含上面表格的 2，4，5</p>
+<p>其他的寻址如何表示呢？</p>
+<p>对于序号 1 的立即数，Intel 指令集的立即数一般都是硬编码在指令里，不需要 ModR/M 字段。</p>
+<p>例如 cmp eax, 0x95279527</p>
+<p>编码是 3D 27 95 27 95</p>
+<p>对于序号 3 的直接寻址，例如 mov eax,[0x86543210]；</p>
+<p>指令集规定，当 mod = 00b, r/m = 101b 的时候，表示 32 位直接寻址模式，32 位地址跟在 ModR/M 字段的后面。</p>
+<p>举个例子，mov eax,[0x86543210] 如何编码？</p>
+<p>根据指令格式 MOV r32, r/m32，其操作码是 8b /r；</p>
+<p>r32 对应 eax，reg 字段的编码是 000b，再结合 mod = 00b, r/m = 101b；</p>
+<p>所以 ModR/M=00 000 101 = 0x05；</p>
+<p>所以 mov eax,[0x86543210] 的指令编码是 8B 05 10 32 54 86；</p>
+<p>有细心的读者发现了，mod = 00b 的时候，不是寄存器间接寻址吗？</p>
+<p>101b 对应的寄存器是 ebp,那 [ebp] 这种寻址方式如何表示呢？</p>
+<p>问得好！</p>
+<p>是的，因为鸠占鹊巢，[ebp] 确实无法表示了，只能迂回一下，表示成 [ebp + 0]；</p>
+<p>例如 “mov ecx, [ebp]” 的指令编码其实是 “mov ecx, [ebp + 0]” 的指令编码；</p>
+<p>所以 mod = 01b, reg = 001, r/m = 101b(ebp)；</p>
+<p>ModR/M = 0100 1101 = 0x4d；</p>
+<p>所以完整的编码是 8b,4d,00；</p>
+<p>对于表格中的序号 6 和 7，属于比较复杂的内存访问，ModR/M 靠一己之力搞不定，只能请 SIB 来帮忙了。</p>
+<h3 id="4-2-受委屈的esp">4.2 受委屈的esp</h3>
+<p>指令集规定，当 mod != 11b, r/m = 100b 的时候，表示引导 SIB 字段。</p>
+<p>此时，esp 不高兴了，说 mod != 11b 可以理解，因为 11b 表示寄存器操作数，访问内存当然不用考虑寄存器操作数。</p>
+<p>可是 r/m = 100b，这是什么规定？</p>
+<p>100b 是我 esp 的编码啊，要是把我的编码给占用了，那下面的指令怎么表示呢？</p>
+<p>例如：</p>
+<p>mov eax,[esp]</p>
+<p>mov eax,[esp + 8]</p>
+<p>mov eax,[esp + 0x88886666]</p>
+<p>这也太欺负人了吧？都说 ebp 运气不好，因为 [ebp] 无法表示了，只能用 [ebp + 0]</p>
+<p>可是我 esp 损失更大啊！我抗议！</p>
+<p>Intel 官方表示这个世界哪有公平可言？你 esp 就不要抱怨了。</p>
+<h3 id="4-3-特殊ModR-M字段">4.3 特殊ModR/M字段</h3>
+<table>
+<thead>
+<tr>
+<th>mod</th>
+<th>r/m</th>
+<th>r/m 寻址模式</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>00</td>
+<td>101</td>
+<td>32 位直接寻址</td>
+<td>[0x88886666]</td>
+</tr>
+<tr>
+<td>00</td>
+<td>100</td>
+<td>引导 SIB</td>
+<td>[?]</td>
+</tr>
+<tr>
+<td>01</td>
+<td>100</td>
+<td>引导 SIB + 8 位偏移</td>
+<td>[? + 0x72]</td>
+</tr>
+<tr>
+<td>10</td>
+<td>100</td>
+<td>引导 SIB + 32 位偏移</td>
+<td>[? + 0x95279528]</td>
+</tr>
+</tbody>
+</table>
+<p>为了表扬 ebp 和 esp 的牺牲精神，我列出了这个表格；</p>
+<p>为了成全 32 位直接寻址，[ebp] 只好时刻抱着一个鸡蛋，变成 [ebp + 0] ；</p>
+<p>为了引导 SIB 字段，esp 做出了怎样的牺牲呢？后面会讲。</p>
+<h2 id="5-SIB字段">5 SIB字段</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">          SIB 字段<br>  <span class="hljs-number">7</span>                           <span class="hljs-number">0</span><br>+---+---+---+---+---+---+---+---+<br>| scale |   index   |    base   |<br>+---+---+---+---+---+---+---+---+    <br></code></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>位数</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>scale</td>
+<td>2 bits</td>
+<td>缩放因子</td>
+</tr>
+<tr>
+<td>index</td>
+<td>3 bits</td>
+<td>索引寄存器编号</td>
+</tr>
+<tr>
+<td>base</td>
+<td>3 bits</td>
+<td>基址寄存器编号</td>
+</tr>
+</tbody>
+</table>
+<p>SIB 的名字就是 scale,index,base 这三个家伙的首字母。</p>
+<p>SIB 字段定义的寻址格式为：<strong>[base + index * 2^scale^]</strong></p>
+<p>当然，如果有偏移，那么寻址的时候也要加上去。</p>
+<p>base 和 index 都是 3 bits，用来编码寄存器；</p>
+<p>scale 是 2 bits，取值 0，1，2，3；</p>
+<p>请问指令 <strong>mov ecx, [eax + ebx]</strong> 的编码是什么？</p>
+<p>选择指令格式  MOV r32, r/m32；</p>
+<p>其操作码是 8b /r</p>
+<p>如果把 eax 看成是 base, 把 ebx 看成是 index</p>
+<p>那么 scale = 0， disp = 0， index = 011， base = 000</p>
+<p>mod = 00b(因为不带偏移),  r/m = 100b, reg = 001b(ecx)</p>
+<p>所以 ModR/M = 0000 1100 = 0x0c</p>
+<p>SIB = 0001 1000 = 0x18</p>
+<p>所以完整的编码是</p>
+<p>8b,0c,18</p>
+<p>如果把 ebx 看成是 base, 把 eax 看成是 index</p>
+<p>ModR/M = 0x0c</p>
+<p>scale = 0，disp = 0，index = 000，base = 011</p>
+<p>SIB = 00000011 = 0x03</p>
+<p>所以完整的编码是</p>
+<p>8b,0c,03</p>
+<p>请问指令 <strong>mov ecx, [eax + ebx * 8 + 0x12344320]</strong> 的编码是什么？</p>
+<p>eax 是 base, ebx 是 index</p>
+<p>base = 000b,index = 011b,scale = 11b</p>
+<p>mod = 01b,  r/m = 100b, reg = 001b(ecx)</p>
+<p>所以 ModR/M = 0100 1100 = 0x4c</p>
+<p>SIB = 1101 1000 = 0xd8</p>
+<p>所以完整的编码是</p>
+<p>8b 4c d8 20 43 34 12</p>
+<h3 id="5-1-让Index消失">5.1 让Index消失</h3>
+<p>有的读者说，你这个寻址好复杂啊！<strong>[base + index * 2^scale^]</strong></p>
+<p>我也用不上这么复杂的，能不能让 index 消失？</p>
+<p>可以，指令集规定，<strong>当 sib 的 index = 100b 时，不存在 index</strong></p>
+<p>例如 mov ecx, [eax + 0x11223344]</p>
+<p>如果要用 SIB 字段，base = 000b(eax),index =100b,scale = 0,1,2,3(都可以)</p>
+<p>SIB = 00100000 = 0x20</p>
+<p>SIB = 01100000 = 0x60</p>
+<p>SIB = 10100000 = 0xa0</p>
+<p>SIB = 11100000 = 0xe0</p>
+<p>所以编码有四种：</p>
+<p>8B 8C 20 44 33 22 11（scale = 0）</p>
+<p>8B 8C 60 44 33 22 11（scale = 1）</p>
+<p>8B 8C a0 44 33 22 11（scale = 2）</p>
+<p>8B 8C e0 44 33 22 11（scale = 3）</p>
+<p>也可以不使用 SIB，用 mod = 10b, 选择 “寄存器基址 + 32 位偏移”</p>
+<p>mod = 10b,  r/m = 000b(eax), reg = 001b(ecx)</p>
+<p>所以 ModR/M = 1000 1000 = 0x88</p>
+<p>编码是 8B 88 44 33 22 11</p>
+<p>此时，esp 又跳出来了，什么？当 sib 的 index = 100b 时，不存在 index；</p>
+<p>怎么受伤的总是我？难道我 esp 就没有资格当变址寄存器吗？</p>
+<p>mov ecx, [eax + esp * 8] 这种指令不行吗？</p>
+<p>intel 官方说，这个指令不合法。<strong>总之，esp 不能当变址寄存器。</strong></p>
+<p>intel 继续说，你不要闹了，之前的问题，我们已经帮你想好了对策。</p>
+<p>你不是抱怨用 ModR/M 寻址无法表示以下指令吗？</p>
+<p>mov eax,[esp]</p>
+<p>mov eax,[esp + 8]</p>
+<p>mov eax,[esp + 0x88886666]</p>
+<p>其实我们让 index 消失就是为了你啊。你现在可以采用 SIB 字节来表示这些指令了。</p>
+<p>比如 mov eax,[esp]</p>
+<p>选择指令格式 MOV r32, r/m32；</p>
+<p>其操作码是 8b /r</p>
+<p>mod = 00b,r/m = 100b</p>
+<p>ModR/M = 00 000(eax) 100 = 0x04</p>
+<p>scale = 00b(其他值也行),index = 100b，base = 100b</p>
+<p>SIB = 00 100 100 = 0x24</p>
+<p>所以编码是 8B 04 24；</p>
+<p>再比如 mov eax, [esp + 8]</p>
+<p><strong>mod = 01b（因为有1字节的偏移）</strong>, r/m = 100b</p>
+<p>ModR/M = 01 000(eax) 100 = 0x44</p>
+<p>SIB 不变，依然是 0x24</p>
+<p>编码是 8B 44 24 08</p>
+<p>再比如 mov eax,[esp + 0x12345678]</p>
+<p><strong>mod = 10b（因为有4字节的偏移）</strong>，r/m = 100b</p>
+<p>所以 ModR/M = 10 000(eax) 100 = 0x84</p>
+<p>SIB 不变，依然是 0x24</p>
+<p>编码是 8B 84 24 78 56 34 12</p>
+<h3 id="5-2-让base消失">5.2 让base消失</h3>
+<p>Intel 规定，当 ModR/M 的 mod = 00b 且 SIB 的 base = 101b 的时候，不存在基址寄存器，这时候的寻址格式为</p>
+<p><strong>[index * 2^scale^ + disp32(必须有)]</strong></p>
+<p>注意，必须有 disp32</p>
+<p>例如 mov ecx, [eax * 8 + 0x12345678]</p>
+<p>mod = 00b,rm = 100b,reg = 001b(ecx)</p>
+<p>base = 101b, scale = 11b, index = 000b(eax)</p>
+<p>ModR/M = 00 001 100b = 0x0c</p>
+<p>SIB = 11 000 101b = 0xc5</p>
+<p>所以完整的编码是 8B 0c c5 78 56 34 12</p>
+<p>让基址寄存器消失要付出代价，例如当指令中没有偏移的时候</p>
+<p><strong>mov ecx, [eax * 8]</strong></p>
+<p>必须按照 <strong>mov ecx, [eax * 8 + 0x00000000]</strong> 处理，指令编码为</p>
+<p>8B 0c c5 00 00 00 00(和上个例子一样，就是把偏移换成 4 字节的 0)</p>
+<p>等于要多写 4 字节的 0</p>
+<p>这时候 ebp 又不高兴了，什么？mod = 00b 且 SIB 的 base = 101b，不存在基址寄存器？</p>
+<p>101 是我的编号啊，你把我编号占用了，那我不能当基址寄存器了！为啥剥夺我的权利？</p>
+<p>intel 官方说：没有为啥，反正就是 mod = 00b 的时候，你不能做基址寄存器。</p>
+<p>但是当 mod = 01b 或者 10b 的时候，你还是可以当基址寄存器的。</p>
+<p>例如</p>
+<p><strong>mov ecx, [ebp + eax * 8 + 4]</strong></p>
+<p>mod = 01b, r/m = 100b,reg = 001b(ecx)</p>
+<p>scale = 11b,base = 101b(ebp),index = 000b(eax)</p>
+<p>ModR/M = 01001100 = 0x4c</p>
+<p>SIB = 11000101 = 0xc5</p>
+<p>所以完整编码是 8b 4c c5 04</p>
+<p>ebp 说，那指令 <strong>mov ecx, [ebp + eax * 8]</strong> 怎么办？</p>
+<p>本来 mod = 00b 且 r/m = 100b 的时候，只有 SIB，但是没有偏移。</p>
+<p>现在我如何表示这种没有偏移的指令？</p>
+<p>intel 官方说：你忘了，之前你不是喜欢抱个鸡蛋吗？你继续抱啊！</p>
+<p><strong>mov ecx, [ebp + eax * 8 + 0]</strong></p>
+<p>这样不就可以了,指令编码是 8b 4c c5 00，就多了一个字节。</p>
+<h2 id="6-偏移和立即数">6 偏移和立即数</h2>
+<p>偏移在指令中如果存在，则紧跟 ModR/M、SIB 字段之后，且按照小端字节序方式存储；</p>
+<p>立即数在指令中如果存在，则紧跟 ModR/M、SIB、偏移字段之后，且按照小端字节序方式存储。</p>
+<h2 id="附录：操作码常用符号说明">附录：操作码常用符号说明</h2>
+<p>指令手册的 opcode 列，除了主操作码，还可能用某些符号描述编码规则。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">符号</th>
+<th style="text-align:center">含义</th>
+<th style="text-align:center">Opcode 举例</th>
+<th>指令格式举例</th>
+<th>涉及到的章节</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center"><code>/digit</code></td>
+<td style="text-align:center">ModR/M 的 reg 字段用于扩展 opcode</td>
+<td style="text-align:center">FF /4</td>
+<td>JMP r/m32</td>
+<td>3.3</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>/r</code></td>
+<td style="text-align:center">ModR/M 同时包含寄存器和 r/m 操作数</td>
+<td style="text-align:center">8A /r</td>
+<td>MOV r8,r/m8</td>
+<td>3.2</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>cb/cw/cd/cp</code></td>
+<td style="text-align:center">相对偏移量（跳转/调用）</td>
+<td style="text-align:center">E9 cd</td>
+<td>JMP rel32</td>
+<td>3.1</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>ib/iw/id</code></td>
+<td style="text-align:center">立即数（1/2/4 字节）</td>
+<td style="text-align:center">3D id</td>
+<td>CMP EAX,imm32</td>
+<td>3.1</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>+rb/+rw/+rd</code></td>
+<td style="text-align:center">寄存器编号加到基础 opcode 上</td>
+<td style="text-align:center">B8 +rd</td>
+<td>MOV r32,imm32</td>
+<td>3.4</td>
+</tr>
+</tbody>
+</table>
+<p>以上列出了 5 种符号，分别举例如下。</p>
+<p>例1：<strong>jmp eax</strong></p>
+<p>这是一条绝对跳转指令，目标地址就在 eax 中。</p>
+<p>Opcode = 0xFF</p>
+<p>ModR/M(reg) = 4</p>
+<p>因为 ModR/M(reg) 用于扩展 opcode,所以寄存器 eax 的编码用 ModR/M(rm) 字段</p>
+<p>当 mod = 11b 的时候，表示 ModR/M(rm) 是寄存器操作数</p>
+<p>ModR/M(rm) = 0（eax）</p>
+<p>所以，ModR/M = 11 100 000b = 0xE0</p>
+<p>所以，jmp eax 的指令编码是 FF E0</p>
+<hr>
+<p>例2：<strong>mov dl, cl</strong></p>
+<p>Opcode = 8a</p>
+<p>ModR/M(rm) = cl = 001b</p>
+<p>ModR/M(reg) = dl = 010b</p>
+<p>mod = 11b</p>
+<p>所以，ModR/M = 11010001 = 0xD1</p>
+<p>所以 MOV dl, cl 的指令编码是 8A D1</p>
+<hr>
+<p>例3： <strong>jmp 0x11223300</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">org <span class="hljs-number">0x10000000</span><br>jmp <span class="hljs-number">0x11223300</span>   ;   汇编器会计算：<span class="hljs-number">0x11223300</span> - (<span class="hljs-number">0x10000000</span> + <span class="hljs-number">5</span>) = <span class="hljs-number">0x012232FB</span><br></code></pre></td></tr></table></figure>
+<p>编码是 E9 FB 32 22 01</p>
+<p>分析:1、当前指令地址: 0x10000000</p>
+<p>2、指令长度: E9 cd 指令全长为 5 字节（1 字节 Opcode + 4 字节偏移）。</p>
+<p>3、下一条指令地址 (Next IP): 0x10000000 + 5 = 0x10000005</p>
+<p>4、目标地址 (Target): 0x11223300</p>
+<p>5、计算位移 (Rel32):Target - Next IP0x11223300 - 0x10000005 = 0x012232FB</p>
+<p>6、转换成小端序字节流: FB 32 22 01</p>
+<hr>
+<p>例4：<strong>cmp eax, 0x95279527</strong></p>
+<p>编码是 3D 27 95 27 95</p>
+<hr>
+<p>例5：<strong>mov ecx, 0x11223344</strong></p>
+<p>这个指令的编码格式为 B8 +rd</p>
+<p>ecx 的编号是 1，B8+1 = B9</p>
+<p>所以完整的编码是 B9 44 33 22 11</p>
+<p>本文到这里就结束了。不要求读者记忆这些内容，等后面用代码实现的时候，可回到本文查阅。孤立的知识不容易掌握，最好的方法是把知识放到应用场景中学习。我们边干边学！</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第29天：x86指令格式入门</div>
+      <div>https://leslieche.github.io/2026/04/18/第29天：x86指令格式入门/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月18日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/" title="第28天：汇编器的符号表">
+                        <span class="hidden-mobile">第28天：汇编器的符号表</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"LeslieChe/comment_for_blog","repo-id":"R_kgDOR6CL3g","category":"General","category-id":"DIC_kwDOR6CL3s4C6Ez9","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":1,"input-position":"top","lang":"zh-CN","strict":0,"theme":"preferred_color_scheme","loading":"lazy"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

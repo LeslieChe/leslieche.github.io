@@ -1,0 +1,1155 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="注意，这个符号表不是 readelf 命令得到的符号表">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第28天：汇编器的符号表">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="注意，这个符号表不是 readelf 命令得到的符号表">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260126171844804.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260418192748944.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260126181038092.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260126183124513.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260126184249670.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260126184631531.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260126205244709.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260126185358648.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260126190155454.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260126191025129.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260127105641983.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260418194229952.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260418194311830.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260127105136520.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260127104945558.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260127111208941.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260127111736938.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260127121958652.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260127122129848.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260127161119553.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260418195102136.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260127161645737.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260127162030895.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260127164854790.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260127164925420.png">
+<meta property="article:published_time" content="2026-04-18T11:00:21.000Z">
+<meta property="article:modified_time" content="2026-04-18T12:03:27.092Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC28%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A1%A8/image-20260126171844804.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第28天：汇编器的符号表 - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/download/" target="_self">
+                <i class="iconfont icon-gitee-fill"></i>
+                <span>代码下载</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/download/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-gitee-fill"></i>
+                  <span>代码下载</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第28天：汇编器的符号表"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-18 19:00" pubdate>
+          2026年4月18日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          12k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          99 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第28天：汇编器的符号表</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第28天：汇编器的符号表">第28天：汇编器的符号表</h1>
+<p>编译器的语义分析离不开符号表，同理，汇编器也需要符号表。</p>
+<h2 id="符号的种类">符号的种类</h2>
+<p>针对 csub 生成的汇编代码，符号来源有三种。</p>
+<p>1、数据。在 C 代码中是变量的名字，到了汇编代码，就代表一个地址，表示一段内存区域的起始位置。</p>
+<p>2、标签。用于表示内存地址，一般存在于代码段中。它一般来自 C 代码中函数的名字，也可能来自中间代码生成时产生的标号，表示跳转的目的地址。</p>
+<p>3、外部符号：当引用外部文件的数据或者函数时，就会产生外部符号。</p>
+<p>例如下面的 c 代码</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-built_in">list</span>[<span class="hljs-number">100</span>] = &#123;<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>,<span class="hljs-number">5</span>&#125;; <br><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> monkey; <span class="hljs-comment">// 引用外部符号</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>; <span class="hljs-comment">// 声明</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">test</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-built_in">list</span>[<span class="hljs-number">99</span>] = monkey;<br>    <span class="hljs-keyword">if</span>(monkey == <span class="hljs-number">0</span>)<br>        foo();<br>    <span class="hljs-keyword">else</span> <br>         <span class="hljs-built_in">list</span>[<span class="hljs-number">99</span>]++;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>生成的汇编代码如下（为了说明问题，我专门把数据段放在代码段的后面）</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">section</span> .text<br><span class="hljs-meta">global</span> <span class="hljs-keyword">test</span><br><span class="hljs-symbol">test:</span><br>	<span class="hljs-comment">; ...</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [monkey]<br>	<span class="hljs-keyword">mov</span> [list+<span class="hljs-number">396</span>], <span class="hljs-built_in">eax</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [monkey]<br>	<span class="hljs-keyword">cmp</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">0</span><br>	<span class="hljs-keyword">sete</span> <span class="hljs-built_in">al</span><br>	<span class="hljs-keyword">movzx</span> <span class="hljs-built_in">eax</span>, <span class="hljs-built_in">al</span><br>	<span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">4</span>], <span class="hljs-built_in">eax</span>	<br>	<span class="hljs-keyword">cmp</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">0</span><br>	<span class="hljs-keyword">je</span> @L47_else<br>	<span class="hljs-keyword">call</span> foo<br>	<span class="hljs-comment">; ...</span><br>@L47_else:<br>	<span class="hljs-comment">; ...</span><br><span class="hljs-meta">extern</span> foo<br><br><span class="hljs-meta">section</span> .data<br><span class="hljs-meta">global</span> list<br>	list <span class="hljs-built_in">dd</span> <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">95</span> <span class="hljs-built_in">dd</span> <span class="hljs-number">0</span><br><span class="hljs-meta">extern</span> monkey<br></code></pre></td></tr></table></figure>
+<p>第 22 行的 list，就是数据</p>
+<p>第 3 行的 “test:” 和第 16 行的 “@L47_else:” 是标签</p>
+<p>第 5 行和第 7 行的 monkey 是外部符号；第 14 行的 foo 也是外部符号。</p>
+<h2 id="后置定义">后置定义</h2>
+<p>需要说明的是，汇编语言和 C 语言不同，前者允许符号的后置定义。</p>
+<p>例如上面第 13 行，“je @L47_else” 的意思是如果相等就跳转到 @L47_else，可是 @L47_else 在哪里呢？当语法分析器解析到第 16 行时，才知道“原来 @L47_else 在这里啊”！</p>
+<p>再比如第 14 行，“call foo” 里面 foo 符号是内部的还是外部的？到了第 18 行，才知道它是外部的符号。换做 C 代码，你要调用外部的 foo 函数，必须先声明，否则编译器不会让你过的。</p>
+<p>所以这种后置定义会给我们的语义分析带来麻烦，当解析到 “call foo” 的时候，还不知道 foo 在哪里，要不要报错呢？报吧，不合适，万一后面有 foo 的声明或定义呢？不报吧，也不合适，万一后面没有 foo 的声明和定义呢？</p>
+<h2 id="两遍扫描">两遍扫描</h2>
+<p>为了解决这个麻烦，我们可以采用一个笨办法——扫描两遍源代码。</p>
+<p>第一遍扫描，遇到了数据和标签的定义，就加入符号表，例如第 3 行，加入标签 “test:”</p>
+<p>当扫描到第 5 行，monkey，这是一个对符号的引用，查表发现没有这个符号，我们也把它加入符号表，但是要标记这个符号“未定义”</p>
+<p>同理，第 6 行的 list，也加入符号表，并标记为“未定义”</p>
+<p>第 13 行的 @L47_else，也加入符号表，并标记为“未定义”</p>
+<p>总之符号表查不到的，都加入符号表，并标记为“未定义”</p>
+<p>到了第 16 行，发现了 @L47_else 的定义，此时要把符号表中 @L47_else 的“未定义”替换成“已经定义”</p>
+<p>第 18 行，发现了 extern foo，此时要把符号表中 foo 的 “未定义” 替换成 “extern”</p>
+<p>当解析到第 22 行，发现了 list 的定义，此时要把符号表中 list 的“未定义”替换成 “已经定义”,还要加入和 list 有关的信息，例如起始地址是多少，占多大内存，初始值是多少。</p>
+<p>当第一遍扫描结束，所有的符号都加入了符号表，并且符号的信息也收集完成了。</p>
+<p>不过别着急，还要再来一遍扫描。因为第一遍扫描生成的指令编码可能是错误的。</p>
+<p>例如第 6 行， “mov [list+396], eax”</p>
+<p>第一遍扫描，把 list 当外部符号，因为那时候符号表里面没有 list</p>
+<p>第二遍扫描，list 就在符号表里面了，就可以知道 list 的有关信息，尤其是地址偏移，这时候生成的指令编码才是对的。</p>
+<p>也许读者不太明白我说的“地址偏移是什么意思”，马上就会讲。</p>
+<p>需要注意，第二遍只查询符号表，但是不会再添加新符号了。</p>
+<h2 id="符号地址">符号地址</h2>
+<p>在汇编代码中，符号（Symbols）本质上是内存地址的别名。</p>
+<p>生成的汇编代码，最终要成为可执行的程序，程序被加载到内存，符号就获得了最终的地址。</p>
+<p>但是从 .s 到 .o 的时候，我们确实不知道每个符号将来在内存的哪个位置。怎么办呢？</p>
+<p>我们可以给每个符号赋予一个相对地址，相对的意思是看这个符号在段内的偏移是多少，它的地址就是多少。</p>
+<p>例如下面的代码。</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">section</span> .data<br><span class="hljs-meta">global</span> list<br>	list <span class="hljs-built_in">dd</span> <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">95</span> <span class="hljs-built_in">dd</span> <span class="hljs-number">0</span><br><span class="hljs-meta">global</span> monkey<br>    monkey <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;Sun&quot;</span>, <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<p>.data 段最开始的地址是 0，因为 list 是此段第一个符号，所以它的地址是 0；</p>
+<p>因为 list 占用了 <code>4*5 + 4*95 = 400</code> 个字节，所以 monkey 这个符号的偏移就是 400，所以 monkey 的符号地址是 400;</p>
+<p>不过像这样人工计算地址实在很麻烦，如何编程计算地址呢？</p>
+<h3 id="位置计数器">位置计数器</h3>
+<p>当汇编器遇到<strong>段声明</strong>时，它会判断这是不是一个新段（根据名字），如果是，它就为这个段创建一个<strong>位置计数器</strong>并将其初始值设为 <strong>0</strong>。</p>
+<p>如果该段之前已声明过，汇编器会查一下该段当时计数到哪里了，然后从那个位置继续计数。因为 csub 没有生成这样的汇编代码，所以这种情况不用考虑。</p>
+<p>我们可以用一个简单的结构体和一个全局变量把当前的段管理起来。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">section_info</span> &#123;</span><br>	<span class="hljs-type">int</span> location_cnt; <span class="hljs-comment">// 位置计数器</span><br>	<span class="hljs-type">char</span> name[ASS_MAX_ID_LEN+<span class="hljs-number">1</span>]; <span class="hljs-comment">// 段名</span><br>&#125;<span class="hljs-type">section_info_t</span>;<br><br><span class="hljs-type">section_info_t</span> *cur_parsing_section_g = <span class="hljs-literal">NULL</span>;<br></code></pre></td></tr></table></figure>
+<p>汇编器初始化的时候，cur_parsing_section_g 的值为 NULL;当汇编器语法分析遇到 “section .xxx” 这样的段声明时，就创建一个段。下面是创建新段的代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">section_info_t</span> *<span class="hljs-title function_">create_one_section</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *name)</span><br>&#123;<br>	<span class="hljs-keyword">if</span>(!name)<br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br><br>	<span class="hljs-type">section_info_t</span> *section_info = <span class="hljs-built_in">calloc</span>(<span class="hljs-number">1</span>, <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">section_info_t</span>));<br>	<span class="hljs-keyword">if</span>(!section_info) &#123;<br>	    SYSTEM_FATAL_ERR(MEM_ALLOC_FAILED);<br>	&#125;<br>	section_info-&gt;location_cnt = <span class="hljs-number">0</span>; <br>	<span class="hljs-built_in">strncpy</span>(section_info-&gt;name, name, ASS_MAX_ID_LEN);<br>	<span class="hljs-keyword">return</span> section_info;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>并让 cur_parsing_section_g 指向这个段;</p>
+<p>当再次遇到 “section .yyy” 时，说明遇到了新的段，则创建新段，释放 cur_parsing_section_g 指向的内存，让 cur_parsing_section_g 指向新创建的段。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">switch_section</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *name)</span><br>&#123;<br>	<span class="hljs-keyword">if</span>(cur_parsing_section_g) &#123;<span class="hljs-comment">// 结束当前的段</span><br>		<span class="hljs-built_in">free</span>(cur_parsing_section_g);<br>		cur_parsing_section_g = <span class="hljs-literal">NULL</span>;<br>	&#125;<br>	<span class="hljs-comment">// 开一个新的段</span><br>	cur_parsing_section_g = create_one_section(name);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这个函数在哪里用呢？</p>
+<p>这个函数在下图第 123 行调用，也就是解析到 “section .yyy” 的时候。</p>
+<img src="image-20260126171844804.png" srcset="/img/loading.gif" lazyload alt="image-20260126171844804" style="zoom:50%;" />
+<p>不管是遇到数据还是指令，计数器的值都会增加。我封装了 2 个函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">increase_section_location_cnt</span><span class="hljs-params">(<span class="hljs-type">int</span> delta_len)</span><br>&#123;<br>    assert(cur_parsing_section_g);<br>    cur_parsing_section_g-&gt;location_cnt += delta_len;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">get_section_location_cnt</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    assert(cur_parsing_section_g);<br>    <span class="hljs-keyword">return</span> cur_parsing_section_g-&gt;location_cnt;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>当解析到一个符号定义的时候，我们就调用这个函数增加数据段计数器的值，参数 delta_len 应该是这个数据占用的所有内存大小；</p>
+<p>当解析到一条完整的指令的时候，我们就调用这个函数增加代码段计数器的值，，参数 delta_len 应该是这条指令编码的长度。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c">section .data<br>global <span class="hljs-built_in">list</span><br>	<span class="hljs-built_in">list</span> dd <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span><br>	times <span class="hljs-number">95</span> dd <span class="hljs-number">0</span><br>global monkey<br>    monkey db <span class="hljs-string">&quot;Sun&quot;</span>, <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<p>举个例子，还是这段代码。</p>
+<p>遇到 “section .data”，创建数据段，<code>section_info-&gt;location_cnt = 0;</code></p>
+<p>cur_parsing_section_g 的值是 section_info;</p>
+<p>为了得到 list 的地址，调用 <code>get_section_location_cnt()</code>，得到 0；</p>
+<p>解析完 list 后，调用 <code>increase_section_location_cnt(400);</code></p>
+<p>所以 <code>section_info-&gt;location_cnt = 400；</code></p>
+<p>遇到了 monkey，为了确定 monkey 的偏移地址，调用 <code>get_section_location_cnt();</code>，返回值是 400;</p>
+<p>当解析完第 6 行，知道 monkey 这段内存占 4 个字节后，要调用 <code>increase_section_location_cnt(4);</code>所以 <code>section_info-&gt;location_cnt = 404；</code></p>
+<h2 id="符号表">符号表</h2>
+<p>下面讲解符号表的代码。</p>
+<p>符号表都包含哪些信息呢？</p>
+<p>1、符号的类型</p>
+<p>2、符号的名字；符号的名字具有唯一性，我们查找符号也是按照名字来查找。</p>
+<p>3、符号所属于的段，就是此符号在哪个段定义的</p>
+<p>4、地址</p>
+<p>5、属性，例如是否是外部的，是否是全局的</p>
+<p>6、对于数据，要存储初始值下面的枚举定义了所有的符号类型。</p>
+<p>下面的枚举定义了所有的符号类型。</p>
+<img src="image-20260418192748944.png" srcset="/img/loading.gif" lazyload alt="image-20260418192748944" style="zoom:50%;" />
+<p>和符号有关的结构体是：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">ass_symbol</span></span><br><span class="hljs-class">&#123;</span><br>    ass_symbol_type_e type;<br>    <span class="hljs-type">char</span> sec_name[ASS_MAX_ID_LEN + <span class="hljs-number">1</span>];  <span class="hljs-comment">// 符号属于的段名，：空/.text/ .data /.bss</span><br>    <span class="hljs-type">char</span> name[ASS_MAX_ID_LEN + <span class="hljs-number">1</span>];  <span class="hljs-comment">// 符号名</span><br>    <span class="hljs-type">bool</span> is_ext;  <span class="hljs-comment">// 是否是外部符号，是 true</span><br>                  <span class="hljs-comment">// 的时候表示为外部的符号，此时 cur_addr 不累加</span><br>    <span class="hljs-type">bool</span> is_global;<br>    <span class="hljs-type">int</span> addr;  <span class="hljs-comment">// 符号的偏移地址</span><br>    <span class="hljs-type">init_val_t</span> *init_val_info;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">hlist_node</span> <span class="hljs-title">hnode</span>;</span>  <span class="hljs-comment">// 用于加入 ass_symbol_table_t 的哈希表</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">entry</span>;</span>   <span class="hljs-comment">// 用于加入 ass_symbol_table_t 链表</span><br>&#125; <span class="hljs-type">ass_symbol_t</span>;<br></code></pre></td></tr></table></figure>
+<p>第 3 行是类型，第 5 行是符号名，第 9 行是偏移，已经介绍了。</p>
+<p>第 4 行是段名，记录这个符号属于哪个段。例如数据定义肯定是属于数据段，标签属于代码段。</p>
+<p>第 6 行表示是否声明为 extern</p>
+<p>第 7 行表示是否声明为 global</p>
+<p>第 10 行，如果是数据定义，这个字段不为 NULL，指向它的初始值。</p>
+<p>第 11 行，哈希表的节点，用于加入哈希表，方便查询符号存不存在。</p>
+<p>第 12 行，链表节点。此节点仅对数据定义有用，我们用链表记录符号定义的先后顺序，为后面生成 .o 做准备。</p>
+<p>以上结构是符号表的“表项”，我们还需要一个“表”。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> ASS_SYM_TAB_BIT         5</span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">ass_symbol_table</span>&#123;</span><br>	DECLARE_HASHTABLE(hash_tab, ASS_SYM_TAB_BIT);<br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">head</span>;</span> <span class="hljs-comment">// 记录 data symbol 添加的顺序</span><br>&#125;<span class="hljs-type">ass_symbol_table_t</span>;<br></code></pre></td></tr></table></figure>
+<p>之前已经讲过哈希表结构和用法，这里不赘述。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">ass_symbol_table_t</span> ass_sym_tab_g; <span class="hljs-comment">// 全局变量</span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">ass_symbol_table_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	<span class="hljs-built_in">memset</span>(&amp;ass_sym_tab_g, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">ass_symbol_table_t</span>));<br>	INIT_LIST_HEAD(&amp;ass_sym_tab_g.head);		<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>第 3 行，是符号表的初始化。</p>
+<h3 id="创建符号的函数">创建符号的函数</h3>
+<p>创建符号的代码如下：</p>
+<img src="image-20260126181038092.png" srcset="/img/loading.gif" lazyload alt="image-20260126181038092" style="zoom:50%;" />
+<p>第一个参数是符号名字，第二个参数是符号类型，第三个参数是初始值（对数据定义有效，其他类型的传 NULL）</p>
+<p>第 19 行，为 ass_symbol_table_t 结构体分配内存。第 23、24 行，登记符号的类型和名字。</p>
+<p>第 26 行，填写符号的偏移。</p>
+<p>第 27 行，获取当前段的段名。这个函数很简单，就是  return cur_parsing_section_g-&gt;name;</p>
+<p>第 28 行，如果这是一个用 extern 声明的符号，设置 is_ext 为 true;</p>
+<p>并且设置它的地址偏移为 0，因为它在其他文件定义，只好先填 0，修正地址的工作交给连接器。</p>
+<p>第 31 行，如果是数据的定义，那步骤就比较多，第 33 行，设置初始值，这个初始值是怎么来的，后面会讲。</p>
+<p>第 35 行，增加段计算器的值。</p>
+<p>第 37~39，仅在第一遍扫描的时候，把数据加入链表。</p>
+<h3 id="数据定义的解析">数据定义的解析</h3>
+<img src="image-20260126183124513.png" srcset="/img/loading.gif" lazyload alt="image-20260126183124513" style="zoom:50%;" />
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> str_list<br>	str_list <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-number">0</span>                    <span class="hljs-comment">; 这是一个 item </span><br>	<span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, langlangshan, -<span class="hljs-number">24</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>    <span class="hljs-comment">; 这是一个 item </span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">2</span> <span class="hljs-built_in">db</span> <span class="hljs-number">0</span>                              <span class="hljs-comment">; 这是一个 item </span><br>	<span class="hljs-built_in">dd</span> test_str                               <span class="hljs-comment">; 这是一个 item </span><br></code></pre></td></tr></table></figure>
+<p>例如上面的汇编代码，当解析到 “world” 或者数字，就会匹配到上面的第 417 行或者 410 行。</p>
+<p>如果解析到 “langlangshan”，就会匹配到第 422 行。</p>
+<p>对于数字或者字符串，比较简单，就是把值加入链表。</p>
+<p>链表的头节点是作为参数传进来的。为了简单，我们都用 int 大小存储。</p>
+<img src="image-20260126184249670.png" srcset="/img/loading.gif" lazyload alt="image-20260126184249670" style="zoom:50%;" />
+<p>ASS_STRING,首先计算字符串的长度（不包括末尾的 0),然后为每个字符分配内存（int 类型的大小)。</p>
+<p>第 393，把字符转换成整型，存进去。</p>
+<p>第 394，加入链表。</p>
+<p>value 的父函数是</p>
+<img src="image-20260126184631531.png" srcset="/img/loading.gif" lazyload alt="image-20260126184631531" style="zoom:50%;" />
+<p>第 307 行，只要遇到逗号，就继续解析，把值都收集到链表。</p>
+<p>value_list 的父函数是 values</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">    &lt;values&gt;     -&gt; &lt;data_size&gt; &lt;value_list&gt;</span><br><span class="hljs-comment">    &lt;data_size&gt;  -&gt; KW_DB | KW_DW | KW_DD</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">values</span><span class="hljs-params">(<span class="hljs-type">scanner_t</span> *scanner,  <span class="hljs-type">int</span> times, <span class="hljs-type">init_val_t</span> *init_val)</span><br>&#123;<br>    <span class="hljs-type">int</span> size = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">switch</span> (scanner-&gt;token) &#123;<br>        <span class="hljs-keyword">case</span> KW_DB:<br>            size = <span class="hljs-number">1</span>;<br>            <span class="hljs-keyword">break</span>;<br>		<span class="hljs-comment">// ...</span><br>    &#125;<br>    <br>    next_token();<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> *<span class="hljs-title">val_head</span> =</span> create_list();<br>    value_list(scanner, size, val_head, init_val);<br>    new_item_add(size, times, val_head, init_val);<br>    <span class="hljs-built_in">free</span>(val_head);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>第 16 行创建了一个空的链表（代码很简单，不贴了），把头节点作为参数传给第 17 行的 value_list()；</p>
+<p>当 value_list() 执行完，说明一个 item 的值都收集好了。</p>
+<p>第 18 行，把这个 item 加入 init_val 指向的结构中（这个函数后面会讲）。</p>
+<p>我们先看看 init_val 这个指针来自哪里。</p>
+<img src="image-20260126205244709.png" srcset="/img/loading.gif" lazyload alt="image-20260126205244709" style="zoom:50%;" />
+<p>init_val 的源头在第 217 行，它是函数 new_init_val 的返回值。</p>
+<p>new_init_val 函数的作用是分配 init_val_t 结构体并初始化，入参是数据符号的名字。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">init_val_t</span> *<span class="hljs-title function_">new_init_val</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *name)</span><br>&#123;<br>    <span class="hljs-type">init_val_t</span> *init_val = <span class="hljs-built_in">calloc</span>(<span class="hljs-number">1</span>, <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">init_val_t</span>));<br>    <span class="hljs-keyword">if</span> (!init_val) &#123;<br>        SYSTEM_FATAL_ERR(MEM_ALLOC_FAILED);<br>    &#125;   <br>    <span class="hljs-built_in">strncpy</span>(init_val-&gt;name, name, ASS_MAX_ID_LEN);<br>    INIT_LIST_HEAD(&amp;init_val-&gt;items_list);<br>    INIT_LIST_HEAD(&amp;init_val-&gt;relocation);<br>    <span class="hljs-keyword">return</span> init_val;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>第 8~9 行初始化 2 个链表。</p>
+<p>第 3 行分配内存，init_val_t 是什么结构体呢？</p>
+<img src="image-20260126185358648.png" srcset="/img/loading.gif" lazyload alt="image-20260126185358648" style="zoom:50%;" />
+<p>第 18 行，记录一共有多少个 item;比如前面的例子 str_list，它包含 4 个 item，</p>
+<p>注意，这个 init_val_t 和后面要说的 item_t 都是我为了解析数据符号而设计的数据结构，和汇编语言没有任何关系。</p>
+<p>第 19 行，后面会讲。</p>
+<p>第 20 行，是一个链表，所有 item 都挂在这个链表上。</p>
+<p>第 21 行，用来存储数据符号的名字，比如 “str_list”</p>
+<p>第 22 行，和重定位有关，不用管。</p>
+<p>item 也是有结构的：</p>
+<img src="image-20260126190155454.png" srcset="/img/loading.gif" lazyload alt="image-20260126190155454" style="zoom:50%;" />
+<p>第 26 行，用来记录数据的 size（db=1,dw=2,dd=4）；</p>
+<p>第 27 行，重复的次数；</p>
+<p>第 28 行，前面的链表上收集了多少个数，这里就是多少；</p>
+<p>这些字段都会在 new_item_add 中被填充。</p>
+<p>我们看 new_item_add(size, times, val_head, init_val);</p>
+<p>意思是根据 val_head 链表收集到的值，创建一个 item，并把这个 item 加入到 init_val 指向的结构中。</p>
+<img src="image-20260126191025129.png" srcset="/img/loading.gif" lazyload alt="image-20260126191025129" style="zoom:50%;" />
+<p>158~161，分配 item 的内存；然后设置 def_size 和 times；</p>
+<p>第 164 行，初始化 item 的 values_list 链表为空；</p>
+<p>第 167~170，利用 list_move_tail 函数，把 head 上面的节点转移到 item 的 values_list 链表上。</p>
+<p>list_move_tail 的工作分为两步：</p>
+<p>一是把 head-&gt;next 从它所在的链表上删除（不释放内存），二是把它加入到 item-&gt;values_list 链表的末尾。</p>
+<p>第 167 行的条件是只要 head 链表不为空。</p>
+<p>所以，我们是把 head 链表上的节点，从第一个开始，依次加入到 item-&gt;values_list 的末尾，所以节点的顺序没有变。</p>
+<p>第 169，统计节点的个数。</p>
+<p>第 171 行，把 item 加入 init_val-&gt;items_list</p>
+<p>第 172 行， <code>def_size * times * item-&gt;values_cnt</code> 的结果是这个 item 所占内存的大小；</p>
+<p>累加到 init_val-&gt;cur_addr 上，表示这个 item 解析完成后，数据符号占用内存多大。</p>
+<p>为什么要统计这个值，在学习重定位的时候会用。</p>
+<h3 id="维护符号表">维护符号表</h3>
+<p>需要注意，定义符号和引用符号不是一回事。</p>
+<p>例如</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> str_list<br>	str_list <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-number">0</span>                <br>	<span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, langlangshan, -<span class="hljs-number">24</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>    <br><span class="hljs-symbol">    </span><br><span class="hljs-symbol">test:</span><br>	<span class="hljs-comment">; ...</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [monkey]<br>	<span class="hljs-comment">;...</span><br>	<span class="hljs-keyword">je</span> @L47_else<br>	<span class="hljs-keyword">call</span> foo<br>	<span class="hljs-comment">; ...</span><br>@L47_else:<br>	<span class="hljs-comment">; ...    </span><br></code></pre></td></tr></table></figure>
+<p>第 2 行的 str_list，这是定义符号;</p>
+<p>第 3 行的 langlangshan，这是在 str_list 定义中引用符号;</p>
+<p>第 5 行的 test: 这是定义符号;</p>
+<p>第 7 行的 monkey，这是引用符号;</p>
+<p>第 9、10行的  @L47_else 和 foo，是引用符号;</p>
+<p>第 12 行的@L47_else: 这是定义符号。</p>
+<p>如何维护符号表？</p>
+<p>下表总结了遇到数据定义、标号定义、extern 声明、global 声明、引用符号这 5 种情况，而且第一遍扫描和第二遍扫描处理方法不一样。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>第一遍扫描</th>
+<th>第二遍扫描</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据定义</td>
+<td>先查表，查不到就创建并添加此符号；查到了，肯定是 ASS_SYMBOL_TYPE_UNDEF 类型，创建同名符号，并替换这个符号</td>
+<td>更新初始值</td>
+</tr>
+<tr>
+<td>标号定义</td>
+<td>同上</td>
+<td>不处理</td>
+</tr>
+<tr>
+<td>extern 声明的符号</td>
+<td>同上</td>
+<td>不处理</td>
+</tr>
+<tr>
+<td>global 声明的符号</td>
+<td>不处理</td>
+<td>查找符号，把 is_global 标记为 true;</td>
+</tr>
+<tr>
+<td>对符号的引用</td>
+<td>先查表，如果查不到，就创建一个 ASS_SYMBOL_TYPE_UNDEF 类型的符号，并加入符号表</td>
+<td>查表，获取正确的符号信息。查到的符号不应该是 ASS_SYMBOL_TYPE_UNDEF 类型，如果是，报错：符号未定义。</td>
+</tr>
+</tbody>
+</table>
+<p>为了维护符号表，有 2 个核心函数。</p>
+<p>1、add_ass_symbol</p>
+<p>2、get_or_add_ass_symbol</p>
+<p>这 2 个函数互相配合，完成符号表的维护。</p>
+<h4 id="get-or-add-ass-symbol">get_or_add_ass_symbol</h4>
+<img src="image-20260127105641983.png" srcset="/img/loading.gif" lazyload alt="image-20260127105641983" style="zoom:50%;" />
+<p>在遇到引用符号的时候，就会调用 get_or_add_ass_symbol；</p>
+<p>第 81 行，在符号表中查找这个符号，如果找不到，则创建一个 ASS_SYMBOL_TYPE_UNDEF 类型的符号，并加入符号表；</p>
+<p>第 83 行完成符号创建，第 87~88 把符号加入哈希表。</p>
+<p>折叠的部分不用管，是后面做实验用的。</p>
+<p>第 102 行，如果这是第二遍扫描，那肯定能找到；</p>
+<p>我们查看符号类型，如果是 ASS_SYMBOL_TYPE_UNDEF，就报错，因为这个符号未定义，也没有用 extern 声明。</p>
+<p>调用 get_or_add_ass_symbol 的地方有 3 处：</p>
+<p>1、数据定义里引用了符号</p>
+<p>例如前面的例子：</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> str_list<br>	str_list <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-number">0</span>                <br>	<span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, langlangshan, -<span class="hljs-number">24</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>  <br><span class="hljs-meta">global</span> langlangshan<br>	langlangshan <span class="hljs-built_in">dd</span> <span class="hljs-number">80</span><br><span class="hljs-comment">; ...</span><br><span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [monkey]  <span class="hljs-comment">; 地址包含符号</span><br><span class="hljs-keyword">mov</span> <span class="hljs-built_in">ecx</span>, cat <span class="hljs-comment">;  操作数是符号</span><br></code></pre></td></tr></table></figure>
+<p>第 3 行 str_list 的定义引用了 langlangshan；</p>
+<p>2、指令里面引用了符号</p>
+<p>例如上面第 7 行和第 8 行，地址包含符号或者操作数是符号；</p>
+<p>相关的代码如下：</p>
+<img src="image-20260418194229952.png" srcset="/img/loading.gif" lazyload alt="image-20260418194229952" style="zoom:50%;" />
+<p>上图第 563 行，操作数里面引用符号；</p>
+<img src="image-20260418194311830.png" srcset="/img/loading.gif" lazyload alt="image-20260418194311830" style="zoom:50%;" />
+<p>上图第 471 行，地址里面引用符号；</p>
+<h4 id="add-ass-symbol">add_ass_symbol</h4>
+<img src="image-20260127105136520.png" srcset="/img/loading.gif" lazyload alt="image-20260127105136520" style="zoom:50%;" />
+<p>以上是 add_ass_symbol 的代码。</p>
+<p>这个函数虽然名字是 add, 但是里面也可能有 replace（替换） 的操作。</p>
+<p>在遇到符号定义的时候，会调用这个函数。</p>
+<p>第 120 行，根据名字去符号表中查找，如果找到了，肯定是之前某个地方引用了此符号，那时候是作为 ASS_SYMBOL_TYPE_UNDEF 类型添加到符号表的，所以第 122 行肯定为真，我们从符号表中删除之前的那个符号，把现在的符号加入符号表，也就是替换。</p>
+<p>如果找不到，就不用替换了，第 132~133 把这个符号加入符号表。</p>
+<p>调用 add_ass_symbol 的地方有 3 处</p>
+<p>1、遇到了标号的定义</p>
+<p>2、遇到了 extern 的声明</p>
+<p>3、遇到了数据的定义</p>
+<img src="image-20260127104945558.png" srcset="/img/loading.gif" lazyload alt="image-20260127104945558" style="zoom:50%;" />
+<p>第 187 行，这里是定义一个标号，所以类型是 ASS_SYMBOL_TYPE_LABEL；然后调用 add_ass_symbol</p>
+<img src="image-20260127111208941.png" srcset="/img/loading.gif" lazyload alt="image-20260127111208941" style="zoom:50%;" />
+<p>第 149 行，说明遇到了 extern 声明。</p>
+<p>第 156~159，创建 ASS_SYMBOL_TYPE_EXT 类型符号，然后调用 add_ass_symbol</p>
+<img src="image-20260127111736938.png" srcset="/img/loading.gif" lazyload alt="image-20260127111736938" style="zoom:50%;" />
+<p>第 234~237，遇到数据定义，创建 ASS_SYMBOL_TYPE_DATA 类型的符号；然后调用 add_ass_symbol</p>
+<p>相信读者已经发现了，这三个地方都有条件，就 <code>if (scan_loop_g == 1)</code></p>
+<p>这是因为我们只在第一遍扫描的时候创建和添加（或替换）符号。</p>
+<h3 id="更新数据的初始值">更新数据的初始值</h3>
+<p>再回到前面的例子：</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> str_list<br>	str_list <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-number">0</span>                <br>	<span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, langlangshan, -<span class="hljs-number">24</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>  <br><span class="hljs-meta">global</span> langlangshan<br>	langlangshan <span class="hljs-built_in">dd</span> <span class="hljs-number">80</span><br><span class="hljs-comment">; ...</span><br><span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [monkey]  <span class="hljs-comment">; 地址包含符号</span><br><span class="hljs-keyword">mov</span> <span class="hljs-built_in">ecx</span>, cat <span class="hljs-comment">;  操作数是符号</span><br></code></pre></td></tr></table></figure>
+<p>第 3 行 str_list 的定义引用了 langlangshan;</p>
+<p>在解析 str_list 的初始值的时候，当解析到 langlangshan，会调用 get_or_add_ass_symbol</p>
+ <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">   &lt;value&gt;  ::= [&lt;sign&gt;] NUM | STR | ASS_ID </span><br><span class="hljs-comment">    &lt;sign&gt;  ::= SUB | ADD</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">value</span><span class="hljs-params">(<span class="hljs-type">scanner_t</span> *scanner, <span class="hljs-type">int</span> size,</span><br><span class="hljs-params">                  <span class="hljs-keyword">struct</span> list_head *head, <span class="hljs-type">init_val_t</span> *init_val)</span><br>&#123;<br>    <span class="hljs-type">int</span> num = <span class="hljs-number">0</span>;<br><br>    <span class="hljs-keyword">switch</span> (scanner-&gt;token) &#123;<br>        <span class="hljs-comment">// ...</span><br><br>        <span class="hljs-keyword">case</span> ASS_ID:<br>            <span class="hljs-type">ass_symbol_t</span> *sym = get_or_add_ass_symbol(scanner);<br>            num = sym-&gt;addr; <br>            list_add_value(head, ASS_NUM, &amp;num);<br>            next_token();<br>            <span class="hljs-keyword">break</span>;<br>    <span class="hljs-comment">// ...</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>假设这是第一遍扫描，第 14 行，get_or_add_ass_symbol 函数会创建一个 ASS_SYMBOL_TYPE_UNDEF 类型，名字为 langlangshan 的符号;</p>
+<p>因为是 ASS_SYMBOL_TYPE_UNDEF 类型，所以第 15 行 sym-&gt;addr 等于 0，所以第 16 行加入链表的值就是 0;</p>
+<p>继续扫描，遇见了 langlangshan 的定义，发现这是一个本文件的符号，虽然用把符号表种旧的 langlangshan 替换了，但是 str_list 的初始值，还是 3, 5, 9, 0, -24, 7, 7, 9；</p>
+<p>在第二遍扫描的时候，会再次扫描 str_list 的定义；</p>
+<p>这时候，依然用 get_or_add_ass_symbol 函数查找 langlangshan，这次得到的 sym-&gt;addr 不是 0，而是 langlangshan 的偏移地址，加入链表的也是这个偏移地址，这才是我们要的。</p>
+<p>所以，当第二次解析 str_list 的初始值后，我们应该更新 str_list 的初始值。</p>
+<img src="image-20260127121958652.png" srcset="/img/loading.gif" lazyload alt="image-20260127121958652" style="zoom:50%;" />
+<p>第 229 行，当 while 循环结束，说明解析完毕。</p>
+<p>第 240 行，else 分支，说明是第二次扫描。在符号表种查找 name，肯定是有的。</p>
+<p>第 241 行，更新初始值。第一个参数是查到的符号，第二个参数是第二次解析的初始值。</p>
+<img src="image-20260127122129848.png" srcset="/img/loading.gif" lazyload alt="image-20260127122129848" style="zoom:50%;" />
+<p>第 249 行，销毁第一次的初始值。</p>
+<p>第 250 行，让 init_val_info 指向新的初始值。</p>
+<p>第 251，计算初始值占用的内存大小</p>
+<p>第 252，增加段计数器。</p>
+<h2 id="成果展示">成果展示</h2>
+<p>接下来为读者展示第一遍扫描和第二遍扫描的区别。</p>
+<img src="image-20260127161119553.png" srcset="/img/loading.gif" lazyload alt="image-20260127161119553" style="zoom:50%;" />
+<p>我们修改这个函数，第一遍扫描，第 84 行，如果遇到没有定义的符号，则标记为红色。</p>
+<p>第二遍扫描，第 91~98 行，根据符号的类型，标记为红色（未定义）、绿色（数据或者标号）和黄色（extern 声明的）；</p>
+<p>对于 fragment 函数，如果遇到 extern 声明、数据定义、标号都标记为蓝色。</p>
+<p>如果没有标记颜色，则打印出来是白色。</p>
+<p>代码如下：</p>
+<img src="image-20260418195102136.png" srcset="/img/loading.gif" lazyload alt="image-20260418195102136" style="zoom:50%;" />
+<hr>
+<img src="image-20260127161645737.png" srcset="/img/loading.gif" lazyload alt="image-20260127161645737" style="zoom:50%;" />
+<p>打印出来如上图。代码本身没有什么逻辑，是我拼凑的，我们关注的是颜色。</p>
+<p>上面是第一次扫描的结果，可以看到所有符号都加入了符号表，红色的是未定义符号（在引用它的地方是未定义的）。</p>
+<img src="image-20260127162030895.png" srcset="/img/loading.gif" lazyload alt="image-20260127162030895" style="zoom:50%;" />
+<p>这是第二次扫描的结果。因为查到了 my_list 和标号 @L101_return，所以它们变成绿色了。同理，黄色的是 extern 声明的符号，第二次在符号表里面查到了。</p>
+<img src="image-20260127164854790.png" srcset="/img/loading.gif" lazyload alt="image-20260127164854790" style="zoom:50%;" />
+<hr>
+<img src="image-20260127164925420.png" srcset="/img/loading.gif" lazyload alt="image-20260127164925420" style="zoom:50%;" />
+<p>上下两个个图分别是第一次扫描完毕和第二次扫描完毕后打印的符号表。</p>
+<p>区别有二，一个是 my_list，monkey，test 的 global 属性是第二次扫描的时候添加的，但是这个不是重点。</p>
+<p>二是 my_list 的初始值，第一次是 3，0，…… 第二次是 3，8，……</p>
+<p>8 是 符号 monkey 的偏移（my_list 占用了 8 个字节）；这说明 “更新初始值” 的目的达到了。</p>
+<p>本文的内容到这里就结束了。</p>
+<p>按理说，接下来应该做语义分析，比如操作数匹配检查、寻址合法性校验、数值范围溢出检查等等。</p>
+<p>但是我们的汇编器不是一个通用的汇编器，仅仅是为了处理 csub 生成的代码，所以就跳过这些，进行指令翻译。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第28天：汇编器的符号表</div>
+      <div>https://leslieche.github.io/2026/04/18/第28天：汇编器的符号表/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月18日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/04/18/%E7%AC%AC29%E5%A4%A9%EF%BC%9Ax86%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/" title="第29天：x86指令格式入门">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">第29天：x86指令格式入门</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/" title="第27天：汇编器的语法分析之代码实现">
+                        <span class="hidden-mobile">第27天：汇编器的语法分析之代码实现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"LeslieChe/comment_for_blog","repo-id":"R_kgDOR6CL3g","category":"General","category-id":"DIC_kwDOR6CL3s4C6Ez9","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":1,"input-position":"top","lang":"zh-CN","strict":0,"theme":"preferred_color_scheme","loading":"lazy"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
