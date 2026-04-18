@@ -1,0 +1,1059 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本节带你从零开始构造产生式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第26天：汇编器的语法分析之产生式">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC26%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BA%A7%E7%94%9F%E5%BC%8F/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="本节带你从零开始构造产生式">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC26%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BA%A7%E7%94%9F%E5%BC%8F/image-20260112150355252.png">
+<meta property="article:published_time" content="2026-04-18T09:46:44.000Z">
+<meta property="article:modified_time" content="2026-04-18T10:21:08.496Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC26%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BA%A7%E7%94%9F%E5%BC%8F/image-20260112150355252.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第26天：汇编器的语法分析之产生式 - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/download/" target="_self">
+                <i class="iconfont icon-gitee-fill"></i>
+                <span>代码下载</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/download/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-gitee-fill"></i>
+                  <span>代码下载</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第26天：汇编器的语法分析之产生式"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-18 17:46" pubdate>
+          2026年4月18日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.7k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          57 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第26天：汇编器的语法分析之产生式</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第26天：汇编器的语法分析之产生式">第26天：汇编器的语法分析之产生式</h1>
+<p>回顾 csub 的语法分析，最重要的工作是构造产生式。</p>
+<p>本文就带着您一步一步构造汇编器的产生式。</p>
+<h2 id="汇编代码中的换行">汇编代码中的换行</h2>
+<p>在汇编语言中，<strong>换行（newline）本身通常没有语义含义</strong>，它主要起到<strong>分隔语句</strong>的作用，类似于高级语言中的分号<code>;</code></p>
+<p>C语言中，可以把多个语句写在一行，但是汇编语言不行。例如</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">push</span> <span class="hljs-built_in">ebp</span>  <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebp</span>, <span class="hljs-built_in">esp</span>   <span class="hljs-comment">; 不能这么写，会报错</span><br><br><span class="hljs-keyword">push</span> <span class="hljs-built_in">ebp</span>           <span class="hljs-comment">; 必须分成 2 行</span><br><span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebp</span>, <span class="hljs-built_in">esp</span>  <br></code></pre></td></tr></table></figure>
+<p>所以，一条指令的末尾，必须要有换行，有多个换行也可以。</p>
+<p>对于数据定义，如果有多个 db/dw/dd ，也要分行写</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">extern</span> langlangshan<br>my_list <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-number">0</span>  <span class="hljs-comment">; 这里要换行</span><br>    <span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, langlangshan, -<span class="hljs-number">24</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span> <br></code></pre></td></tr></table></figure>
+<p>对于标号，可以没有换行，也可以有一个到多个换行。</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">@L16_for:<br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">ebp</span>+<span class="hljs-number">12</span>]	<br>	<br>@L16_for: 	 <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">ebp</span>+<span class="hljs-number">12</span>]	 <span class="hljs-comment">; 这样写也可以</span><br></code></pre></td></tr></table></figure>
+<h2 id="EBNF">EBNF</h2>
+<p>之前我们定义 csub 的文法，用的是<strong>教科书式 CFG 写法</strong></p>
+<p>这里为大家介绍一种新的写法：<strong>EBNF（Extended Backus-Naur Form，扩展巴科斯-诺尔范式）</strong> 是 <strong>BNF（Backus-Naur Form）</strong> 的增强版本，用于<strong>更简洁、清晰地描述上下文无关文法（Context-Free Grammar, CFG）</strong>，广泛应用于编程语言规范、协议定义和编译器设计中。</p>
+<p><strong>EBNF 引入了语法糖（syntactic sugar），让文法更简洁、易读、易写，而传统写法严格依赖递归和选择，形式更基础但冗长。</strong></p>
+<p>区别如下表</p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>传统产生式（纯 BNF / CFG）</th>
+<th>EBNF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>0 或多次</strong></td>
+<td>需递归定义： XList → ε | X XList</td>
+<td>直接写： { X }</td>
+</tr>
+<tr>
+<td><strong>可选（0 或 1 次）</strong></td>
+<td>需额外规则： OptX → ε | X</td>
+<td>直接写：[ X ]</td>
+</tr>
+<tr>
+<td><strong>分组</strong></td>
+<td>无法显式分组，靠规则拆分</td>
+<td>用 <code>( )</code> 明确优先级</td>
+</tr>
+<tr>
+<td><strong>1 或多次</strong></td>
+<td>XPlus → X | X XPlus</td>
+<td>X {X} 或 X+</td>
+</tr>
+<tr>
+<td><strong>可读性</strong></td>
+<td>冗长，嵌套深</td>
+<td>简洁，接近自然语言</td>
+</tr>
+<tr>
+<td><strong>工具支持</strong></td>
+<td>所有 parser 支持</td>
+<td>需 EBNF-aware 工具（如 ANTLR）</td>
+</tr>
+</tbody>
+</table>
+<p>举个例子：如果用非终结符 &lt;0orMoreNL&gt; 表示 0 个或多个换行，nl 表示终结符换行(newline)</p>
+<p>0 个或多个换行，用教科书式 CFG 写法：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml">&lt;0orMoreNL&gt; -&gt; ε <br>             | nl &lt;0orMoreNL&gt;<br></code></pre></td></tr></table></figure>
+<p>用 EBNF 写法：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml">&lt;0orMoreNL&gt; ::= &#123;nl&#125;<br></code></pre></td></tr></table></figure>
+<p>{} 表示零次或多次</p>
+<p>如果用非终结符 &lt;1orMoreNL&gt; 表示 1 个或多个换行，&lt;1orMoreNL&gt; 的产生式是：</p>
+<p>用教科书式 CFG 写法：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml">&lt;1orMoreNL&gt; -&gt; nl <br>             | nl &lt;1orMoreNL&gt;<br></code></pre></td></tr></table></figure>
+<p>用 EBNF 写法:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml">&lt;1orMoreNL&gt; ::= nl &#123;nl&#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到，EBNF 写法更简洁，也更容易理解。后文中若采用 EBNF 写法，我们用“::=” 代替 -&gt;，以和教科书式 CFG 写法区分开。</p>
+<h2 id="起始符号">起始符号</h2>
+<p>如果起始符号叫 <code>&lt;ass_program&gt;</code>，该怎么分解呢？</p>
+<p>汇编代码肯定不是一大疙瘩，是一条一条的。</p>
+<p>如果用 <code>&lt;segment&gt;</code> 表示代码片段，那么 <code>&lt;ass_program&gt;</code> 可以推导出 0 个或多个 <code>&lt;segment&gt;</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;ass_program&gt; ::=  &#123;&lt;segment&gt;&#125;<br><br></code></pre></td></tr></table></figure>
+<p><code>&lt;segment&gt;</code> 可以分成 2 大类，一个是声明(包括定义)，一个是指令。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;segment&gt; -&gt; &lt;decl&gt; |  &lt;ass_inst&gt;<br></code></pre></td></tr></table></figure>
+<p><code>&lt;decl&gt;</code> 表示一条声明</p>
+<p><code>&lt;ass_inst&gt;</code> 表示一条指令</p>
+<h2 id="声明">声明</h2>
+<p>下面的代码包括了各种声明。</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">section</span> .data<br><span class="hljs-meta">global</span> list<br>	list <span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, <span class="hljs-number">1000</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>, -<span class="hljs-number">200</span>, <span class="hljs-number">100</span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">12</span> <span class="hljs-built_in">dd</span> <span class="hljs-number">0</span><br>	<br><span class="hljs-meta">section</span> .text<br><span class="hljs-meta">global</span> <span class="hljs-keyword">test</span><br><span class="hljs-symbol">test:</span><br>	<span class="hljs-keyword">push</span> <span class="hljs-built_in">ebp</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebp</span>, <span class="hljs-built_in">esp</span><br>	<span class="hljs-keyword">sub</span> <span class="hljs-built_in">esp</span>, <span class="hljs-number">4</span><br>	...<br>@L68_return:<br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">esp</span>, <span class="hljs-built_in">ebp</span><br>	<span class="hljs-keyword">pop</span> <span class="hljs-built_in">ebp</span><br>	<span class="hljs-keyword">ret</span><br><br><span class="hljs-meta">extern</span> print_int_arr<br></code></pre></td></tr></table></figure>
+<p>如果把指令以外的语法单元都当作声明，那么声明可以分为以下记类：</p>
+<p>1、section .data； section .text 等对段的声明；</p>
+<p>2、global xxxx  对全局符号的声明；</p>
+<p>3、extern xxx 对外部符号的声明；</p>
+<p>4、第 8 行的 test, 第 13 行的 @L68_return 等标号，也可以当成声明。<strong>标号本质上是符号的定义（symbol definition）</strong>，它向汇编器声明“此处有一个可被引用的地址”；</p>
+<p>5、第 3 行，定义了 list,它后面有一大串东西</p>
+<p>对于 1~3，规律是 section/global/extern 然后跟着标识符，再跟着一个或者多个换行；</p>
+<p>对于 4，规律是标识符后面跟着冒号；</p>
+<p>对于 5，有点麻烦，不过也是以标识符开头。</p>
+<p>所以，<code>&lt;decl&gt;</code> 可以分解为</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">decl</span>&gt;</span>   -&gt; KW_SEC ASS_ID &lt;1orMoreNL&gt;<br>          | KW_GLB ASS_ID &lt;1orMoreNL&gt;<br>          | KW_EXT ASS_ID &lt;1orMoreNL&gt;<br>          | ASS_ID <span class="hljs-tag">&lt;<span class="hljs-name">decl_tail</span>&gt;</span>      <br></code></pre></td></tr></table></figure>
+<p>KW_SEC 表示终结符 section</p>
+<p>KW_GLB 表示终结符 global</p>
+<p>KW_EXT 表示终结符 extern</p>
+<p>ASS_ID 表示标识符，也属于终结符</p>
+<p>&lt;1orMoreNL&gt; 是前面讲过的 1 个或多个换行</p>
+<p>第 4 行，就是情况 4 和 5，以标识符开头，后面的冒号或者一串东西用<code>&lt;decl_tail&gt;</code>表示</p>
+<p>下面，我们把注意力放在产生式 <code>&lt;decl&gt; -&gt; ASS_ID &lt;decl_tail&gt;</code>上，看看 <code>&lt;decl_tail&gt;</code> 如何分解</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">@L68_return:<br><br><span class="hljs-built_in">list</span> dd <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, <span class="hljs-number">1000</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>, <span class="hljs-number">-200</span>, <span class="hljs-number">100</span><br><br>cat times <span class="hljs-number">20</span> dd <span class="hljs-number">0</span><br><br>hello db <span class="hljs-string">&#x27;C&#x27;</span>, <span class="hljs-string">&#x27;H&#x27;</span>, <span class="hljs-string">&#x27;I&#x27;</span>, <span class="hljs-string">&#x27;N&#x27;</span>, <span class="hljs-string">&#x27;A&#x27;</span><br>times <span class="hljs-number">25</span> db <span class="hljs-number">0</span>    <br>    <br>dog dd cat<br></code></pre></td></tr></table></figure>
+<p>这些声明确实都以 ASS_ID（标识符） 开头，但是后面跟着什么不能一概而论。</p>
+<p>第 1 行，标识符后面是冒号</p>
+<p>第 3 行，标识符后面是 dd，然后是一串数字</p>
+<p>第 5 行，标识符后面是 times 20, 然后是 dd 和一串数字</p>
+<p><code>times</code>是 NASM 汇编器中的一个<strong>重复伪指令</strong>，用于将一段代码或数据重复指定的次数。它主要用于初始化重复的数据模式或重复生成相同的指令序列。</p>
+<p>回忆一下，在把中间代码翻译成汇编代码的时候，在数据段的生成上，如果数组没有指定初始化值，或者提供的初始化值的个数少于数组元素个数，我们会使用<code>times xx dd 0</code>或者<code>times xx db 0</code>来填充。</p>
+<p>看来<code>times xx</code>不是必须有的。</p>
+<p>我先把 &lt;decl_tail&gt; 拆成 2 大类</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">decl_tail</span>&gt;</span> -&gt; COLON &lt;0orMoreNL&gt;  // 标号<br> 		    | <span class="hljs-tag">&lt;<span class="hljs-name">init_value</span>&gt;</span>        // 数据定义的初始值<br></code></pre></td></tr></table></figure>
+<p>COLON 是终结符冒号，前文说过，它的后面可以有 0 或多个换行</p>
+<p>&lt;init_value&gt; 表示标识符后面的那一大串，例如下图用粉色笔迹圈出来的，分别是每个标识符的 &lt;init_value&gt;</p>
+<img src="image-20260112150355252.png" srcset="/img/loading.gif" lazyload alt="image-20260112150355252" style="zoom:50%;" />
+<p>其实 &lt;init_value&gt; 还可以有更复杂的写法，例如：</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">hello <span class="hljs-built_in">db</span> <span class="hljs-string">&#x27;C&#x27;</span>, <span class="hljs-string">&#x27;H&#x27;</span>, <span class="hljs-string">&#x27;I&#x27;</span>, <span class="hljs-string">&#x27;N&#x27;</span>, <span class="hljs-string">&#x27;A&#x27;</span><br><span class="hljs-built_in">times</span> <span class="hljs-number">25</span> <span class="hljs-built_in">db</span> <span class="hljs-number">0</span>  <br><span class="hljs-built_in">db</span> <span class="hljs-string">&#x27;G&#x27;</span>, <span class="hljs-string">&#x27;R&#x27;</span>, <span class="hljs-string">&#x27;E&#x27;</span>, <span class="hljs-string">&#x27;A&#x27;</span>, <span class="hljs-string">&#x27;T&#x27;</span><br><span class="hljs-built_in">db</span> <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span><br><span class="hljs-built_in">times</span> <span class="hljs-number">8</span> <span class="hljs-built_in">db</span> <span class="hljs-number">0</span> <br></code></pre></td></tr></table></figure>
+<p>以上代码的意思是，定义了一个数组，名字叫 hello，它的初始值是这样的：最开始 5 个字节是  ‘C’, ‘H’, ‘I’, ‘N’, ‘A’，然后是连续 25 字节的 0，再然后是 8 个字节： ‘G’, ‘R’, ‘E’, ‘A’, ‘T’，1，2，3，最后是连续 8 字节的 0；</p>
+<p>注意，每一行的末尾都要有 &lt;1orMoreNL&gt;</p>
+<p>如果把每一行的初始化值看成是一个 <code>&lt;item&gt;</code>，那么 <code>&lt;init_value&gt;</code> 可以分解为</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;init_value&gt; -&gt; &lt;item&gt; &lt;item_tail&gt;<br>       <br>&lt;item_tail&gt; -&gt;  &lt;item&gt; &lt;item_tail&gt;<br>             |  ε<br></code></pre></td></tr></table></figure>
+<p>或者用 EBNF 写法：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;init_value&gt; ::= &lt;item&gt; &#123;&lt;item&gt;&#125;<br></code></pre></td></tr></table></figure>
+<p>也就是说，&lt;init_value&gt; 有一个或多个 <code>&lt;item&gt;</code> 组成</p>
+<p><code>&lt;item&gt;</code> 如何分解呢？</p>
+<p>前文说过，“times xx” 的意思是重复多少次，且不是必须的。我们可以构造出</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">rept</span>&gt;</span> ::= KW_TIMES NUM <br></code></pre></td></tr></table></figure>
+<p>KW_TIMES 表示终结符 times</p>
+<p>NUM 表示终结符十进制整数（前面不能有负号）</p>
+<p><code>&lt;item&gt;</code> 可以包含 <code>&lt;rept&gt;</code>，也可以不包含</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;item&gt; ::= [&lt;rept&gt;] &lt;values&gt; &lt;<span class="hljs-number">1</span>orMoreNL&gt;<br></code></pre></td></tr></table></figure>
+<p>[] 表示 0 或 1 次</p>
+<p><code>&lt;values&gt;</code> 如何分解呢？它的开头一定是 db、dd 这类<strong>数据定义伪指令（data definition directives）</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;values&gt; ::=  &lt;data_size&gt; &lt;value_list&gt;  <br>&lt;data_size&gt; ::= KW_DB | KW_DW | KW_DD<br></code></pre></td></tr></table></figure>
+<p>KW_DB,KW_DW,KW_DD 分别表示终结符 db,dw,dd</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;value_list&gt; ::= &lt;value&gt; &#123; COMMA &lt;value&gt; &#125;<br></code></pre></td></tr></table></figure>
+<p>COMMA 表示终结符逗号</p>
+<p>&lt;value_list&gt; 可以推导出 <code>&lt;value&gt;</code>，后面可以跟着 0 次或多次 “COMMA <code>&lt;value&gt;</code>”</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;value&gt; ::= [&lt;sign&gt;] NUM | STR | ASS_ID <br>&lt;sign&gt;  ::= SUB | ADD<br></code></pre></td></tr></table></figure>
+<p><code>&lt;value&gt;</code> 可以是数字，字符串，标识符。如果是数字，也可能带负号/正号。</p>
+<p>至此，声明的产生式就构造完成了，下面看指令的产生式如何构造。</p>
+<h2 id="指令">指令</h2>
+<p>指令的构造比较简单，从操作数上分，有双操作数指令，单操作数指令和无操作数指令。</p>
+<p>用 &lt;ass_inst&gt; 表示一条指令，用 <code>&lt;oprand&gt;</code> 表示操作数；</p>
+<p>&lt;double_op&gt; &lt;single_op&gt; &lt;none_op&gt; 分别表示带有双操作数的指令助记符，带有单操作数的指令助记符，不带操作数的指令助记符。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;ass_inst&gt; -&gt; &lt;double_op&gt; &lt;oprand&gt; COMMA  &lt;oprand&gt; &lt;<span class="hljs-number">1</span>orMoreNL&gt;<br>            | &lt;single_op&gt; &lt;oprand&gt; &lt;<span class="hljs-number">1</span>orMoreNL&gt;<br>            | &lt;none_op&gt; &lt;<span class="hljs-number">1</span>orMoreNL&gt;<br></code></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;double_op&gt; -&gt; I_MOV | I_MOVSX | I_MOVZX |<br>               I_ADD | I_SUB   | I_IMUL  |<br>               I_CMP | I_LEA <br>    <br>&lt;single_op&gt; -&gt; I_CALL | I_INT   | I_IDIV | I_NEG   |    <br>               I_JMP  | I_JE    | I_JNE  |    <br>               I_SETE | I_SETNE | I_SETG | I_SETGE | I_SETL | I_SETLE |  <br>               I_PUSH | I_POP    <br>               <br>&lt;none_op&gt; -&gt;   I_RET | I_CDQ        <br></code></pre></td></tr></table></figure>
+<p>以上是我们用到的指令助记符。</p>
+<p>操作数 <code>&lt;oprand&gt;</code> 如何分解呢？</p>
+<p>操作数可以是数字（前面可以有正负号）、标识符、寄存器的名字，还可以是用方括号包裹起来的内存操作数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;oprand&gt; ::= [&lt;sign&gt;] NUM | ASS_ID | &lt;reg&gt; | &lt;mem&gt;<br>   <br>&lt;reg&gt; ::=   AL | CL | DL | BL | AH | CH | DH | BH	<br>           |EAX|ECX |EDX |EBX |ESP |EBP |ESI | EDI      <br></code></pre></td></tr></table></figure>
+<p><code>&lt;mem&gt;</code> 表示内存操作数；</p>
+<p>不熟悉汇编语言的同学，我帮你补一补课：</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">mov</span> [<span class="hljs-number">0x1234</span>], <span class="hljs-built_in">eax</span><br><span class="hljs-keyword">mov</span> <span class="hljs-built_in">byte</span> [<span class="hljs-built_in">ebx</span>], <span class="hljs-number">0x88</span><br></code></pre></td></tr></table></figure>
+<p>[0x1234] 就是一个内存操作数；</p>
+<p>注意，[] 前面可能有 byte、word、dword 等用于显式指定操作数大小的“操作数大小前缀”（operand-size specifier）。它们告诉汇编器：“我要对多少字节的数据进行操作”。</p>
+<p>例如上面第 2 行，表示把一个字节且值为 0x88 存储到 ebx 指向的内存。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;mem&gt; ::= [&lt;op_size&gt;] ASS_LBRACKET &lt;addr&gt; ASS_RBRACKET<br>	<br>&lt;op_size&gt; ::=  KW_BYTE | KW_WORD | KW_DWORD <br></code></pre></td></tr></table></figure>
+<p>ASS_LBRACKET 和 ASS_RBRACKET 分别表示终结符 “[” 和 “]”</p>
+<p>“[” 和 “]” 是内存操作数的特征。</p>
+<p><code>&lt;addr&gt;</code> 是什么呢？这取决于 x86-32 位 cpu 的寻址方式。</p>
+<p>x86-32 寻址方式如下表：</p>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>类型</th>
+<th>形式</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>立即数</td>
+<td><code>imm</code></td>
+<td><code>mov eax, 10</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>寄存器</td>
+<td><code>reg</code></td>
+<td><code>mov eax, ebx</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>直接/绝对地址</td>
+<td><code>[addr]</code></td>
+<td><code>mov eax, [my_var]</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>寄存器间接</td>
+<td><code>[reg]</code></td>
+<td><code>mov eax, [esi]</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>基址+位移</td>
+<td><code>[base + disp]</code></td>
+<td><code>mov eax, [ebp + 8]</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>变址+比例+位移</td>
+<td><code>[index*scale + disp]</code></td>
+<td><code>mov eax, [edi*4 + table]</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>基址+变址+比例+位移</td>
+<td><code>[base + index*scale + disp]</code></td>
+<td><code>mov eax, [ebx + esi*4 + 16]</code></td>
+</tr>
+</tbody>
+</table>
+<p>我们生成的汇编代码只用到了前 5 种，1 和 2 不需要访问内存，3、4、5 需要访问内存；</p>
+<p>序号 3 的例子中，my_var 是一个标识符，它的本质是一个地址，和 mov eax, [0x1234] 没有区别；</p>
+<p>根据序号 3-5，我们可以构造如下产生式；</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"> &lt;addr&gt; ::= ASS_NUM    <span class="hljs-comment">; 对应表格的 3</span><br>          | ASS_ID     <span class="hljs-comment">; 对应表格的 3</span><br>          | &lt;reg&gt; [&lt;disp&gt;] <span class="hljs-comment">; 对应表格的 4 和 5</span><br>    <br>&lt;disp&gt;  ::= &lt;sign&gt; ASS_NUM <br></code></pre></td></tr></table></figure>
+<p>也就是说，方括号里面可以是具体的数字，也可以是标识符，还可以是寄存器名字，寄存器名字后面还可以带一个偏移，偏移可正可负。</p>
+<p>如果是下面这样的 c 代码</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-built_in">list</span>[<span class="hljs-number">1000</span>] = &#123;<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>,<span class="hljs-number">5</span>&#125;; <br><br><span class="hljs-type">int</span> <span class="hljs-title function_">test</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-built_in">list</span>[<span class="hljs-number">1000</span>] = <span class="hljs-number">20</span>;<br>    <span class="hljs-comment">// ...</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>翻译成汇编后：</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">section</span> .data<br><span class="hljs-meta">global</span> list<br>	list <span class="hljs-built_in">dd</span> <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">995</span> <span class="hljs-built_in">dd</span> <span class="hljs-number">0</span><br>	<br><br><span class="hljs-meta">section</span> .text<br><span class="hljs-meta">global</span> <span class="hljs-keyword">test</span><br><span class="hljs-symbol">test:</span><br><span class="hljs-comment">; ...</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">dword</span> [list+<span class="hljs-number">4000</span>], <span class="hljs-number">20</span><br></code></pre></td></tr></table></figure>
+<p>第 11 行的方括号里面是 list + 数字</p>
+<p>所以 <code>&lt;addr&gt;</code> 还需要再修改一下</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"> &lt;addr&gt; ::= ASS_NUM   <br>          | ASS_ID  [&lt;disp&gt;] <span class="hljs-comment">; 这里</span><br>          | &lt;reg&gt; [&lt;disp&gt;] <br>          <br>&lt;disp&gt;  ::= &lt;sign&gt; ASS_NUM <br></code></pre></td></tr></table></figure>
+<p>另外，下面两行我们也不考虑。</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-number">12</span>+<span class="hljs-built_in">ebp</span>]   <span class="hljs-comment">; 这样写也可以，但是我们没有生成这样的代码，所以不考虑这种情况</span><br><span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [-<span class="hljs-number">100</span>]   <span class="hljs-comment">; nasm 可以编译过，但是我们没有生成这样的代码，所以不考虑这种情况</span><br></code></pre></td></tr></table></figure>
+<p>至此，产生式构造完毕。我们可以根据产生式做语法分析了。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第26天：汇编器的语法分析之产生式</div>
+      <div>https://leslieche.github.io/2026/04/18/第26天：汇编器的语法分析之产生式/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月18日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/" title="第27天：汇编器的语法分析之代码实现">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">第27天：汇编器的语法分析之代码实现</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/18/%E7%AC%AC25%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/" title="第25天：汇编器的词法分析">
+                        <span class="hidden-mobile">第25天：汇编器的词法分析</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"LeslieChe/comment_for_blog","repo-id":"R_kgDOR6CL3g","category":"General","category-id":"DIC_kwDOR6CL3s4C6Ez9","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":1,"input-position":"top","lang":"zh-CN","strict":0,"theme":"preferred_color_scheme","loading":"lazy"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

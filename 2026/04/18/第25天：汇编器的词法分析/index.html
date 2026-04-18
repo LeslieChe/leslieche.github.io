@@ -391,7 +391,8 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第25天：汇编器的词法分析"><a href="#第25天：汇编器的词法分析" class="headerlink" title="第25天：汇编器的词法分析"></a>第25天：汇编器的词法分析</h1><p>回顾一下从第一节课到现在我们都做了什么？</p>
+                <h1 id="第25天：汇编器的词法分析">第25天：汇编器的词法分析</h1>
+<p>回顾一下从第一节课到现在我们都做了什么？</p>
 <ol>
 <li>词法分析</li>
 <li>语法分析</li>
@@ -421,14 +422,14 @@
 <p>读者不用害怕，我会尽己所能为您讲明白。</p>
 <p>接下来，我们要完成汇编器的词法分析。</p>
 <p>需要说明的是，我们要实现的汇编器，功能比较简单，只能汇编 csub 生成的汇编代码。</p>
-<h2 id="汇编器的词法记号"><a href="#汇编器的词法记号" class="headerlink" title="汇编器的词法记号"></a>汇编器的词法记号</h2><p>还记得什么是词法记号吗？词法记号是源代码经词法分析后生成的最小语义单元，也就是说不能再分了。</p>
+<h2 id="汇编器的词法记号">汇编器的词法记号</h2>
+<p>还记得什么是词法记号吗？词法记号是源代码经词法分析后生成的最小语义单元，也就是说不能再分了。</p>
 <p>根据 csub 生成的汇编代码，我们的汇编器要支持哪些词法记号呢？</p>
 <p>汇编代码包括数据段、代码段。数据段里面有 section, global, extern, db, dd 等<strong>关键字</strong>,还有<strong>标识符</strong>，例如 .text, .data；</p>
 <p>另外，对于数据的定义，肯定少不了<strong>常量</strong>，包括数字常量、字符串常量或者字符常量；</p>
 <p>代码段里面有  global, extern 等关键字，还有以冒号结尾的标识符，标号，各种指令（<strong>指令助记符、寄存器名字</strong>）</p>
 <p>另外还有<strong>界符</strong>，例如冒号、逗号、分号（用于注释）、方括号等。</p>
 <p>把上面的信息归纳一下，如下面的表格</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -467,20 +468,20 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>有几点要注意：</p>
 <p>1、和 C 语言不同，汇编指令以换行作为结束，你不能在同一行书写 2 条汇编指令；</p>
 <p>2、其他包括无效的记号(ASS_INVALID)、文件结束(ASS_FILE_END)、还有注释（ASS_COMMENT）；</p>
 <p>3、虽然生成汇编指令的时候用不上 byte, word, dword 这些关键字，但是做窥孔优化的时候可能用到；</p>
 <p>和之前一样，我们用枚举类型记录所有词法记号。</p>
-<p><img src="image-20260124121114203.png" srcset="/img/loading.gif" lazyload alt="image-20260124121114203" style="zoom:50%;" /></p>
+<img src="image-20260124121114203.png" srcset="/img/loading.gif" lazyload alt="image-20260124121114203" style="zoom:50%;" />
 <p>代码仅截取部分。</p>
 <p>需要注意的是，第 33 行，是我专门加的，为了记录关键字的开始位置。后面会讲为什么这么做。</p>
-<h2 id="扫描器"><a href="#扫描器" class="headerlink" title="扫描器"></a>扫描器</h2><p>在做词法分析之前，肯定需要一个扫描器，我们之前写的那个改一改就可以用。</p>
+<h2 id="扫描器">扫描器</h2>
+<p>在做词法分析之前，肯定需要一个扫描器，我们之前写的那个改一改就可以用。</p>
 <p>不过我打算重新写一个。这次打算把和扫描有关的全局变量都封装到一个结构体里面，例如下面这样。</p>
-<p><img src="image-20260124162036738.png" srcset="/img/loading.gif" lazyload alt="image-20260124162036738" style="zoom:50%;" /></p>
+<img src="image-20260124162036738.png" srcset="/img/loading.gif" lazyload alt="image-20260124162036738" style="zoom:50%;" />
 <p>扫描器的初始化函数是：</p>
-<p><img src="image-20260124162328648.png" srcset="/img/loading.gif" lazyload alt="image-20260124162328648" style="zoom:50%;" /></p>
+<img src="image-20260124162328648.png" srcset="/img/loading.gif" lazyload alt="image-20260124162328648" style="zoom:50%;" />
 <p>第 82 行马上会讲。</p>
 <p>第 88 行，以只读的方式打开文件</p>
 <p>第 94 行设置文件的名字</p>
@@ -493,13 +494,13 @@
 <p>ASS_TOKEN_CNT 表示所有词法记号的个数。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">ass_token</span>  // 所有词法记号的枚举</span><br><span class="hljs-class">&#123;</span> <br>  ASS_INVALID,           <span class="hljs-comment">// 无效值</span><br>  ASS_FILE_END,          <span class="hljs-comment">// 文件结束</span><br>  ASS_COMMENT,           <span class="hljs-comment">// 注释</span><br>  ASS_ID,                <span class="hljs-comment">// 标识符</span><br><br> <span class="hljs-comment">//   ...                // 省略 </span><br>  ASS_RBRACKET,          <span class="hljs-comment">// 右方括号</span><br>  NEW_LINE,              <span class="hljs-comment">// 换行 </span><br> <span class="hljs-comment">// 关键字</span><br>  ASS_KEYWORDS_BEGIN,   <span class="hljs-comment">// 注意这里</span><br> <span class="hljs-comment">// 8 位寄存器</span><br>  AL,<br>  CL,<br>    <br>  <span class="hljs-comment">// ...     // 省略 </span><br>  <br>  KW_WORD,   <span class="hljs-comment">// word</span><br>  KW_DWORD,  <span class="hljs-comment">// dword</span><br>  ASS_TOKEN_CNT, <span class="hljs-comment">// 注意这里</span><br>&#125; ass_token_e;   <br></code></pre></td></tr></table></figure>
 <p>因为我们还有两个数组，和这里定义的词法记号（或者其中的关键字）一一对应。</p>
-<p><img src="image-20260124163144738.png" srcset="/img/loading.gif" lazyload alt="image-20260124163144738" style="zoom:50%;" /></p>
+<img src="image-20260124163144738.png" srcset="/img/loading.gif" lazyload alt="image-20260124163144738" style="zoom:50%;" />
 <p>ass_token_names 数组里面都是字符串，从第一个字符串到最后一个字符串，和 enum ass_token 是一一对应的关系。</p>
 <p>有时候我们增加了词法记号或者删除了词法记号，这个数组也要跟着修改，如果忘了修改就会出问题。</p>
-<p>assert(ASS_TOKEN_CNT == ass_token_names_cnt); </p>
+<p>assert(ASS_TOKEN_CNT == ass_token_names_cnt);</p>
 <p>就是为了保证 ass_token_names 的字符串个数和 ass_token_e 定义的词法记号个数一样，避免出现仅修改一处而忘记修改另一处的情况。</p>
 <p>因为枚举默认是从 0 开始的，所以 ASS_TOKEN_CNT 就表示了整个列表有多少个枚举成员。</p>
-<p><img src="image-20260124163923966.png" srcset="/img/loading.gif" lazyload alt="image-20260124163923966" style="zoom:50%;" /></p>
+<img src="image-20260124163923966.png" srcset="/img/loading.gif" lazyload alt="image-20260124163923966" style="zoom:50%;" />
 <p>ass_token_names_cnt 的值是靠第 46 行的宏 ARR_ELEM_CNT 计算的。</p>
 <p>这个宏很简单，我们之前多次使用过多次。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> ARR_ELEM_CNT(arr_name) (sizeof(arr_name) / sizeof(arr_name[0]))</span><br></code></pre></td></tr></table></figure>
@@ -513,7 +514,7 @@
 <p>如果在 ass_token_e 中增加了关键字，数组 ass_keywords_names 也要跟着修改。</p>
 <p>第二句断言就是为了保证数组 ass_keywords_names 和 ass_token_e 中的关键字一一对应，避免出现仅修改一处而忘记修改另一处的情况。</p>
 <p>接下来看看扫描的函数：</p>
-<p><img src="image-20260124170418852.png" srcset="/img/loading.gif" lazyload alt="image-20260124170418852" style="zoom:50%;" /></p>
+<img src="image-20260124170418852.png" srcset="/img/loading.gif" lazyload alt="image-20260124170418852" style="zoom:50%;" />
 <p>为了叙述方便，</p>
 <p>第一次调用 scan 函数的时候，因为 scanner-&gt;line_len 是 0（扫描器初始化调用了 calloc 函数，会把这个字段清零）</p>
 <p>所以执行第 119~120 行，读 ASS_MAX_LINE_LEN（定义为 80）个字符到 scanner-&gt;line_buf 中；</p>
@@ -524,15 +525,17 @@
 <p>总之，每次调用 scan 函数，得到的字符在 scanner-&gt;cur_ch 中；</p>
 <p>如果文件读到了末尾，scanner-&gt;cur_ch 的值是 END；</p>
 <p>代码就分析到这里。</p>
-<h2 id="词法分析"><a href="#词法分析" class="headerlink" title="词法分析"></a>词法分析</h2><p>轮子有了，可以做词法分析了。</p>
+<h2 id="词法分析">词法分析</h2>
+<p>轮子有了，可以做词法分析了。</p>
 <p>最早我们学习词法分析的时候，用到了状态转换图。现在，依然是用状态转换图。</p>
 <p>我们把注意力放在和编译器的词法分析不一样的地方，如果类似就不赘述。</p>
-<h3 id="标识符"><a href="#标识符" class="headerlink" title="标识符"></a>标识符</h3><p>我用的 NASM 的版本是 version 2.16.01</p>
+<h3 id="标识符">标识符</h3>
+<p>我用的 NASM 的版本是 version 2.16.01</p>
 <p>这个版本的 NASM 允许标识符以字母、下划线 <code>_</code>、问号 <code>?</code>、点号 <code>.</code> 或 <strong><code>@</code></strong> 符号<strong>开头</strong>。</p>
 <p>标识符可以包含字母（a-z, A-Z）、数字（0-9）、下划线 <code>_</code>、美元符号 <code>$</code>、井号 <code>#</code>、艾特符号 <code>@</code>、波浪号 <code>~</code>、点号 <code>.</code> 以及问号 <code>?</code>。</p>
 <p><strong>但是，有些字符最好不用做标识符，例如</strong></p>
 <ol>
-<li>美元符号：$$<code>= 当前位置，</code>$$$ = 当前段开始位置</li>
+<li>美元符号：<code>$</code> = 当前位置，<code>$$</code> = 当前段开始位置</li>
 <li><code>#</code>号，NASM 的预处理器指令可以选用 <code>#</code>或 <code>%</code> 作为前缀。虽然官方文档更推荐使用 %（如 %define），但为了兼容 C 语言预处理器的习惯，NASM 也支持 #</li>
 <li>波浪号 <code>~</code>：波浪号是按位取反运算符</li>
 <li>问号 <code>？</code>：问号主要用于未初始化数据的占位符</li>
@@ -544,30 +547,31 @@
 <li>NASM 中，以点号 “.” 开头的标签是局部标签，但是为了降低难度，我们把以 “.” 开头的标签当成是普通标签；</li>
 <li><code>.data</code> <code>.text</code> 等在 NASM 官方手册中被列为标准段名。但是我们把它们当作标识符来处理，在语法分析的时候，再识别为段名。</li>
 </ol>
-<h3 id="得到token"><a href="#得到token" class="headerlink" title="得到token"></a>得到token</h3><p><code>__ass_next_token</code> 函数如下：</p>
-<p><img src="image-20260124192405367.png" srcset="/img/loading.gif" lazyload alt="image-20260124192405367" style="zoom:50%;" /></p>
+<h3 id="得到token">得到token</h3>
+<p><code>__ass_next_token</code> 函数如下：</p>
+<img src="image-20260124192405367.png" srcset="/img/loading.gif" lazyload alt="image-20260124192405367" style="zoom:50%;" />
 <p>每调用一次，就得到一个 token;</p>
 <p>如果文件结束，得到的是 ASS_FILE_END;</p>
 <p>第 338~342，忽略空格、tab 等空白字符，注意，没有 ‘\n’;</p>
 <p>第 344~346 行，如果遇到文件结束，返回。</p>
 <p>第 350~350，如果遇到字符、下划线、点号或者 @，说明遇到了标识符，从状态 1 进入状态 2，调用 352 行的 ass_parse_id 做进一步的解析。</p>
 <p>识别标识符的状态转换图如下：</p>
-<p><img src="image-20260124192320691.png" srcset="/img/loading.gif" lazyload alt="image-20260124192320691" style="zoom:50%;" /></p>
+<img src="image-20260124192320691.png" srcset="/img/loading.gif" lazyload alt="image-20260124192320691" style="zoom:50%;" />
 <hr>
-<p><img src="image-20260124190917655.png" srcset="/img/loading.gif" lazyload alt="image-20260124190917655" style="zoom:50%;" /></p>
+<img src="image-20260124190917655.png" srcset="/img/loading.gif" lazyload alt="image-20260124190917655" style="zoom:50%;" />
 <p>第 167 行，检查标识符是不是关键字。</p>
-<p><img src="image-20260124192555306.png" srcset="/img/loading.gif" lazyload alt="image-20260124192555306" style="zoom:50%;" /></p>
+<img src="image-20260124192555306.png" srcset="/img/loading.gif" lazyload alt="image-20260124192555306" style="zoom:50%;" />
 <p>把标识符（在 scanner-&gt;token_id 中）和 ass_keywords_names 数组里面字符串逐一比较，发现匹配说明是关键字，并且设置 scanner-&gt;token 为对应的枚举成员。</p>
 <p>对于数字常量，我们仅考虑十进制非负整数，如果整数前面有正号或者负号，到了语法分析阶段再处理。</p>
 <p>对于字符串常量，由于汇编语言使用了数字代替不可打印的字符，所以不用考虑转义字符。</p>
 <p>第 356 行，我们调用 ass_parse_other_syms 来处理标识符、数字以外的字符或者字符串。</p>
-<p><img src="image-20260124193928916.png" srcset="/img/loading.gif" lazyload alt="image-20260124193928916" style="zoom:50%;" /></p>
+<img src="image-20260124193928916.png" srcset="/img/loading.gif" lazyload alt="image-20260124193928916" style="zoom:50%;" />
 <p>需要注意的是换行，NASM 是一种<strong>面向行</strong>的汇编器。换行符的主要作用是<strong>结束当前的指令或声明</strong>。</p>
 <ul>
 <li>在 C 语言中，你用分号 <code>;</code> 结束语句，所以你可以把所有代码写在一行。</li>
 <li>在 NASM 中，一行通常只能有一条指令。换行符告诉汇编器：“这条 <code>mov</code> 指令到此结束，下一行是新的开始。”</li>
 </ul>
-<p><img src="image-20260124194240873.png" srcset="/img/loading.gif" lazyload alt="image-20260124194240873" style="zoom:50%;" /></p>
+<img src="image-20260124194240873.png" srcset="/img/loading.gif" lazyload alt="image-20260124194240873" style="zoom:50%;" />
 <p>对于注释的处理，和 c 的单行注释有点不同。</p>
 <p>第 258 行，是一个带参数的宏</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> IF_ASS_EOF_GOTO(label)  <span class="hljs-keyword">if</span>(END == scan(scanner)) goto label</span><br></code></pre></td></tr></table></figure>
@@ -578,13 +582,14 @@
 <p>第 263 和 264 分别是双引号和单引号，我们看 ass_parse_after_quot 函数。</p>
 <p>在 C 语言中，字符串要用双引号包裹，单个字符要用单引号包裹；</p>
 <p>但是在 nasm 中，不管是字符还是字符串，都可以用双引号或单引号包裹。</p>
-<p><img src="image-20260124200613190.png" srcset="/img/loading.gif" lazyload alt="image-20260124200613190" style="zoom:50%;" /></p>
+<img src="image-20260124200613190.png" srcset="/img/loading.gif" lazyload alt="image-20260124200613190" style="zoom:50%;" />
 <p>第 201 行，如果当前读出的字符是单引号或者双引号（和参数 quot_type 匹配）则跳出循环，否则把字符保存在 token_string 数组中；</p>
 <p>第 209 行，用 0 来结束字符串；</p>
 <p>第 214，如果仅有 1 个字符，就用数字常量来表示，因为字符的本质是小整数；我们之前定义的枚举类型 ASS_CHARA 根本用不上，可以删除。如果大于 1 个字符，则用字符串表示。</p>
 <p>到这里，汇编器的词法分析就完成了。因为有之前的基础，所以新内容不多。</p>
-<h2 id="成果展示"><a href="#成果展示" class="headerlink" title="成果展示"></a>成果展示</h2><p>那就来个词法着色吧。</p>
-<p><img src="image-20260124203017911.png" srcset="/img/loading.gif" lazyload alt="image-20260124203017911" style="zoom:50%;" /></p>
+<h2 id="成果展示">成果展示</h2>
+<p>那就来个词法着色吧。</p>
+<img src="image-20260124203017911.png" srcset="/img/loading.gif" lazyload alt="image-20260124203017911" style="zoom:50%;" />
 <p>本文到这里就结束了，下节课我们学习汇编器的语法分析。</p>
 
                 
@@ -659,6 +664,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2026/04/18/%E7%AC%AC26%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BA%A7%E7%94%9F%E5%BC%8F/" title="第26天：汇编器的语法分析之产生式">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">第26天：汇编器的语法分析之产生式</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">

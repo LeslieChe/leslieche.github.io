@@ -411,21 +411,23 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第18天：活跃变量分析"><a href="#第18天：活跃变量分析" class="headerlink" title="第18天：活跃变量分析"></a>第18天：活跃变量分析</h1><p>还记得上节课的内容吗？</p>
+                <h1 id="第18天：活跃变量分析">第18天：活跃变量分析</h1>
+<p>还记得上节课的内容吗？</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 代码片段 1</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span><br>&#123;<br>     <span class="hljs-type">int</span> a, b, c;<br>   	 a = x;<br>     b = a;<br>     c = b;<br><br>     <span class="hljs-keyword">return</span> c + <span class="hljs-number">3</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p><img src="image-20251205201406253.png" srcset="/img/loading.gif" lazyload alt="image-20251205201406253" style="zoom:50%;" /></p>
+<img src="image-20251205201406253.png" srcset="/img/loading.gif" lazyload alt="image-20251205201406253" style="zoom:50%;" />
 <p>↑图 1</p>
 <p>代码片段 1 生成的中间代码如图1。经过复写传播优化后，中间代码变成下图（图2）的样子：</p>
-<p><img src="image-20251205201445540.png" srcset="/img/loading.gif" lazyload alt="image-20251205201445540" style="zoom:50%;" /></p>
+<img src="image-20251205201445540.png" srcset="/img/loading.gif" lazyload alt="image-20251205201445540" style="zoom:50%;" />
 <p>↑图 2</p>
 <p>咱们仔细看看这段代码，指令 6 是 a = x;</p>
 <p>当把 x 的值给变量 a 后，后面就没有使用过 a;可以说“a = x”这个赋值没有什么用。</p>
 <p>同理，指令 8、9、11、14 也没有什么用。</p>
 <p>以上是人工识别出指令多余，如何用代码实现呢？</p>
 <p>活跃变量分析就是干这个的，经过活跃变量分析后，会发现图 2 中指令 3-14 都是多余的，删除多余的指令后，最终生成代码如图 3：</p>
-<p><img src="image-20251205201859537.png" srcset="/img/loading.gif" lazyload alt="image-20251205201859537" style="zoom:50%;" /></p>
+<img src="image-20251205201859537.png" srcset="/img/loading.gif" lazyload alt="image-20251205201859537" style="zoom:50%;" />
 <p>↑图 3</p>
-<h2 id="活跃是什么意思"><a href="#活跃是什么意思" class="headerlink" title="活跃是什么意思"></a>活跃是什么意思</h2><p>有读者问“活跃变量”中的“活跃”怎么理解？</p>
+<h2 id="活跃是什么意思">活跃是什么意思</h2>
+<p>有读者问“活跃变量”中的“活跃”怎么理解？</p>
 <p>它的定义是这样的：</p>
 <p>对于变量 x 和程序点 p，如果在流图中沿着从 p 开始的<strong>某条</strong>路径会引用变量 x 在 p 点的值，则称变量 x 在点 p 是<strong>活跃</strong>（<strong>live</strong>）的，否则称变量 x 在点 p 是<strong>不活跃</strong>（<strong>dead</strong>）的。</p>
 <p>我们举个例子：</p>
@@ -440,7 +442,8 @@
 <p>作为对比，我们再看一个例子：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c">x = <span class="hljs-number">10</span>;        <span class="hljs-comment">// 程序点 p：定值 x</span><br>x = <span class="hljs-number">20</span>;        <span class="hljs-comment">// 立即重新定值 x</span><br><span class="hljs-keyword">if</span> (condition) &#123;<br>    y = x + <span class="hljs-number">1</span>; <span class="hljs-comment">// 使用x的值，但使用的是第2行的定值20</span><br>&#125; <span class="hljs-keyword">else</span> &#123;<br>    y = <span class="hljs-number">0</span>;<br>&#125;<br>print(y);<br></code></pre></td></tr></table></figure>
 <p>从点 <code>p</code>出发的所有路径上，<code>x</code>在点 <code>p</code>的值 (<code>10</code>) 都<strong>没有被使用</strong>的机会（因为它在第 2 行被立即覆盖了）。因此，变量 <code>x</code>在程序点 <code>p</code>是<strong>不活跃</strong>的。所以，第 1 行的 x = 10; 是死代码，可以删除。</p>
-<h2 id="数据流分析框架"><a href="#数据流分析框架" class="headerlink" title="数据流分析框架"></a>数据流分析框架</h2><p>理解了什么是“活跃”和“不活跃”后，我们看看活跃变量数据流分析框架。</p>
+<h2 id="数据流分析框架">数据流分析框架</h2>
+<p>理解了什么是“活跃”和“不活跃”后，我们看看活跃变量数据流分析框架。</p>
 <p>1、数据流方向：逆向。因为判断一个变量是否活跃看的是它在将来会不会被使用，所以是逆向。</p>
 <p>2、值集：活跃变量分析的是所有可见变量，包括全局变量、函数的形参变量和函数内定义的局部变量，这和常量传播分析的变量是相似的。边界集合 Exit 块的 in 值为空集，其他块的 in 值也是空集。</p>
 <p>3、交汇运算：当基本块有多个后继的时候，基本块的 out 值是多个后继 in 值的并集。</p>
@@ -448,7 +451,7 @@
 <p>下面我们举例说明活跃变量的数据流分析。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span><br>&#123;<br>     <span class="hljs-type">int</span> sum = <span class="hljs-number">0</span>;<br>     <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; x; ++i)<br>          sum = sum + i;<br>     <span class="hljs-keyword">return</span> sum;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>我们的编译器针对上面的代码，生成的中间代码如下：</p>
-<p><img src="image-20251206115323956.png" srcset="/img/loading.gif" lazyload alt="image-20251206115323956" style="zoom:50%;" /></p>
+<img src="image-20251206115323956.png" srcset="/img/loading.gif" lazyload alt="image-20251206115323956" style="zoom:50%;" />
 <p>首先，我们要统计代码中的变量，因为示例中没有全局变量，只需要统计函数的形参变量和函数内定义的局部变量。</p>
 <p>不难看出，变量有</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-number">0</span>: sum<br><span class="hljs-number">1</span>: i<br><span class="hljs-number">2</span>: .t5<br><span class="hljs-number">3</span>: .t7<br><span class="hljs-number">4</span>: .t8<br><span class="hljs-number">5</span>: .t6<br><span class="hljs-number">6</span>: x<br></code></pre></td></tr></table></figure>
@@ -459,11 +462,11 @@
 <p>所以，指令 9 的 <code>s.def = {.t5};</code> <code>s.use = {i, x};</code></p>
 <p>再比如指令 11， <code>i = i + 1;</code></p>
 <p>这条指令既使用了 i，也定值了 i，但是对 i 的使用在先，所以指令 11 的 <code>s.use = {i};</code> <code>s.def</code> 是空集</p>
-<p><img src="image-20251206123205187.png" srcset="/img/loading.gif" lazyload alt="image-20251206123205187" style="zoom:50%;" /></p>
+<img src="image-20251206123205187.png" srcset="/img/loading.gif" lazyload alt="image-20251206123205187" style="zoom:50%;" />
 <p>如图所示，我已经把每条指令的 def 和 use 集合写在指令的下方了（黄颜色字体）。对于没有列出来的，表示集合为空，例如指令 5，def 和 use 集合都为空；指令 11，def 是空集。竖线仅仅是为了分隔变量，看起来清晰一些。</p>
 <p>现在我们根据数据流分析框架做活跃变量的分析。</p>
 <p>因为代码中有跳转和循环，所以还需要画出它的流图。</p>
-<p><img src="image-20251206165825479.png" srcset="/img/loading.gif" lazyload alt="image-20251206165825479" style="zoom:50%;" /></p>
+<img src="image-20251206165825479.png" srcset="/img/loading.gif" lazyload alt="image-20251206165825479" style="zoom:50%;" />
 <p>上图就是流图。先不用看标注，只需要大致观察 B0~B6 这 7 个基本块。</p>
 <p>下面我们用工作表法（worklist）手动分析数据流。</p>
 <p>开始的时候，把除B6（EXIT）的基本块逆序加入工作表。</p>
@@ -471,7 +474,8 @@
 <p>B5，B4，B3，B2，B1，B0</p>
 <p>只要队列不是空，我们就从队列头摘下一个基本块，处理它。</p>
 <p>为了叙述方便，我们用 inst_xx.yy 表示 xx 指令的 yy 集合。</p>
-<h3 id="B5"><a href="#B5" class="headerlink" title="B5"></a>B5</h3><p>首先处理 B5.</p>
+<h3 id="B5">B5</h3>
+<p>首先处理 B5.</p>
 <p>队列变成 B4，B3，B2，B1，B0</p>
 <p><code>B5.out</code> 来自 <code>B6.in</code>，因为 <code>B6.in</code> 的初始值是空集，所以 <code>B5.out = Ø</code></p>
 <p>B5 里面就一条指令：指令 2</p>
@@ -480,11 +484,12 @@
 <p><code>inst_2.in = Ø - Ø ∪ Ø = Ø</code></p>
 <p><code>B5.in = inst_2.in = Ø</code></p>
 <p>这样对 B5 的处理就完成了，因为每个基本块的 in 集合的初始值是空集，当前 <code>B5.in</code> 也是空集，和初始值一样，所以不用把它的前驱加入队列。</p>
-<h3 id="B4"><a href="#B4" class="headerlink" title="B4"></a>B4</h3><p>我们再从队列头摘下一个基本块，是 B4；</p>
+<h3 id="B4">B4</h3>
+<p>我们再从队列头摘下一个基本块，是 B4；</p>
 <p>队列变成 B3，B2，B1，B0</p>
 <p><code>B4.out = B5.in = Ø</code></p>
 <p>B4 块里面最后一条指令是指令 20</p>
-<p><code>inst_20.out = B4.out = Ø</code> </p>
+<p><code>inst_20.out = B4.out = Ø</code></p>
 <p>因为 <code>inst_20.use = {sum};</code>  <code>inst_20.def = Ø</code></p>
 <p>所以 <code>inst_20.in = Ø - Ø ∪ {sum} = {sum}</code> (如图 B4 块，我在指令 20 的 in 位置标注了 sum)</p>
 <p>然后处理指令 6</p>
@@ -492,16 +497,17 @@
 <p><code>inst_6.in = {sum} - Ø ∪ Ø  = {sum};</code></p>
 <p>因为指令 6 是基本块 B4 的第一个指令，所以 <code>B4.in = inst_6.in = {sum};</code></p>
 <p>因为 <code>B4.in</code> 的初始值为空集，现在是 {sum}，不一样了，所以要把它的前驱 B2 加入队列。发现 B2 已经在队列中，就不需要重复加入了。</p>
-<h3 id="B3"><a href="#B3" class="headerlink" title="B3"></a>B3</h3><p>我们再从队列头摘下一个基本块，是 B3；</p>
+<h3 id="B3">B3</h3>
+<p>我们再从队列头摘下一个基本块，是 B3；</p>
 <p>队列变成 B2，B1，B0</p>
 <p><code>B3.out =  B2.in = Ø</code> （因为所有基本块的初始值 in 是空集）</p>
-<p><code>inst_19.out = B3.out = Ø</code> </p>
+<p><code>inst_19.out = B3.out = Ø</code></p>
 <p><code>inst_19.in = Ø - Ø ∪ Ø = Ø</code></p>
 <p><code>inst_13.out = inst_19.in = Ø</code></p>
 <p>因为 <code>inst_13.def = {.t6};</code>  <code>inst_13.use = {i}</code></p>
 <p><code>inst_13.in =  Ø - {.t6} ∪ {i} = {i}</code></p>
 <p><code>inst_12.in = {i}</code></p>
-<p><code>inst_11.out = inst_12.in = {i};</code>  <code>inst_11.use = {i};</code>  <code>inst_11.def =  Ø</code> </p>
+<p><code>inst_11.out = inst_12.in = {i};</code>  <code>inst_11.use = {i};</code>  <code>inst_11.def =  Ø</code></p>
 <p><code>inst_11.in = {i} - Ø ∪ {i} = {i}</code></p>
 <p>后面我就不一个一个算了，仅列出重要的：</p>
 <p><code>inst_18.in = {i, sum}</code></p>
@@ -510,7 +516,8 @@
 <p><code>inst_14.in = inst_15.in = {i, sum}</code></p>
 <p>需要注意的地方到了，<code>B3.in = inst_14.in = {i, sum}</code></p>
 <p><code>B3.in</code> 的值也发生了变化，所以要把它的前驱 B2 加入队列。发现 B2已经在队列中，就不需要重复加入了。</p>
-<h3 id="B2"><a href="#B2" class="headerlink" title="B2"></a>B2</h3><p>我们再从队列头摘下一个基本块，是 B2；</p>
+<h3 id="B2">B2</h3>
+<p>我们再从队列头摘下一个基本块，是 B2；</p>
 <p>队列变成 B1，B0</p>
 <p>因为 B2 的后继是 B3 和 B4，</p>
 <p><code>B2.out = B3.in ∪ B4.in = {i，sum} ∪ {sum} =  {i，sum}</code></p>
@@ -520,69 +527,77 @@
 <p><code>B2.in = inst_5.in = inst_9.in = {i，sum，x}</code></p>
 <p><code>B2.in</code> 的值也发生了变化，所以要把它的前驱 B1 和 B3 加入队列。发现 B1 已经在队列中，就不需要重复加入了，但是 B3 不在队列中，需要加入。</p>
 <p>这时候队列变成： B1，B0，B3</p>
-<h3 id="B1"><a href="#B1" class="headerlink" title="B1"></a>B1</h3><p>我们再从队列头摘下一个基本块，是 B1；</p>
+<h3 id="B1">B1</h3>
+<p>我们再从队列头摘下一个基本块，是 B1；</p>
 <p>这时候队列变成： B0，B3</p>
 <p><code>B1.out = B2.in = {i，sum，x} = B1.in</code></p>
 <p><code>B1.in</code> 的值也发生了变化，所以要把它的前驱 B0 加入队列。发现 B0 已经在队列中，就不需要重复加入了。</p>
-<h3 id="B0"><a href="#B0" class="headerlink" title="B0"></a>B0</h3><p>我们再从队列头摘下一个基本块，是 B0；</p>
+<h3 id="B0">B0</h3>
+<p>我们再从队列头摘下一个基本块，是 B0；</p>
 <p>这时候队列变成：B3</p>
 <p><code>B0.out = B1.in = {i，sum，x} = B0.in</code></p>
 <p>虽然 <code>B0.in</code> 的值发生了变化，但是 B0 是入口，没有前驱，所以 B0 也处理完了。</p>
-<h3 id="B3-1"><a href="#B3-1" class="headerlink" title="B3"></a>B3</h3><p>再从队列头摘下一个基本块，是 B3；</p>
+<h3 id="B3-2">B3</h3>
+<p>再从队列头摘下一个基本块，是 B3；</p>
 <p>此时队列为空。</p>
 <p><code>B3.out =  B2.in ={i，sum，x}</code></p>
-<p>经过指令 19，13，12，…，到了指令 16 的 in, </p>
+<p>经过指令 19，13，12，…，到了指令 16 的 in,</p>
 <p><code>inst_16.in = {i, .t7, x}</code>（蓝色标注）</p>
 <p><code>inst_15.in ={i, sum, x}</code></p>
 <p><code>B3.in = inst_15.in ={i, sum, x}</code></p>
 <p>注意，上一次计算 B3 的时候，<code>B3.in ={i, sum}</code></p>
 <p>所以，要把 B3 的前驱 B2 加入队列。</p>
 <p>此时，队列里面仅有 B2；</p>
-<h3 id="B2-1"><a href="#B2-1" class="headerlink" title="B2"></a>B2</h3><p>从队列中拿出基本块，B2</p>
+<h3 id="B2-2">B2</h3>
+<p>从队列中拿出基本块，B2</p>
 <p><code>B2.out = B3.in ∪ B4.in = {i，sum，x} ∪ {sum} = {i，sum，x}</code></p>
-<p><code>inst_10.out = B2.out = {i，sum，x}</code> </p>
+<p><code>inst_10.out = B2.out = {i，sum，x}</code></p>
 <p><code>inst_10.in = inst_10.out ∪ {.t5} = {i, sum, x, .t5}</code></p>
 <p><code>inst_9.in = {i, sum, x, .t5} - {.t5} ∪ {x, i} =  {i, sum, x}</code></p>
 <p><code>B2.in = inst_9.in = {i, sum, x}</code></p>
 <p>上一次 <code>B2.in = {i, sum, x}</code>,看来值没有改变，所以不需要再把 B2 的前驱加入队列。</p>
 <p>此时队列为空。数据流分析到达了不动点。</p>
-<h2 id="找出死代码"><a href="#找出死代码" class="headerlink" title="找出死代码"></a>找出死代码</h2><p>到达了不动点后，我们关注指令的 out 集合。</p>
+<h2 id="找出死代码">找出死代码</h2>
+<p>到达了不动点后，我们关注指令的 out 集合。</p>
 <p>根据 <code>s.in = (s.out - s.def) ∪ s.use</code></p>
 <p>也就是说如果某个变量被使用，它就会向前面的语句传递，一直传递到它被定值的地方。</p>
-<p><img src="image-20251206180642915.png" srcset="/img/loading.gif" lazyload alt="image-20251206180642915" style="zoom:50%;" /></p>
+<img src="image-20251206180642915.png" srcset="/img/loading.gif" lazyload alt="image-20251206180642915" style="zoom:50%;" />
 <p>上图是到达不定点后，每个指令的 out 集合，对于有单一后继的指令，它的 out 值也是它后继指令的 in 值。</p>
 <p>先看黄色框，指令 9 的 in 集合是 {sum, i, x}， out 集合是 {sum, i, .t5, x}</p>
 <p>我们不能根据 in 集合来优化，因为 .t5 明显是有用的，但是它不在 in 集合中，而在 out 集合中；</p>
 <p>再看指令 18， .t8 没有用，它不在指令 18 的 out 集合中；同理，指令 13，.t6 没有用，它不在指令 13 的 out 集合中。</p>
 <p>所以一个指令的 out 集合，反映出这条指令后面会使用的变量。如果这条指令的左值不在 out 集合里面，说明它往后没有用，这条代码就是死代码。</p>
-<h2 id="代码讲解"><a href="#代码讲解" class="headerlink" title="代码讲解"></a>代码讲解</h2><p>原理就说这么多，下面该说代码了。</p>
-<h3 id="live-var-t"><a href="#live-var-t" class="headerlink" title="live_var_t"></a>live_var_t</h3><p><img src="image-20251206192534566.png" srcset="/img/loading.gif" lazyload alt="image-20251206192534566" style="zoom:50%;" /></p>
+<h2 id="代码讲解">代码讲解</h2>
+<p>原理就说这么多，下面该说代码了。</p>
+<h3 id="live-var-t">live_var_t</h3>
+<img src="image-20251206192534566.png" srcset="/img/loading.gif" lazyload alt="image-20251206192534566" style="zoom:50%;" />
 <p>这是 live_var_t  结构体，和之前的复写传播的 copy_prpgt_info_t 很像。可以对比一下。</p>
-<p><img src="image-20251206192658285.png" srcset="/img/loading.gif" lazyload alt="image-20251206192658285" style="zoom:50%;" /></p>
-<h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h3><p><img src="image-20251206193004411.png" srcset="/img/loading.gif" lazyload alt="image-20251206193004411" style="zoom:50%;" /></p>
+<img src="image-20251206192658285.png" srcset="/img/loading.gif" lazyload alt="image-20251206192658285" style="zoom:50%;" />
+<h3 id="初始化">初始化</h3>
+<img src="image-20251206193004411.png" srcset="/img/loading.gif" lazyload alt="image-20251206193004411" style="zoom:50%;" />
 <p>第 67 行，分配内存；第 72 行，让 live_var_t  的 dfg 指针指向函数的流图；</p>
 <p>74~75 完成链表的初始化；第 78 行提取中间代码。</p>
 <p>第 81~85 是统计各种变量。代码比较简单，不赘述。</p>
 <p>第 88 行，处理特殊情况，如果三种变量的个数加起来是 0，那也不用做活跃变量分析了。</p>
-<p><img src="image-20251206193340961.png" srcset="/img/loading.gif" lazyload alt="image-20251206193340961" style="zoom:50%;" /></p>
+<img src="image-20251206193340961.png" srcset="/img/loading.gif" lazyload alt="image-20251206193340961" style="zoom:50%;" />
 <p>第 94~97，初始化三个集合，分别是全集，空集和 G，G 表示全局变量的集合。</p>
 <p>第 99 ~102，设置 G 的 bit 0 到 bit(glb_cnt - 1) 为 1，这是因为全局变量最先统计，其索引对应 0 ~ (glb_cnt - 1)</p>
 <p>第 108 行，遍历链表 var_list，所有变量的地址都收集到了这个链表中。需要为变量分配索引，这个索引指示它们在集合中占用第几个比特位。</p>
 <p>前面做常量传播的时候，也用到了 optimize_id 这个字段。一旦常量传播及有关的优化做完，这些变量就没有用了。所以这里依然用这个字段做变量活跃性分析。</p>
 <p>第 112~116，打印索引和变量的名字，用于调试。</p>
-<p><img src="image-20251206194343733.png" srcset="/img/loading.gif" lazyload alt="image-20251206194343733" style="zoom:50%;" /></p>
+<img src="image-20251206194343733.png" srcset="/img/loading.gif" lazyload alt="image-20251206194343733" style="zoom:50%;" />
 <p>活跃变量的分析涉及到 4 个集合，分别是 in、out、use、def</p>
-<p><img src="image-20251206194429813.png" srcset="/img/loading.gif" lazyload alt="image-20251206194429813" style="zoom:50%;" /></p>
+<img src="image-20251206194429813.png" srcset="/img/loading.gif" lazyload alt="image-20251206194429813" style="zoom:50%;" />
 <p>第 121 行，遍历指令，第 124 行，为指令的集合分配内存，并且把集合都设置为空集。</p>
-<p><img src="image-20251206194520952.png" srcset="/img/loading.gif" lazyload alt="image-20251206194520952" style="zoom:50%;" /></p>
+<img src="image-20251206194520952.png" srcset="/img/loading.gif" lazyload alt="image-20251206194520952" style="zoom:50%;" />
 <p>接下来是根据指令的操作码，设置每个指令的 use 和 def 集合。</p>
-<p><img src="image-20251206195334113.png" srcset="/img/loading.gif" lazyload alt="image-20251206195334113" style="zoom:50%;" /></p>
+<img src="image-20251206195334113.png" srcset="/img/loading.gif" lazyload alt="image-20251206195334113" style="zoom:50%;" />
 <p>我们先处理红框里面的指令（排除掉 IR_OP_LOAD 和 IR_OP_STORE），绿色的后面再处理。</p>
-<p><img src="image-20251206195508674.png" srcset="/img/loading.gif" lazyload alt="image-20251206195508674" style="zoom:50%;" /></p>
+<img src="image-20251206195508674.png" srcset="/img/loading.gif" lazyload alt="image-20251206195508674" style="zoom:50%;" />
 <p>137~140，如果使用了变量 arg1, 则把 arg1 的索引加入 use 集合；</p>
 <p>142~145，如果使用了变量 arg2, 则把 arg2 的索引加入 use 集合；</p>
 <p>第 147 设置 def 集合为 res 的索引。但是要排除掉 a = a + 2; b = 3 * b 这样的指令。</p>
-<p><img src="image-20251206200802311.png" srcset="/img/loading.gif" lazyload alt="image-20251206200802311" style="zoom:50%;" /></p>
+<img src="image-20251206200802311.png" srcset="/img/loading.gif" lazyload alt="image-20251206200802311" style="zoom:50%;" />
 <p>第 151 行，处理形如 *arg1 = res；</p>
 <p>如果 res 是变量，肯定使用了 res; 但是不知道 arg1 指向哪里，所以定值了什么变量不好说。</p>
 <p>另外，肯定使用了指针变量 arg1，所以有第 158 行。</p>
@@ -590,62 +605,65 @@
 <p>同理，不知道 arg1 指向谁，所以认为 use 了所有变量，于是第 164 行设置 use 集合为全集。</p>
 <p>第 165 行，处理形如 return arg1;如果返回值是变量，则一定使用了它</p>
 <p>第 169 行，处理形如 arg arg1；如果 arg1 是基本类型的变量，则一定使用了它；如果 arg1 是指针变量，保守认为使用了所有变量，设置 use 集合为全集。</p>
-<p><img src="image-20251206201242629.png" srcset="/img/loading.gif" lazyload alt="image-20251206201242629" style="zoom:50%;" /></p>
+<img src="image-20251206201242629.png" srcset="/img/loading.gif" lazyload alt="image-20251206201242629" style="zoom:50%;" />
 <p>第 177 行，处理函数调用，保守认为使用了所有的全局变量。</p>
 <p>如果函数调用有返回值且返回值是局部变量，则定值了 res；如果不是这种情况，定值了哪个变量不好说，就不设置了。</p>
 <p>第 186 行，处理为真跳转或者为假跳转，排除掉常量后，必然使用了 arg1；</p>
 <p>第 189 行，处理相等跳转或者不相等跳转，排除掉常量后，必然使用了 arg1 或者 arg2；</p>
-<p><img src="image-20251206201847699.png" srcset="/img/loading.gif" lazyload alt="image-20251206201847699" style="zoom:50%;" /></p>
+<img src="image-20251206201847699.png" srcset="/img/loading.gif" lazyload alt="image-20251206201847699" style="zoom:50%;" />
 <p>初始化最后部分的代码为每个基本块分配 live_var_set 的内存，并都初始化为空集。</p>
 <p>第 205 行是为了调试，不用管。</p>
 <p>第 221 行返回设置好的 live_var;</p>
 <p>初始化完成了，下面是数据流分析函数。</p>
-<h3 id="数据流分析"><a href="#数据流分析" class="headerlink" title="数据流分析"></a>数据流分析</h3><p>前文我们模拟了工作表法的流程，所以就不讲解工作表法的代码了。仅讲传统迭代法的代码。</p>
-<p><img src="image-20251206202324381.png" srcset="/img/loading.gif" lazyload alt="image-20251206202324381" style="zoom:50%;" /></p>
+<h3 id="数据流分析">数据流分析</h3>
+<p>前文我们模拟了工作表法的流程，所以就不讲解工作表法的代码了。仅讲传统迭代法的代码。</p>
+<img src="image-20251206202324381.png" srcset="/img/loading.gif" lazyload alt="image-20251206202324381" style="zoom:50%;" />
 <p>第 314~319 完成基本块的初始化。每个基本块的 in 集合是空集。</p>
-<p><img src="image-20251206202420921.png" srcset="/img/loading.gif" lazyload alt="image-20251206202420921" style="zoom:50%;" /></p>
+<img src="image-20251206202420921.png" srcset="/img/loading.gif" lazyload alt="image-20251206202420921" style="zoom:50%;" />
 <p>第 328 行，逆序遍历基本块，跳过不可达的块，先计算这个块的后继块 in 集合的并集，作为这个块的 out 值，然后做块内的传递，从 out 得到 in；</p>
 <p>如果 in 集合的值和上一次迭代不一样，则设置变量 change 为真，以继续下一轮的迭代。</p>
 <p>live_var_block_join 函数代码很简单，不再赘述。</p>
-<p><img src="image-20251206202749834.png" srcset="/img/loading.gif" lazyload alt="image-20251206202749834" style="zoom:50%;" /></p>
+<img src="image-20251206202749834.png" srcset="/img/loading.gif" lazyload alt="image-20251206202749834" style="zoom:50%;" />
 <p>执行这个函数的时候，参数 block 的 out 值已经计算完毕。第 255 行创建 2 个临时的集合，out 和 in；out 和 in 集合分别用来存放指令的输入和输出。</p>
 <p>此基本块最后一条指令的 out 就是参数 block 的 out，所以第 255 行用了集合拷贝函数。</p>
 <p>第 261 行，逆序处理每个指令，并跳过死代码。</p>
 <p>第 265 行做指令级别的传递。</p>
 <p>第 269 到结尾都是旧内容，不赘述。</p>
-<p><img src="image-20251206203235443.png" srcset="/img/loading.gif" lazyload alt="image-20251206203235443" style="zoom:50%;" /></p>
+<img src="image-20251206203235443.png" srcset="/img/loading.gif" lazyload alt="image-20251206203235443" style="zoom:50%;" />
 <p>此函数完成了数据流在指令级别的传递。</p>
 <p>第 236，求 out 和 def 集合的差集，结果在 tmp 集合中；</p>
 <p>第 238，求 tmp 和 use 集合的并集。</p>
 <p>第 246~247 的目的是保存 out 和 in 的结果，为后面的优化做准备。</p>
-<h3 id="标记死指令"><a href="#标记死指令" class="headerlink" title="标记死指令"></a>标记死指令</h3><p>当数据流分析到达不动点的时候，就可以根据指令的 out 集合做优化了。</p>
+<h3 id="标记死指令">标记死指令</h3>
+<p>当数据流分析到达不动点的时候，就可以根据指令的 out 集合做优化了。</p>
 <p>具体方法是遍历每个指令，如果这个指令的左值不在 out 集合中，就标记此指令是死代码。</p>
-<p><img src="image-20251206204822957.png" srcset="/img/loading.gif" lazyload alt="image-20251206204822957" style="zoom:50%;" /></p>
+<img src="image-20251206204822957.png" srcset="/img/loading.gif" lazyload alt="image-20251206204822957" style="zoom:50%;" />
 <p>第 450 行，遍历每条指令。</p>
 <p>第 452 行是考虑到活跃变量分析可能不止一次，所以之前标记为死代码指令不重复处理。</p>
-<p><img src="image-20251206205025997.png" srcset="/img/loading.gif" lazyload alt="image-20251206205025997" style="zoom:50%;" /></p>
+<img src="image-20251206205025997.png" srcset="/img/loading.gif" lazyload alt="image-20251206205025997" style="zoom:50%;" />
 <p>只要操作码牵扯到左值，就是我们处理的对象，但是 IR_OP_STORE 除外。</p>
 <p>因为 IR_OP_STORE 的指令形如  *arg1 = res；不确定指针 arg1 指向哪个变量，自然就不知道这个变量是不是在 out 集合里面，所以就不优化了。</p>
 <p>第 462~463 是因为全局变量是模块间共享的，保不齐其他文件会引用这个全局变量，所以也不能优化。</p>
 <p>第 467，查看 res 是不是在 out 集合中，如果不在，说明此指令多余，第 478 行标记它为死指令。</p>
 <p>第 471 行的意思是针对 “a = a;” 这样的代码，活跃变量分析是无法优化掉它的，需要我们特别对待。</p>
-<p><img src="image-20251206205628829.png" srcset="/img/loading.gif" lazyload alt="image-20251206205628829" style="zoom:50%;" /></p>
+<img src="image-20251206205628829.png" srcset="/img/loading.gif" lazyload alt="image-20251206205628829" style="zoom:50%;" />
 <p>对于有返回值的函数调用，形如 a = foo(); 如果 a 不在 out 集合，那这个返回值也没有用，可以把 IR_OP_CALL 改成 IR_OP_PROC。</p>
 <p>再看看之前的图：</p>
-<p><img src="image-20251206180642915.png" srcset="/img/loading.gif" lazyload alt="image-20251206180642915" style="zoom:50%;" /></p>
+<img src="image-20251206180642915.png" srcset="/img/loading.gif" lazyload alt="image-20251206180642915" style="zoom:50%;" />
 <p>可以发现指令 18 和指令 13 是多余的。</p>
 <p>因为 .t8 不在指令 18 的out 集合中；.t6 也不在指令 13 的 out 集合中。</p>
 <p>当删除了指令 18 和 13 后（把它们标记为死指令），指令 17 和指令 12 也是多余的。</p>
 <p>所以，我们需要清除多余的 decl 指令。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">var_info</span>&#123;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">hlist_node</span> <span class="hljs-title">hnode</span>;</span> <br>    <span class="hljs-type">int</span> index; <span class="hljs-comment">// 变量编号</span><br>    <span class="hljs-type">int</span> err_flag;  <span class="hljs-comment">// 没有通过语法或语义检查</span><br>    <span class="hljs-type">bool</span> is_ext;<br>    <span class="hljs-type">bool</span> is_ptr;<br>    <span class="hljs-type">bool</span> is_literal;<br>    <span class="hljs-type">bool</span> is_left; <span class="hljs-comment">// 是左值</span><br>    <span class="hljs-type">bool</span> is_arr;<br>    ...<br>        <br>    <span class="hljs-type">int</span> optimize_id; <span class="hljs-comment">// 用于简单常量传播优化</span><br>    <span class="hljs-type">bool</span> is_live; <span class="hljs-comment">// 活跃变量分析</span><br>&#125;<span class="hljs-type">var_t</span>;<br></code></pre></td></tr></table></figure>
 <p>首先，我给 var_t 增加了第 13 行的 is_live 字段。</p>
-<p><img src="image-20251207103039498.png" srcset="/img/loading.gif" lazyload alt="image-20251207103039498" style="zoom:50%;" /></p>
+<img src="image-20251207103039498.png" srcset="/img/loading.gif" lazyload alt="image-20251207103039498" style="zoom:50%;" />
 <p>这个函数用于清理多余的 decl 指令。参数是执行完 mark_dead_inst 后的中间代码的链表。</p>
 <p>第 408 行，遍历所有的中间指令，跳过死代码和声明语句。</p>
 <p>这样得到的指令都是有用的，第 420~425，把指令用到的变量都标记为活跃。</p>
-<p><img src="image-20251207104533110.png" srcset="/img/loading.gif" lazyload alt="image-20251207104533110" style="zoom:50%;" /></p>
+<img src="image-20251207104533110.png" srcset="/img/loading.gif" lazyload alt="image-20251207104533110" style="zoom:50%;" />
 <p>第 429 行，再次遍历所有的指令；第 434 行，仅关注声明语句，如果声明的变量不活跃，则标记此声明为死代码。</p>
-<h3 id="控制程序"><a href="#控制程序" class="headerlink" title="控制程序"></a>控制程序</h3><p><img src="image-20251207105326781.png" srcset="/img/loading.gif" lazyload alt="image-20251207105326781" style="zoom:50%;" /></p>
+<h3 id="控制程序">控制程序</h3>
+<img src="image-20251207105326781.png" srcset="/img/loading.gif" lazyload alt="image-20251207105326781" style="zoom:50%;" />
 <p>终于来到控制程序。</p>
 <p>第 530 行，完成活跃变量分析的初始化。</p>
 <p>第 534 行，用工作表法做数据流分析，当然，可以换成传统迭代法。</p>
@@ -653,23 +671,23 @@
 <p>第 536 行，清理多余的 decl 指令。</p>
 <p>乍一看，没有什么问题。</p>
 <p>来一张对比图，也看不出什么破绽。</p>
-<p><img src="image-20251207105904956.png" srcset="/img/loading.gif" lazyload alt="image-20251207105904956" style="zoom:50%;" /></p>
+<img src="image-20251207105904956.png" srcset="/img/loading.gif" lazyload alt="image-20251207105904956" style="zoom:50%;" />
 <p>现在把测试代码修改一下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>; <span class="hljs-comment">// 声明</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span><br>&#123;<br>     <span class="hljs-type">int</span> sum = <span class="hljs-number">0</span>;  <br>     <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; x; ++i)<br>          sum = sum + i;<br>     <br>     <span class="hljs-type">int</span> c = bar();  <span class="hljs-comment">// 新增</span><br>     <span class="hljs-keyword">return</span> sum;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>增加了第 8 行，调用函数 bar()，并且把返回值给 c;</p>
 <p>相信读者已经看出来了，变量 c 的值没有使用，所以可以把变量 c 优化掉。</p>
 <p>优化之前和优化后的中间指令如下图：</p>
-<p><img src="image-20251207111045731.png" srcset="/img/loading.gif" lazyload alt="image-20251207111045731" style="zoom:50%;" /></p>
+<img src="image-20251207111045731.png" srcset="/img/loading.gif" lazyload alt="image-20251207111045731" style="zoom:50%;" />
 <p>请看最下面的黄框，指令 22 和 23 确实删除了，也就是 c 变量没有了。但是问题来了，粉色框的里面的变量 .t9 也没什么用，为啥没有优化掉呢？</p>
 <p>其实，当标记一个指令为死指令的时候，可能会引发连锁反应，本例中，因为 23 是死指令，可以删除；而变量 .t9 唯一被使用的地方是在指令 23 中，现在指令 23 都被删除了，那 .t9 也就没有用了。皮之不存，毛将焉附？</p>
 <p>所以，消除死代码后，可能使某些原本活跃的变量变成不活跃的，所以需要再次执行活跃变量分析和优化。</p>
 <p>控制程序需要改一改：</p>
-<p><img src="image-20251207114200995.png" srcset="/img/loading.gif" lazyload alt="image-20251207114200995" style="zoom:50%;" /></p>
+<img src="image-20251207114200995.png" srcset="/img/loading.gif" lazyload alt="image-20251207114200995" style="zoom:50%;" />
 <p>我们增加一个变量 change，进入 while 循环后，第 508 行把它清零，默认仅执行一遍优化。</p>
 <p>第 513 行，如果发现新的死代码，mark_dead_inst 函数的返回值是 true;这种情况要设置 change 为 1，以再次执行优化。</p>
 <p>否则，说明优化完成，调用 mark_dead_decl 清理没有用的 decl 语句。</p>
 <p>修改完控制程序后，再次实验，其实执行了 2 遍优化，结果是：</p>
-<p><img src="image-20251207113945621.png" srcset="/img/loading.gif" lazyload alt="image-20251207113945621" style="zoom:50%;" /></p>
+<img src="image-20251207113945621.png" srcset="/img/loading.gif" lazyload alt="image-20251207113945621" style="zoom:50%;" />
 <p>可以看到，之前的指令 20、21 变成了粉色框中的指令 21，达到了目的。</p>
 <p>本节的内容就到这里。</p>
 <p>下节课我们学习一个特别烧脑的：冗余代码消除。</p>

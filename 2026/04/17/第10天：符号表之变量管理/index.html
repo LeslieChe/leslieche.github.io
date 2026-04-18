@@ -365,7 +365,7 @@
         
         
         
-          128 分钟
+          129 分钟
         
       </span>
     
@@ -409,24 +409,28 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第10天：符号表之变量管理"><a href="#第10天：符号表之变量管理" class="headerlink" title="第10天：符号表之变量管理"></a>第10天：符号表之变量管理</h1><p>前面我们完成了语法分析。</p>
+                <h1 id="第10天：符号表之变量管理">第10天：符号表之变量管理</h1>
+<p>前面我们完成了语法分析。</p>
 <p>复习一下，语法分析的任务是：接受一个终结符号串作为输入，找出从文法的开始符号推导出这个串的方法；如果推导不出来，就报告语法错误。</p>
 <p>前面的文章也多处提到，对于语法分析做不了的或者不方便做的，可以延后到语义分析解决。</p>
 <p>例如下面的代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">a = b;  <span class="hljs-comment">// 变量 a、b 是否都声明了？语义分析阶段处理</span><br>c++++; <span class="hljs-comment">// ++ 的操作数必须是左值，语义分析阶段报错</span><br><span class="hljs-type">int</span> d[] = &#123;<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>&#125;; <span class="hljs-comment">// 语法分析时不知道数组有多少个元素，语义分析的时候才知道</span><br><span class="hljs-type">int</span> e[]; <span class="hljs-comment">// 语义分析阶段报错</span><br>fun(<span class="hljs-type">int</span> x, <span class="hljs-type">void</span> y);  <span class="hljs-comment">// 语义分析阶段报错，变量 y 声明为 void 类型</span><br></code></pre></td></tr></table></figure>
 <p>前面我们构造的函数参数列表的产生式为：</p>
-<p><code>&lt;para_decl&gt;     -&gt;   void |  &lt;para_item&gt; &lt;para_list&gt; |  ε</code> </p>
-<p><code>&lt;para_item&gt;     -&gt;   &lt;type&gt; ident &lt;arr_len&gt; |  &lt;type&gt; mul ident &lt;arr_len&gt;</code></p>
-<p>我们完全可以把这里的 <code>&lt;type&gt;</code> 修改为   <para_type> </p>
+<p><code>&lt;para_decl&gt;     -&gt;   void |  &lt;para_item&gt; &lt;para_list&gt; |  ε</code></p>
+<p><code>&lt;para_item&gt;     -&gt;   &lt;type&gt; ident &lt;arr_len&gt; |  &lt;type&gt; mul ident &lt;arr_len&gt; </code></p>
+<p>我们完全可以把这里的 <code>&lt;type&gt;</code> 修改为   &lt;para_type&gt;</p>
 <p>并且让  <code>&lt;para_type&gt; -&gt; int | char</code></p>
 <p>这样第 6 行的错误，在语法分析阶段就可以发现。</p>
-<p>但是我觉得这样做有点复杂，又是<code>&lt;type&gt;</code> 又是<code>&lt;para_type&gt;</code>，容易混淆。再说，万一哪天要给 csub 增加 void 类型的指针，是不是这个  <para_type>  还要改回去呢？</p>
+<p>但是我觉得这样做有点复杂，又是<code>&lt;type&gt;</code> 又是<code>&lt;para_type&gt;</code>，容易混淆。再说，万一哪天要给 csub 增加 void 类型的指针，是不是这个  &lt;para_type&gt;  还要改回去呢？</p>
 <p>所以，我把第 6 行的错误延后到语义分析阶段处理。</p>
 <p>但是，还有一种情况，就是语法分析根本就做不了，只能放在语义分析阶段做。</p>
-<h2 id="从-0-型文法到-3-型文法"><a href="#从-0-型文法到-3-型文法" class="headerlink" title="从 0 型文法到 3 型文法"></a>从 0 型文法到 3 型文法</h2><p>复习一下前文讲的形式化文法。</p>
+<h2 id="从-0-型文法到-3-型文法">从 0 型文法到 3 型文法</h2>
+<p>复习一下前文讲的形式化文法。</p>
 <blockquote>
 <p>一个形式化文法通常由一个四元组定义：</p>
-<script type="math/tex; mode=display">G = (N, T, P, S)</script><p>N：非终结符集合。表示语法结构的中间变量，用尖括号或大写字母表示。</p>
+<p class="katex-block "><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>G</mi><mo>=</mo><mo stretchy="false">(</mo><mi>N</mi><mo separator="true">,</mo><mi>T</mi><mo separator="true">,</mo><mi>P</mi><mo separator="true">,</mo><mi>S</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">G = (N, T, P, S)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">G</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mclose">)</span></span></span></span></span></p>
+<p>N：非终结符集合。表示语法结构的中间变量，用尖括号或大写字母表示。</p>
 <p>T：终结符集合：语言的基本符号，无法再分解，比如前面词法分析得到的各种 token。注意：非终结符和终结符没有交集。</p>
 <p>P：产生式集合。描述替换规则，定义了如何从非终结符出发，逐步推导出合法的终结符号串。形式：<code>α -&gt; β</code>（读作：α 能推导出 β）。<code>α</code>是一个包含至少一个非终结符的符号串。<code>β</code>是由终结符和非终结符组成的任意符号串（包括空串 ε）。</p>
 <p>S：开始符号。指定一个非终结符号为开始符号，是整个推导过程的起点。</p>
@@ -443,7 +447,8 @@
 <p>别着急，我们先做符号表管理。因为刚才提到的两个问题，都需要查符号表。</p>
 <p>在语法分析阶段，我们为每一个非终结符编写了一个函数，接下来要在函数里面执行符号表管理、语义分析和代码生成的工作，这就是“语法制导”。</p>
 <p>如果把前面写的代码比喻成编译器的骨架，那后面要做的符号表管理、语义分析和代码生成，就是为这个骨架增加肌肉。</p>
-<h2 id="符号表"><a href="#符号表" class="headerlink" title="符号表"></a>符号表</h2><p>在语义分析阶段，针对代码</p>
+<h2 id="符号表">符号表</h2>
+<p>在语义分析阶段，针对代码</p>
 <p><code>a = b;</code></p>
 <p>首先要查符号表，看看 a 和 b 这两个变量是否定义或声明，如果没有，那就报错。如果有定义或声明，还要看看类型是否兼容，假如 b 是指针， a 是 int，这样赋值肯定是不合法的。所以，当变量定义或者声明的时候，要把变量的名字、类型等信息加入符号表，这样才有据可查。</p>
 <p>同理，遇到代码</p>
@@ -455,7 +460,7 @@
 <p>还有，请看下面的代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a = <span class="hljs-number">0</span>; <span class="hljs-comment">// 文件作用域</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> a = <span class="hljs-number">2</span>;<br>    <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; ++i)<br>        a++;  <br>&#125;<br></code></pre></td></tr></table></figure>
 <p>请问第 6 行的变量 a 是哪个 a 呢？是第 1 行定义的还是第 4 行定义的？</p>
-<p>这也需要查符号表，按照名字“a”查找变量，然后对比作用域，根据同名变量的“就近原则”，解析出是第 4 行定义的变量 a </p>
+<p>这也需要查符号表，按照名字“a”查找变量，然后对比作用域，根据同名变量的“就近原则”，解析出是第 4 行定义的变量 a</p>
 <p>为了提高查找速度，很容易联想到我们前面学习的哈希表。</p>
 <p>csub 设计了三个哈希表，分别是变量表、函数表还有字符串表。我们可以定义一个结构体，把这三个表管理起来。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> VAR_TAB_BIT   5</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> FUN_TAB_BIT   5</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> STR_TAB_BIT   5</span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">sym_table</span>&#123;</span><br>	DECLARE_HASHTABLE(var_tab, VAR_TAB_BIT);<br>	DECLARE_HASHTABLE(fun_tab, FUN_TAB_BIT);<br>	DECLARE_HASHTABLE(str_tab, STR_TAB_BIT);<br>	<span class="hljs-type">int</span> var_num; <span class="hljs-comment">// 统计变量个数</span><br>	<span class="hljs-type">int</span> fun_num; <span class="hljs-comment">// 统计函数个数</span><br>	<span class="hljs-type">int</span> str_num; <span class="hljs-comment">// 统计常量字符串个数</span><br>	<span class="hljs-type">int</span> literal_num; <span class="hljs-comment">// 统计常量(整形或者字符)个数</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">var_tab_head</span>;</span> <span class="hljs-comment">// 记录变量的添加顺序</span><br>    <span class="hljs-type">scope_info_t</span> scope;<br><span class="hljs-comment">//...</span><br><br>&#125;<span class="hljs-type">sym_table_t</span>;<br></code></pre></td></tr></table></figure>
@@ -477,10 +482,11 @@
 <p>第 6 行，初始化链表 var_tab_head；</p>
 <p>第 7~8 是和作用域相关的内容，之前讲过。</p>
 <p>这样，我们就有 3 个空的哈希表了，还有 1 个空的叫 var_tab_head 的链表。</p>
-<h2 id="var-t"><a href="#var-t" class="headerlink" title="var_t"></a>var_t</h2><p>为了把变量存入哈希表，我们要为变量设计一个结构体，此结构体可以描述所有的变量，也包括常量。</p>
+<h2 id="var-t">var_t</h2>
+<p>为了把变量存入哈希表，我们要为变量设计一个结构体，此结构体可以描述所有的变量，也包括常量。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">var_info</span>&#123;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">hlist_node</span> <span class="hljs-title">hnode</span>;</span> <br>    <span class="hljs-type">int</span> index; <span class="hljs-comment">// 变量编号</span><br>    <span class="hljs-type">bool</span> is_ext; <span class="hljs-comment">// extern</span><br>    <span class="hljs-type">bool</span> is_ptr; <span class="hljs-comment">// 是指针</span><br>    <span class="hljs-type">bool</span> is_literal; <span class="hljs-comment">// 是常量</span><br>    <span class="hljs-type">bool</span> is_left; <span class="hljs-comment">// 是左值</span><br>    <span class="hljs-type">bool</span> is_arr; <span class="hljs-comment">// 是数组</span><br>    symbol_e type; <span class="hljs-comment">// 变量类型</span><br>    <span class="hljs-type">char</span> name[MAX_ID_LEN+<span class="hljs-number">1</span>]; <span class="hljs-comment">// 变量名称</span><br>    <span class="hljs-type">int</span> size; <span class="hljs-comment">// 变量的大小  </span><br>    <span class="hljs-type">int</span> ele_num; <span class="hljs-comment">// 数组元素个数</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">arr_init_val</span>;</span> <span class="hljs-comment">// 数组初始化列表</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">var_info</span> *<span class="hljs-title">init_val</span>;</span> <span class="hljs-comment">// 带有初始化</span><br>    <span class="hljs-class"><span class="hljs-keyword">union</span> &#123;</span> <span class="hljs-comment">// 目前仅对常量有用</span><br>		<span class="hljs-type">int</span> int_val;<br>		<span class="hljs-type">char</span> char_val;<br>        <span class="hljs-type">char</span> *string_val; <span class="hljs-comment">// 字符串常量用字符数组存储，指向字符数组的存储空间</span><br>	&#125;;<br>    <span class="hljs-type">int</span> err_flag;  <span class="hljs-comment">// 没有通过语法或语义检查</span><br>    <span class="hljs-type">int</span> line_num; <span class="hljs-comment">// 名字所在的行号，为了报错用</span><br>    <span class="hljs-comment">//...    </span><br>&#125;<span class="hljs-type">var_t</span>;<br></code></pre></td></tr></table></figure>
 <p>这里面的字段很多，我们挑重点说。</p>
-<p>第 1 行<code>struct hlist_node hnode;</code>这是哈希表节点，为了把变量加入哈希表，必须有它。至于 hnode 只是一个名字，你换成其他的也可以。</p>
+<p>第 1 行<code>struct hlist_node hnode; </code>这是哈希表节点，为了把变量加入哈希表，必须有它。至于 hnode 只是一个名字，你换成其他的也可以。</p>
 <p>第 6 行，<strong>如果是常量，也用这个结构体保存</strong>，但是 is_literal 为 true；是不是常量，看这个字段就可以。</p>
 <p>第 9 行，支持的类型是 int 和 char，如果是 void, 这肯定是一个无效的变量。（不过以后要是增加了 void 类型的指针，这个，以后再说吧）</p>
 <p>第 12 、13 行，仅对数组有用。</p>
@@ -492,13 +498,14 @@
 <p>第 21 行用来记录变量定义位置的行号，为了报错用。</p>
 <p>光有 var_t 这个结构体还不行，还需要有创建变量的代码。</p>
 <p>因为  var_t 仅仅是一个我们定义的类型。这就好比光有  int 关键字还不够，你要写 <code>int a;</code>才能得到一个整形变量一样。</p>
-<h2 id="new-var"><a href="#new-var" class="headerlink" title="new_var"></a>new_var</h2><p>讲解这个函数之前，先补一下之前的代码窟窿。</p>
-<p><img src="image-20251012150553206.png" srcset="/img/loading.gif" lazyload alt="image-20251012150553206" style="zoom:50%;" /></p>
+<h2 id="new-var">new_var</h2>
+<p>讲解这个函数之前，先补一下之前的代码窟窿。</p>
+<img src="image-20251012150553206.png" srcset="/img/loading.gif" lazyload alt="image-20251012150553206" style="zoom:50%;" />
 <p>以前第 201 行的 INVALID 是 INT，也就是默认整形。</p>
 <p>但是我现在觉得不妥，如果默认是整形，那么就算是类型遗漏了（会执行第 208 行），此时返回的也是 INT；调用这个函数的代码并不知道出错了，还以为确实是 INT 类型呢。现在我把 201 行改成 INVALID，这样调用者就能知道出错了。</p>
 <p>下面是 new_var 的代码。</p>
 <p>这个函数用来创建并初始化变量（int 或 char 类型，也可以是int 或 char 类型的指针），但不能是数组（我们会用另外一个函数创建数组）。</p>
-<p><img src="image-20251014170439084.png" srcset="/img/loading.gif" lazyload alt="image-20251014170439084" style="zoom:50%;" /></p>
+<img src="image-20251014170439084.png" srcset="/img/loading.gif" lazyload alt="image-20251014170439084" style="zoom:50%;" />
 <p>第 31 行，如果语法分析的时候缺少标识符，name 指向的数组就是全零。所以一旦发现 name[0] 为 0，就说明前面的语法分析出错了，连标识符都没有。</p>
 <p>既然没有名字，就返回 NULL 吧，因为我实在没有办法把一个没有名字的变量加入哈希表。</p>
 <p>第 34 行，定义一个叫 err_flag 的变量，用来表示语法分析是否出错。</p>
@@ -510,9 +517,9 @@
 <p>第 1 行，忘了写 a 的类型了。</p>
 <p>当解析到 a 的时候，发现类型是 INVALID，如果在 new_var 函数里面返回 NULL，那么就无法把变量 a 加入符号表。</p>
 <p>解析第 4 行的时候，再遇到 a，就会找不到符号，会报更多的错误。</p>
-<p>所以，我决定即使类型是 INVALID，也要把 a 加入变量表，但是我会做一个标记，就是 err_flag;  </p>
+<p>所以，我决定即使类型是 INVALID，也要把 a 加入变量表，但是我会做一个标记，就是 err_flag;</p>
 <p>我们回到代码。第 50~54 行分配内存并检查内存的有效性。</p>
-<p><img src="image-20251014171029831.png" srcset="/img/loading.gif" lazyload alt="image-20251014171029831" style="zoom:50%;" /></p>
+<img src="image-20251014171029831.png" srcset="/img/loading.gif" lazyload alt="image-20251014171029831" style="zoom:50%;" />
 <p>第 56 行，设置变量的作用域。</p>
 <p>第 57 行，初始化哈希表节点 hnode; INIT_HLIST_NODE 是一个宏</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_HLIST_NODE(ptr) ((ptr)-&gt;next = NULL, (ptr)-&gt;pprev = NULL)</span><br></code></pre></td></tr></table></figure>
@@ -526,19 +533,21 @@
 <p>第 67 行，如果是 extern 类型的变量，它是在其他文件定义的，本文件不为它分配存储空间，所以 size 为 0；否则要计算变量的大小。</p>
 <p>70~74：如果是指针，大小是 4 字节。因为我们要编译出的程序的运行环境是32 位 Linux 系统，所以指针占 4 字节。</p>
 <p>因为我们仅支持 int 和 char 类型，所以变量的大小是 4 字节或者 1 字节。</p>
-<h2 id="new-arr"><a href="#new-arr" class="headerlink" title="new_arr"></a>new_arr</h2><p>我们趁热打铁，看看 new_arr 这个函数。</p>
-<p><img src="image-20251014171527595.png" srcset="/img/loading.gif" lazyload alt="image-20251014171527595" style="zoom:50%;" /></p>
+<h2 id="new-arr">new_arr</h2>
+<p>我们趁热打铁，看看 new_arr 这个函数。</p>
+<img src="image-20251014171527595.png" srcset="/img/loading.gif" lazyload alt="image-20251014171527595" style="zoom:50%;" />
 <p>错误处理和前面的 new_var 函数类似，这里不赘述。</p>
 <p>第 121 行，初始化链表，arr_init_val 这个字段是专门为数组设计的。这个链表怎么用，后文会讲。</p>
-<p><img src="image-20251017133228161.png" srcset="/img/loading.gif" lazyload alt="image-20251017133228161" style="zoom:50%;" /></p>
+<img src="image-20251017133228161.png" srcset="/img/loading.gif" lazyload alt="image-20251017133228161" style="zoom:50%;" />
 <p>第 127 行，把 is_arr 设置为 true,说明这是一个数组。 is_arr 为 ture 是判断变量是数组的依据。</p>
 <p>第 128 行，记录元素的个数。注意，传入的参数 len 可能等于 ARR_SIZE_UNKNOWN ，如果有初始化，会修正 var-&gt;ele_num 和 var-&gt;size，后文会讲。</p>
-<h2 id="new-literal"><a href="#new-literal" class="headerlink" title="new_literal"></a>new_literal</h2><p>不仅需要创建变量，还需要创建常量。例如：</p>
+<h2 id="new-literal">new_literal</h2>
+<p>不仅需要创建变量，还需要创建常量。例如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> x = <span class="hljs-number">10</span>;<br></code></pre></td></tr></table></figure>
 <p>这个 x 已经用 var_t 结构保存起来了，var_t 中有个字段是  struct var_info *init_val;这是一个指针，指向另一个 var_t（这里面存储着 x 的初始值）。</p>
 <p>所以，需要把 10 也存储到 var_t 结构体中，然后把它的地址赋值给 init_val；</p>
 <p>创建常量的函数是 new_literal</p>
-<p><img src="image-20251012163409777.png" srcset="/img/loading.gif" lazyload alt="image-20251012163409777" style="zoom:50%;" /></p>
+<img src="image-20251012163409777.png" srcset="/img/loading.gif" lazyload alt="image-20251012163409777" style="zoom:50%;" />
 <p>这个函数的作用是存储常量，例如 100， ‘x’, “hello”；</p>
 <p>注意，常量不需要保存作用域。</p>
 <p>第一个参数 val 是指向常量的指针，第二个参数是 token 的值，只有 NUM、CHARA、STRING 这三种。</p>
@@ -546,23 +555,24 @@
 <p>对于整形常量和字符常量，是没有变量名的，不过我们可以给它们一个特殊的变量名，整形常量统一叫 “<code>&lt;int&gt;</code>”,字符常量统一叫“<code>&lt;char&gt;</code>”;</p>
 <p>这就是第 195 行和第 200 行的意思。</p>
 <p>var_t 类型中有一个匿名联合体，用来存储常量的值。例如第 197 行和第 202 行。</p>
-<p><img src="image-20251012171750585.png" srcset="/img/loading.gif" lazyload alt="image-20251012171750585" style="zoom:50%;" /></p>
+<img src="image-20251012171750585.png" srcset="/img/loading.gif" lazyload alt="image-20251012171750585" style="zoom:50%;" />
 <p>如果是整形常量或者字符常量，可以直接存储到这个联合体里面，要是字符串常量，就需要分配内存，然后让 string_val 指向这段内存。</p>
-<p><img src="image-20251012164446631.png" srcset="/img/loading.gif" lazyload alt="image-20251012164446631" style="zoom:50%;" /></p>
+<img src="image-20251012164446631.png" srcset="/img/loading.gif" lazyload alt="image-20251012164446631" style="zoom:50%;" />
 <p>字符串常量也没有名字，但是我们不能给它们指定一个统一的名字，而是要给每个字符串创建一个独一无二的名字。至于为什么，读者现在不用关心，等学到后面自然会明白。</p>
 <p>第 205 行，调用 gen_name 生成一个唯一的名字。这个函数后面会说。</p>
 <p>第 207 行为字符串分配存储空间，第 213 行拷贝字符串到分配好的空间里。第 215 行，让 string_val 指向这个空间。</p>
 <p>我们把字符串作为字符数组存储，所以第 206 行的类型是 CHAR；第 214 行的 is_arr 是 ture;</p>
 <p>gen_name 函数的代码如下：</p>
-<p><img src="image-20251012164757321.png" srcset="/img/loading.gif" lazyload alt="image-20251012164757321" style="zoom:50%;" /></p>
+<img src="image-20251012164757321.png" srcset="/img/loading.gif" lazyload alt="image-20251012164757321" style="zoom:50%;" />
 <p>第 22 行的 name_id，是一个 static 类型的变量，表示它具有静态存储期，仅初始化一次，而且是在程序启动前初始化。</p>
 <p>第一次调用这个函数，tmp[] 中的字符串是“L1”，第二次调用，tmp[] 中的字符串是“L2”，…</p>
-<h2 id="创建变量并加入变量表"><a href="#创建变量并加入变量表" class="headerlink" title="创建变量并加入变量表"></a>创建变量并加入变量表</h2><p>接下来的任务是，在代码适当的地方创建变量，并把变量加入变量表。</p>
+<h2 id="创建变量并加入变量表">创建变量并加入变量表</h2>
+<p>接下来的任务是，在代码适当的地方创建变量，并把变量加入变量表。</p>
 <p>需要创建变量的地方有 2 处，一个是 var_init 函数，一个是 para_item 函数；后者涉及到函数，这是下节的内容，我们先看  var_init()；</p>
-<p><img src="image-20250929122433157.png" srcset="/img/loading.gif" lazyload alt="image-20250929122433157" style="zoom:50%;" /></p>
+<img src="image-20250929122433157.png" srcset="/img/loading.gif" lazyload alt="image-20250929122433157" style="zoom:50%;" />
 <p>这是 var_init 之前的代码。为什么说这个地方适合创建变量呢？因为这个函数的参数收集了变量的各种特性，包括数组长度、是不是 extern、变量类型、是不是指针、变量名字是什么等。</p>
 <p>为了创建变量并把它加入变量表，我们需要改动代码。修改后如下图：</p>
-<p><img src="image-20251014172705822.png" srcset="/img/loading.gif" lazyload alt="image-20251014172705822" style="zoom:50%;" /></p>
+<img src="image-20251014172705822.png" srcset="/img/loading.gif" lazyload alt="image-20251014172705822" style="zoom:50%;" />
 <p>这个函数细分为四种情况。</p>
 <ol>
 <li>带有初始化，变量是数组</li>
@@ -577,18 +587,21 @@
 <p>不管是哪种情况，都要把创建好的变量加入变量表。</p>
 <p>对于情况 2，3，4，执行第 350 行，调用 add_var 变量加入变量表。</p>
 <p>对于情况 1，加入变量表是在第 334 的 arr_init_list 函数里面做的。</p>
-<h2 id="add-var"><a href="#add-var" class="headerlink" title="add_var"></a>add_var</h2><p>哈希表有了，变量也有了，可以编写把变量加入变量表的函数了。</p>
-<p><img src="image-20251015215905723.png" srcset="/img/loading.gif" lazyload alt="image-20251015215905723" style="zoom:50%;" /></p>
+<h2 id="add-var">add_var</h2>
+<p>哈希表有了，变量也有了，可以编写把变量加入变量表的函数了。</p>
+<img src="image-20251015215905723.png" srcset="/img/loading.gif" lazyload alt="image-20251015215905723" style="zoom:50%;" />
 <p>如果有语法错误或语义错误，向 add_var 传入的参数可能是 NULL。例如前文的 new_var 函数，发现缺少标识符则返回 NULL。所以第 190 行要判断一下，如果 var 是 NULL 就直接返回。</p>
 <p>对于有 extern 声明的变量，执行第 194 行；否则执行第 196 行。</p>
 <p>decl_var 和 def_var 这两个函数有点烧脑，本节先不讲。只要知道它们的作用是把变量加入变量表就行，并且把变量的地址加入了 var_tab_head 这个链表，目的是记录变量或者常量加入变量表的先后顺序。</p>
-<h2 id="数组的初始化"><a href="#数组的初始化" class="headerlink" title="数组的初始化"></a>数组的初始化</h2><p>现在我们解决前面的难题：“如果变量是数组，且带有初始化”这种情况。</p>
-<p><img src="image-20251014173452726.png" srcset="/img/loading.gif" lazyload alt="image-20251014173452726" style="zoom:50%;" /></p>
+<h2 id="数组的初始化">数组的初始化</h2>
+<p>现在我们解决前面的难题：“如果变量是数组，且带有初始化”这种情况。</p>
+<img src="image-20251014173452726.png" srcset="/img/loading.gif" lazyload alt="image-20251014173452726" style="zoom:50%;" />
 <p>第 333 行，先调用 new_arr 创建变量，arr_len 这个参数可能是 ARR_SIZE_UNKNOWN（没有指定数组大小），也可能是某个数字；</p>
 <p>arr_init_list 这个函数和以前的也很不一样了：</p>
-<p><img src="image-20251012174939445.png" srcset="/img/loading.gif" lazyload alt="image-20251012174939445" style="zoom:50%;" /></p>
+<img src="image-20251012174939445.png" srcset="/img/loading.gif" lazyload alt="image-20251012174939445" style="zoom:50%;" />
 <p>红色框框出来的，都是新加的代码。在解释代码之前，先介绍通用链表。</p>
-<h3 id="通用链表"><a href="#通用链表" class="headerlink" title="通用链表"></a>通用链表</h3><p>细心的读者一定发现了:为了使用 Linux kernel 的链表，首先要定义一个头节点，其次宿主结构体里面要有 struct list_head；</p>
+<h3 id="通用链表">通用链表</h3>
+<p>细心的读者一定发现了:为了使用 Linux kernel 的链表，首先要定义一个头节点，其次宿主结构体里面要有 struct list_head；</p>
 <p>那么问题来了，是不是我们定义的结构体里面都要加上  struct list_head？除非这个数据不会加入任何链表。</p>
 <p>还有第二个问题，比如 var_t，除了把它加入变量表，我还想把它加入另一个链表怎么办？那就要在里面再加入一个  struct list_head，但是要另外起个名字。例如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">var_info</span>&#123;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">hlist_node</span> <span class="hljs-title">hnode</span>;</span> <br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">node1</span>;</span> <br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">node2</span>;</span> <br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">node3</span>;</span> <br>    <span class="hljs-comment">//...    </span><br>&#125;<span class="hljs-type">var_t</span>;<br></code></pre></td></tr></table></figure>
@@ -598,15 +611,15 @@
 <p>为了解决上面这些问题，我设计了结构体  <code>struct gp_node</code>，gp 是通用（general purpose）的意思。后文称这种结构为通用链表（我自己起的名字）。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">gp_node</span>&#123;</span> <br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">entry</span>;</span><br>	<span class="hljs-type">void</span> *addr;<br>&#125;<span class="hljs-type">gp_node_t</span>; <span class="hljs-comment">// 通用节点</span><br></code></pre></td></tr></table></figure>
 <p>第 2 行是链表节点，第 3 行的 addr 是用户数据的地址，为了兼容各种类型，所以是 void * ；</p>
-<p>然后，我编写了函数 gp_node_add_tail </p>
+<p>然后，我编写了函数 gp_node_add_tail</p>
 <p>代码如下：</p>
-<p><img src="image-20251001164447022.png" srcset="/img/loading.gif" lazyload alt="image-20251001164447022" style="zoom:50%;" /></p>
+<img src="image-20251001164447022.png" srcset="/img/loading.gif" lazyload alt="image-20251001164447022" style="zoom:50%;" />
 <p>第 14 行分配内存，第 20 行填写地址（注意，这相当于把数据地址复制了一份），第 21 行把节点加入到链表的末尾。</p>
 <p>不管是什么类型的数据，都可以用此函数把数据的地址加入到某个链表中（注意，一个链表里面的数据类型要一致）。</p>
 <p>例如，我们要收集数组的初始化值，arr_init_val 是头节点，假设代码是 <code>int a[] = {1, m, n};</code></p>
 <p>大括号里面的 3 个初始值会通过 expr() 解析（后文马上说），返回 3 个 var_t  类型的变量；根据我的设计，利用 gp_node_add_tail  函数把这 3 个 var_t  类型的变量加入 arr_init_val 链表。</p>
 <p>当把这 3 个变量加入链表后，示意图如下图：</p>
-<p><img src="image-20251001170336410.png" srcset="/img/loading.gif" lazyload alt="image-20251001170336410" style="zoom: 50%;" /></p>
+<img src="image-20251001170336410.png" srcset="/img/loading.gif" lazyload alt="image-20251001170336410" style="zoom: 50%;" />
 <p>粉色部分是链表节点，它们都是 struct list_head 类型（首尾相连的指针我没有画）。</p>
 <p>绿色部分是用户数据的地址，也可以理解为指向实际数据的指针；</p>
 <p>当访问具体数据的时候，先找到链表的头节点，然后遍历链表，得到每个 gp_node_t 的地址，再找到 addr 字段，把它转换成要访问类型的指针，最后访问数据。</p>
@@ -622,30 +635,31 @@
 <p>对于 expr() 这个函数，先不用管，等学完了中间代码生成就都明白了。</p>
 <p>对于第 6 行的 var 要不要加入符号表，其实 var 仅仅是 expr() 的返回值，可以肯定的是在 expr() 中创建了这个变量。真实情况是在创建这个变量之后，也把它加入了符号表。这个问题我们在后面还会讨论。</p>
 <p>再回到函数 arr_init_list</p>
-<p><img src="image-20251012174939445.png" srcset="/img/loading.gif" lazyload alt="image-20251012174939445" style="zoom:50%;" /></p>
+<img src="image-20251012174939445.png" srcset="/img/loading.gif" lazyload alt="image-20251012174939445" style="zoom:50%;" />
 <p>第 551 和 566 行，调用 array_semantic_check，这个函数的作用是检查数组元素的类型是否和初始化数据的类型相匹配。这属于语义分析。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_LIST    1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_STRING  2</span><br></code></pre></td></tr></table></figure>
 <p>第 552 行的参数 INIT_BY_STRING 表示用字符串初始化字符数组。例如<code>char my_str[] = &quot;hello&quot;;</code></p>
 <p>第 566 行的第二个参数 INIT_BY_LIST 表示用{…} 初始化数组。</p>
 <p>第 553 和 567 行，如果语义检查通过，res 就是 true，这时候把 arr 添加到变量表，否则调用 var_destroy，释放内存。</p>
 <p>由此可见，语义分析和符号表管理不是孤立的，而是交织在一起的。例如在把变量添加到符号表之前，需要检查语义是否正确，若正确才能把变量加入符号表。</p>
-<h3 id="array-semantic-check"><a href="#array-semantic-check" class="headerlink" title="array_semantic_check"></a>array_semantic_check</h3><p>这个函数比较长，我们一段一段看。</p>
-<p><img src="image-20251001182300250.png" srcset="/img/loading.gif" lazyload alt="image-20251001182300250" style="zoom:50%;" /></p>
+<h3 id="array-semantic-check">array_semantic_check</h3>
+<p>这个函数比较长，我们一段一段看。</p>
+<img src="image-20251001182300250.png" srcset="/img/loading.gif" lazyload alt="image-20251001182300250" style="zoom:50%;" />
 <p>如果是用 {…} 这种方式初始化，则第 20 行成立；</p>
 <p>第 21 行，获取链表的长度，也就是初始化列表中元素的个数;</p>
 <p>第 22 ~ 25 行，如果定义数组的时候[]里面为空，那么现在的链表长度就是元素的个数，此时修改 arr-&gt;ele_num 和 arr-&gt;size 字段的值。</p>
 <p>第 25 ~ 27， 如果定义数组时指定的元素个数小于初始化列表中元素的个数不相等，则报错。</p>
 <p>30 ~ 41 是元素类型检查。遍历链表的每个用户节点 node ，根据 node-&gt;addr 找到初始化列表中的元素；</p>
 <p>我定义了一组宏</p>
-<p><img src="image-20251001183002376.png" srcset="/img/loading.gif" lazyload alt="image-20251001183002376" style="zoom:50%;" /></p>
+<img src="image-20251001183002376.png" srcset="/img/loading.gif" lazyload alt="image-20251001183002376" style="zoom:50%;" />
 <p>第 9 行：基本类型指既不是数组也不是指针；</p>
 <p>第 10 行：非基本类型指数组或者指针；</p>
 <p>再回到上面的代码。第 32 行，当数组类型是 char 的时候，初始值也必须是 char 类型，否则报错；</p>
 <p>第 37 行，当数组类型是 int 的时候，初始值可以是 char  或  int，否则报错；</p>
-<p>需要说明的是，上面展示的代码不是最终的代码，因为数组的元素还可以是 char <em> 类型或者 int </em> 类型，这牵扯到解析初始值并生成一元表达式，我们后面会讲。这里先跳过。</p>
+<p>需要说明的是，上面展示的代码不是最终的代码，因为数组的元素还可以是 char * 类型或者 int * 类型，这牵扯到解析初始值并生成一元表达式，我们后面会讲。这里先跳过。</p>
 <p>这个函数有返回值，返回 false 表示有错误，返回 true 说明检查通过。</p>
 <p>如果用字符串初始化，则执行下面的代码：</p>
-<p><img src="image-20251012214019599.png" srcset="/img/loading.gif" lazyload alt="image-20251012214019599" style="zoom:50%;" /></p>
+<img src="image-20251012214019599.png" srcset="/img/loading.gif" lazyload alt="image-20251012214019599" style="zoom:50%;" />
 <p>第 48 行，如果不是字符数组就报错；因为只有字符数组才可以用字符串初始化；字符类型的指针也可以用字符串初始化，但是现在说的是数组。</p>
 <p>第 53 行，如果定义数组的时候[]里面为空，那么字符串的长度再加一就是数组长度。</p>
 <p>第 58 行，虽然给数组指定长度了，但是长度容纳不下字符串，也报错。</p>
@@ -653,7 +667,8 @@
 <p>第 64 行，把创建好的字符串常量添加到字符串表中。</p>
 <p>第 65 行，设置数组的 init_val；表示它用 init_val 指向的常量初始化。</p>
 <p>这里多说一句，判断数组是否带初始化，需要检查数组的 init_val 字段和  arr_init_val 字段；当 init_val 为 NULL 且  arr_init_val 链表为空时，说明不带初始化。</p>
-<h2 id="primary-expr"><a href="#primary-expr" class="headerlink" title="primary_expr"></a>primary_expr</h2><p><img src="image-20251013104700405.png" srcset="/img/loading.gif" lazyload alt="image-20251013104700405" style="zoom:50%;" /></p>
+<h2 id="primary-expr">primary_expr</h2>
+<img src="image-20251013104700405.png" srcset="/img/loading.gif" lazyload alt="image-20251013104700405" style="zoom:50%;" />
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">primary_expr</span>&gt;</span> -&gt;  ident | lparen <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> rparen | <span class="hljs-tag">&lt;<span class="hljs-name">literal</span>&gt;</span><br></code></pre></td></tr></table></figure>
 <p>primary_expr 这个函数在前面没有讲过，现在补补课。产生式也列出来了，不复杂，就三种情况，要么是标识符，要么是用括号括起来的<code>&lt;expr&gt;</code>，要么是常量;分别对应第 874、883、889 行。</p>
 <p>不管是哪种情况，都应该返回一个值，例如返回标识符（var_t 或者 fun_t(函数类型，下节课讲)），或者返回一个表达式的值（var_t 类型），或者返回常量（var_t 类型）。如果是标识符，需要查找变量表或者函数表。如何判断是变量还是函数呢？</p>
@@ -670,7 +685,7 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">my_fun</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-comment">//...</span><br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> my_fun = <span class="hljs-number">2</span>; <br>    my_fun;<br>    my_fun(); <span class="hljs-comment">// 并不是第 1 行定义的 my_fun 函数</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>请问第 9 行的标识符是指哪一个？是第 1 行定义的函数还是第 8 行定义的局部变量？</p>
 <p>如果是前者，那第 10 行的写法应该没有问题，事实上， gcc 报错：</p>
-<p> error: called object ‘my_fun’ is not a function or function pointer；并且还会提醒你这个 my_fun  是在第 8 行声明的。</p>
+<p>error: called object ‘my_fun’ is not a function or function pointer；并且还会提醒你这个 my_fun  是在第 8 行声明的。</p>
 <p>由此可见，第 9 行的标识符是指第 8 行定义的局部变量。</p>
 <p>我们再修改代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">my_fun</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-comment">//...</span><br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> my_fun = <span class="hljs-number">2</span>;<br>    &#123;<br>        <span class="hljs-type">void</span> <span class="hljs-title function_">my_fun</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br>        my_fun();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -682,38 +697,44 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">my_fun</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-comment">//...</span><br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> my_fun = <span class="hljs-number">2</span>;<br>    &#123;<br>        <span class="hljs-type">void</span> <span class="hljs-title function_">my_fun</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br>        <span class="hljs-type">int</span> my_fun = <span class="hljs-number">3</span>; <br>        my_fun;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>请看上面的代码。</p>
 <p>这是合法的吗？</p>
-<p><img src="image-20251016112550719.png" srcset="/img/loading.gif" lazyload alt="image-20251016112550719" style="zoom:50%;" /></p>
+<img src="image-20251016112550719.png" srcset="/img/loading.gif" lazyload alt="image-20251016112550719" style="zoom:50%;" />
 <p>gcc 会针对第 11 行报错：error: ‘my_fun’ redeclared as different kind of symbol</p>
 <p>所以，我修改了代码：</p>
-<p><img src="image-20251016200803988.png" srcset="/img/loading.gif" lazyload alt="image-20251016200803988" style="zoom:50%;" /></p>
+<img src="image-20251016200803988.png" srcset="/img/loading.gif" lazyload alt="image-20251016200803988" style="zoom:50%;" />
 <p>第 892 行，调用</p>
-<p><code>void *get_var_or_fun(const char *name, int *symbol_type)</code></p>
+<p><code>void *get_var_or_fun(const char *name, int *symbol_type)  </code></p>
 <p>去函数表和变量表查找符号。找到的可能是函数，也可能是变量。所以第二个参数是输出型参数，需要 get_var_or_fun 里面给这个地址填写合适的值。</p>
 <p>get_var_or_fun 的代码我们下节再讲。现在我们把关注点移到 primary_expr 函数的最后，第 907 行，它调用了 literal()</p>
-<h2 id="literal"><a href="#literal" class="headerlink" title="literal"></a>literal</h2><p><img src="image-20251013155711088.png" srcset="/img/loading.gif" lazyload alt="image-20251013155711088" style="zoom:50%;" /></p>
+<h2 id="literal">literal</h2>
+<img src="image-20251013155711088.png" srcset="/img/loading.gif" lazyload alt="image-20251013155711088" style="zoom:50%;" />
 <p>这个函数的目的是解析常量，包括整形常量、字符常量和字符串常量，利用 new_literal 函数构造各种常量，然后把它们加入符号表。</p>
 <p>第 911 行调用了 add_literal,代码如下：</p>
-<p><img src="image-20251013155830026.png" srcset="/img/loading.gif" lazyload alt="image-20251013155830026" style="zoom:50%;" /></p>
+<img src="image-20251013155830026.png" srcset="/img/loading.gif" lazyload alt="image-20251013155830026" style="zoom:50%;" />
 <p>虽然是常量，但是我的设计是把它们加入变量表，因为有 is_literal 字段为真标记，不会和真正的变量混淆。</p>
 <p>第 184 行，就是前面讲的通用链表，把参数 literal 加入 var_tab_head 这个链表，目的是为了记录变量或者常量的添加顺序。打印变量表的时候我们按照这个顺序来打印，可以和测试代码对照着看。</p>
 <p>add_str 函数的代码如下：</p>
-<p><img src="image-20251005095452229.png" srcset="/img/loading.gif" lazyload alt="image-20251005095452229" style="zoom:50%;" /></p>
+<img src="image-20251005095452229.png" srcset="/img/loading.gif" lazyload alt="image-20251005095452229" style="zoom:50%;" />
 <p>把字符串加入了 str_tab,就是串表。</p>
-<h2 id="main-函数"><a href="#main-函数" class="headerlink" title="main 函数"></a>main 函数</h2><p><img src="image-20251016115511997.png" srcset="/img/loading.gif" lazyload alt="image-20251016115511997" style="zoom:50%;" /></p>
+<h2 id="main-函数">main 函数</h2>
+<img src="image-20251016115511997.png" srcset="/img/loading.gif" lazyload alt="image-20251016115511997" style="zoom:50%;" />
 <p>我已经写了注释，不再赘述。</p>
-<h2 id="expr-函数的返回值"><a href="#expr-函数的返回值" class="headerlink" title="expr() 函数的返回值"></a>expr() 函数的返回值</h2><p>表达式的解析涉及创建中间变量和中间代码生成，这部分比较复杂，目前的代码还不包括这些功能。</p>
-<p>从产生式<code>&lt;expr&gt;</code>一直推导下去，会推导出基本表达式 <primary_expr> </p>
-<p><primary_expr>  的产生式如下：</p>
+<h2 id="expr-函数的返回值">expr() 函数的返回值</h2>
+<p>表达式的解析涉及创建中间变量和中间代码生成，这部分比较复杂，目前的代码还不包括这些功能。</p>
+<p>从产生式<code>&lt;expr&gt;</code>一直推导下去，会推导出基本表达式 &lt;primary_expr&gt;</p>
+<p>&lt;primary_expr&gt;  的产生式如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;primary_expr&gt; -&gt;  ident | lparen &lt;expr&gt; rparen | &lt;literal&gt;<br></code></pre></td></tr></table></figure>
 <p><code>&lt;literal&gt;</code> 对应上面的 literal 函数</p>
 <p>如果表达式为常量，调用 expr() 函数可以得到正确的值，否则 expr() 的返回值是 NULL（这是不对的，需要后面完善代码）；这里面的原因就不赘述了，有兴趣的同学可以看这一节的配套代码。等后面学习中间代码生成的时候，还会讲解表达式的代码。</p>
-<h2 id="成果展示"><a href="#成果展示" class="headerlink" title="成果展示"></a>成果展示</h2><h3 id="语义错误"><a href="#语义错误" class="headerlink" title="语义错误"></a>语义错误</h3><p>下面我们故意写一些错误的代码，看看程序能否检查出这些错误。</p>
-<p><img src="image-20251005163452951.png" srcset="/img/loading.gif" lazyload alt="image-20251005163452951" style="zoom: 50%;" /></p>
+<h2 id="成果展示">成果展示</h2>
+<h3 id="语义错误">语义错误</h3>
+<p>下面我们故意写一些错误的代码，看看程序能否检查出这些错误。</p>
+<img src="image-20251005163452951.png" srcset="/img/loading.gif" lazyload alt="image-20251005163452951" style="zoom: 50%;" />
 <p>效果还不错，都检查出来了。</p>
-<h3 id="打印变量表"><a href="#打印变量表" class="headerlink" title="打印变量表"></a>打印变量表</h3><p>var_tab_head 这个链表，纯粹是为了打印出来容易看。</p>
+<h3 id="打印变量表">打印变量表</h3>
+<p>var_tab_head 这个链表，纯粹是为了打印出来容易看。</p>
 <p>因为变量表中的变量很多，而且是根据 name 映射到不同的 key （分到不同的桶）。如果使用 hash_for_each 遍历，顺序就显得乱，和测试代码对照起来很困难。</p>
 <p>如何根据变量的添加顺序打印符号表呢？</p>
-<p><img src="image-20251016114718741.png" srcset="/img/loading.gif" lazyload alt="image-20251016114718741" style="zoom:50%;" /></p>
+<img src="image-20251016114718741.png" srcset="/img/loading.gif" lazyload alt="image-20251016114718741" style="zoom:50%;" />
 <p>第 772 行，遍历 sym_tab_g.var_tab_head 这个链表，得到变量的地址 var;有了变量的地址，就知道要打印什么变量了，因为地址是唯一的。</p>
 <p>第 775 行，根据 var-&gt;name 计算出 key</p>
 <p>第 776 行，遍历哈希表中和 key 值对应的桶，注意，同名变量可能有一个或多个，我们需要比较地址是不是和 var 相等</p>
@@ -722,7 +743,7 @@
 <p>测试代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> x = <span class="hljs-number">10</span>;<br><span class="hljs-type">int</span> *px;<br><span class="hljs-type">char</span> *my_str = <span class="hljs-string">&quot;hello&quot;</span>;<br><span class="hljs-type">int</span> a1 = <span class="hljs-number">99</span>, a2 = <span class="hljs-number">98</span>, a3[<span class="hljs-number">3</span>]=&#123;<span class="hljs-number">13</span>, <span class="hljs-number">14</span>&#125;;<br><span class="hljs-type">char</span> *arr[] = &#123;<span class="hljs-string">&quot;haohao&quot;</span>, <span class="hljs-string">&quot;xuexi&quot;</span>&#125;;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    &#123;<br>        <span class="hljs-type">int</span> k;<br>        &#123;<br>            <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">100</span>; ++i) &#123;<br>                k++;<br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>运行结果：</p>
-<p><img src="image-20251016121744724.png" srcset="/img/loading.gif" lazyload alt="image-20251016121744724" style="zoom: 67%;" /></p>
+<img src="image-20251016121744724.png" srcset="/img/loading.gif" lazyload alt="image-20251016121744724" style="zoom: 67%;" />
 <p>最左边这列是变量的编号（var-&gt;index，此字段在创建变量的时候赋值）</p>
 <p>然后是变量类型、名字、size、作用域，如果是常量就会写明常量和 value</p>
 <p>如果是带有初始化的变量，则换行缩进，打印由哪个常量初始化（绿色部分）。</p>

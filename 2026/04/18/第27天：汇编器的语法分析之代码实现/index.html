@@ -19,35 +19,39 @@
   <meta name="author" content="Che">
   <meta name="keywords" content="">
   
-    <meta name="description" content="我们用 csub 支持的语法实现一个小游戏——汉诺塔!">
+    <meta name="description" content="纸上得来终觉浅，绝知此事要躬行">
 <meta property="og:type" content="article">
-<meta property="og:title" content="最终成果展示">
-<meta property="og:url" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/index.html">
+<meta property="og:title" content="第27天：汇编器的语法分析之代码实现">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/index.html">
 <meta property="og:site_name" content="49天自制编译器">
-<meta property="og:description" content="我们用 csub 支持的语法实现一个小游戏——汉诺塔!">
+<meta property="og:description" content="纸上得来终觉浅，绝知此事要躬行">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/image-20260308160347492.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/image-20260308142815541.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/image-20260308161114919.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/image-20260308143339888.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/image-20260308152238314.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/image-20260308154235342.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/image-20260308154702300.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/image-20260308154951862.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/image-20260308155054705.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/image-20260308155224860.png">
-<meta property="og:image" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/image-20260308155835859.png">
-<meta property="article:published_time" content="2026-03-29T06:56:10.000Z">
-<meta property="article:modified_time" content="2026-03-29T09:46:57.486Z">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125165606577.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125171022627.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125171455390.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125182405881.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125183052489.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125184116058.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125184628738.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125184847033.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125191256182.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125191630655.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125192451965.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125194102744.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125194705741.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125195058427.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125195951566.png">
+<meta property="article:published_time" content="2026-04-18T10:24:25.000Z">
+<meta property="article:modified_time" content="2026-04-18T10:45:41.705Z">
 <meta property="article:author" content="Che">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://leslieche.github.io/2026/03/29/%E6%9C%80%E7%BB%88%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA/image-20260308160347492.png">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC27%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/image-20260125165606577.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>最终成果展示 - 49天自制编译器</title>
+  <title>第27天：汇编器的语法分析之代码实现 - 49天自制编译器</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -310,7 +314,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="最终成果展示"></span>
+            <span id="subtitle" data-typed-text="第27天：汇编器的语法分析之代码实现"></span>
           
         </div>
 
@@ -321,8 +325,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2026-03-29 14:56" pubdate>
-          2026年3月29日 下午
+        <time datetime="2026-04-18 18:24" pubdate>
+          2026年4月18日 晚上
         </time>
       </span>
     
@@ -333,7 +337,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.6k 字
+          4.2k 字
         
       </span>
     
@@ -344,7 +348,7 @@
         
         
         
-          22 分钟
+          36 分钟
         
       </span>
     
@@ -383,117 +387,148 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">最终成果展示</h1>
+            <h1 id="seo-header">第27天：汇编器的语法分析之代码实现</h1>
             
             
               <div class="markdown-body">
                 
-                <h1 id="最终成果展示">最终成果展示</h1>
-<p>这节课，也是最后一节课，我们用 csub 支持的语法实现一个小游戏——汉诺塔。</p>
-<h2 id="1-游戏起源与传说">1. 游戏起源与传说</h2>
-<p><strong>汉诺塔</strong>（Tower of Hanoi），又称<strong>河内塔</strong>，是一个经典的数学益智游戏，也是计算机科学中讲解<strong>递归算法</strong>（Recursion）最著名的案例。</p>
-<p>这个故事由法国数学家爱德华·卢卡斯（Édouard Lucas）于 1883 年提出。传说在印度贝拿勒斯（今瓦拉纳西）的一座神庙里，有三根金刚石柱子，其中一根柱子上从下往上按大小顺序摞着 <strong>64 片黄金圆盘</strong>。</p>
-<ul>
-<li><strong>任务</strong>：僧侣们需要将所有圆盘从第一根柱子移动到第三根柱子。</li>
-<li><strong>规则</strong>：每次只能移动一个圆盘，且大圆盘不能压在小圆盘上面。</li>
-<li><strong>预言</strong>：传说当这64个圆盘全部移动完毕时，世界就会毁灭。</li>
-<li><strong>数学真相</strong>：移动 64 个圆盘所需的最少步数是 2 的 64 次方再减 1 （约1844亿亿次）。如果每秒移动一次，大约需要<strong>5800 亿年</strong>（根据主流宇宙学模型和多种卫星探测数据的综合估算，宇宙目前的年龄约为 138 亿年）。</li>
-</ul>
-<h2 id="2-游戏规则">2. 游戏规则</h2>
-<p>现代版的汉诺塔玩具通常由三根柱子（记为 <strong>A、B、C</strong>）和若干个大小不一的圆盘组成。</p>
-<img src="image-20260308160347492.png" srcset="/img/loading.gif" lazyload alt="image-20260308160347492" style="zoom:70%;" />
-<ul>
-<li><strong>初始状态</strong>：所有圆盘按大小顺序（大盘在下，小盘在上）叠放在柱子 <strong>A</strong> 上。</li>
-<li><strong>目标状态</strong>：将所有圆盘移动到柱子 <strong>C</strong> 上，保持原有的大小顺序。</li>
-<li><strong>两大铁律</strong>：
-<ol>
-<li><strong>一次只能移动一个圆盘</strong>：每次必须从某根柱子的最顶端取出一个圆盘，放到另一根柱子的最顶端。</li>
-<li><strong>大不压小</strong>：在任何时候，都不能将较大的圆盘放在较小的圆盘上面。</li>
-</ol>
-</li>
-</ul>
-<h2 id="3-核心逻辑：递归思想">3. 核心逻辑：递归思想</h2>
-<p>假设我们要把 <em>n</em> 个盘子从 A 移到 C（借助 B）</p>
-<p>可以拆解为三步：</p>
-<ol>
-<li>将上面的 n-1 个盘子从 A 移到 B（借助 C)</li>
-<li>将最底下的那一个（最大的）盘子从 A 移到 C</li>
-<li>将 B 上的个盘子移到 C（借助 A)</li>
-</ol>
-<p>移动 n 个盘子所需的最少步骤数为 2 的 n 次方再减去 1</p>
-<h2 id="4-代码">4. 代码</h2>
-<p>先看看有哪些全局变量</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> step_cnt = <span class="hljs-number">0</span>; <span class="hljs-comment">// 移动的步数</span><br><span class="hljs-type">int</span> disk_min_width = <span class="hljs-number">3</span>; <span class="hljs-comment">// 盘子最小的宽度</span><br><span class="hljs-type">int</span> disk_delta_width = <span class="hljs-number">4</span>; <span class="hljs-comment">// 宽度的间隔</span><br><span class="hljs-type">int</span> disk_num = <span class="hljs-number">0</span>;<br><span class="hljs-type">int</span> total_width = <span class="hljs-number">0</span>;<br><span class="hljs-type">int</span> demo_mode = <span class="hljs-number">1</span>;  <span class="hljs-comment">// 1:演示模式  0:用户模式</span><br><span class="hljs-type">int</span> one_step = <span class="hljs-number">0</span>; <span class="hljs-comment">// 1:每一步都停下来等待用户输入换行</span><br><br><span class="hljs-comment">// 定义三根柱子，每根最多放 9 个盘子</span><br><span class="hljs-type">int</span> p1[<span class="hljs-number">12</span>] = &#123;<span class="hljs-number">0</span>&#125;;  <span class="hljs-comment">// 元素是盘子宽度，0 代表没有盘子； 12 是为了方便显示空行</span><br><span class="hljs-type">int</span> p2[<span class="hljs-number">12</span>] = &#123;<span class="hljs-number">0</span>&#125;;<br><span class="hljs-type">int</span> p3[<span class="hljs-number">12</span>] = &#123;<span class="hljs-number">0</span>&#125;;<br><span class="hljs-type">int</span> c1 = <span class="hljs-number">0</span>;<br><span class="hljs-type">int</span> c2 = <span class="hljs-number">0</span>;<br><span class="hljs-type">int</span> c3 = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 每根柱子当前的盘子数量</span><br></code></pre></td></tr></table></figure>
-<p>第 2 行，disk_min_width 表示盘子最小宽度是 3，然后以变量 disk_delta_width 为间隔递增。</p>
-<p>第 10~12 行，定义了 3 个数组，分别对应 3 根柱子。</p>
-<p>数组元素的值是盘子的宽度。</p>
-<p>假设初始状态是柱子 1 上有 3 个盘子，那么</p>
-<p>p1[0] = 11; p1[1] = 7; p1[2] = 3; 其他元素都是 0；</p>
-<p>数组 p2 和 p3 的元素都是 0，表示一个盘子都没有。</p>
-<p>c1、c2、c3 分别表示三根柱子上有几个盘子。</p>
-<p>虽然可以通过遍历数组得知柱子上有几个盘子，但是用一个变量来记录盘子数更方便。</p>
-<img src="image-20260308142815541.png" srcset="/img/loading.gif" lazyload alt="image-20260308142815541" style="zoom:70%;" />
-<p>以上三个函数调用了我们自己的 C 运行时库。</p>
-<p>第 34 行的 set_disk_color 函数用来设置盘子的颜色，可以改成你喜欢的颜色，总之和终端的背景色不一样就行。</p>
-<p>第 40 行的 close_color 用来恢复之前的颜色。</p>
-<p>第 46 行的 print_space 用来打印 n 个空格。</p>
-<p>打印盘子的原理很简单，就是修改背景色，然后打印若干个空格，再恢复背景色，这样屏幕上就会出现一个带颜色的矩形，表示盘子。</p>
-<p>下面是盘子的初始化函数。</p>
-<img src="image-20260308161114919.png" srcset="/img/loading.gif" lazyload alt="image-20260308161114919" style="zoom:70%;" />
-<p>我们规定，盘子的个数从 2 到 9；</p>
-<p>第 168 ~ 169，设置全局变量 disk_num 和 c1，因为初始状态是所有盘子都在第一个柱子上</p>
-<p>第 170 ~174，设置 p1 数组，下标越小，盘子的宽度越大。</p>
-<p>下面看最关键的函数 move</p>
-<img src="image-20260308143339888.png" srcset="/img/loading.gif" lazyload alt="image-20260308143339888" style="zoom:70%;" />
-<p>此函数有 7 个参数，分别是</p>
-<p>1）n：要移动的盘子数(只能移动最上面的 n 个盘子)</p>
-<p>2）src：要移动的盘子在哪个柱子上（下面简称源柱）</p>
-<p>3）src_num：和 2) 是一对，表示源柱子上原来有多少个盘子</p>
-<p>4）dst：目标柱子（下面简称目标柱）</p>
-<p>5）dst_num：和 4) 是一对，表示目标柱上原来有多少个盘子</p>
-<p>6）aux：辅助柱子（下面简称辅助柱）</p>
-<p>7）aux_num：和 6) 是一对，表示辅助柱上原来有多少个盘子</p>
-<p>2）~6）这 6 个参数都是指针类型，因为要操作数组，所以必须传入数组名（指针）；但是盘子的数量为什么是指针？马上会讲。</p>
-<p>第 144 行，如果移动 0 个盘子，那什么也不用做；</p>
-<p>第 148 行，不是要移动 n 个盘子吗？我先调用我自己，把最上面 n-1 个盘子通过目标柱移动到辅助柱上，然后，第 154 行，此时源柱上就一个盘子了，我把这个盘子移动到目标柱。</p>
-<p>第 162 行，我再调用我自己，把辅助柱上的 n-1 个盘子通过源柱移动到目标柱。</p>
-<p>第 154 行，是真正的移动</p>
-<img src="image-20260308152238314.png" srcset="/img/loading.gif" lazyload alt="image-20260308152238314" style="zoom:70%;" />
-<p>这次移动不需要辅助柱。</p>
-<p>第 133 行，找到 src 最上面的盘子，把宽度保存到 disk</p>
-<p>第 134，让这个盘子从 src 上消失</p>
-<p>第 137，把盘子移动到目标柱，填写宽度</p>
-<p>第 138，让目标柱的盘子数量增加 1</p>
-<p>在移动的过程中，每个柱子上的盘子数量都会发生变化，必须传入 c1,c2,c3 的地址；因为 C 语言的参数传递靠值拷贝，如果传递 int 类型，即使修改了盘子的数量，也是在栈上修改，函数返回后修改会丢失。</p>
-<p>代码就说这么多。</p>
-<p>现在是演示时间。</p>
-<p>当前目录下有 3 个文件。</p>
-<p>hanoi.c  Makefile  start.asm</p>
-<p>Makefile 内容如下</p>
-<img src="image-20260308154235342.png" srcset="/img/loading.gif" lazyload alt="image-20260308154235342" style="zoom:70%;" />
-<p>要编译的目标是 b.out</p>
-<p>第 20 行，它依赖当前目录下的 .asm 和 .c</p>
-<p>第 14 行，用 csub 编译 hanoi.c</p>
-<p>第 17 行，用 csub 编译 start.asm</p>
-<p>第 21 行，用 csub 链接 hanoi.o 和 start.o，最终生成 b.out</p>
-<p>敲入 make 命令</p>
-<img src="image-20260308154702300.png" srcset="/img/loading.gif" lazyload alt="image-20260308154702300" style="zoom:70%;" />
-<p>运行 b.out</p>
-<p>会让你选择盘子的数目</p>
-<p>假设是 4</p>
-<img src="image-20260308154951862.png" srcset="/img/loading.gif" lazyload alt="image-20260308154951862" style="zoom:70%;" />
-<p>这时候会等待用户输入命令</p>
-<p>例如从柱子 1 移动到柱子 2，就输入 12[回车]</p>
-<img src="image-20260308155054705.png" srcset="/img/loading.gif" lazyload alt="image-20260308155054705" style="zoom:70%;" />
-<p>如果不符合规则，也会提示</p>
-<img src="image-20260308155224860.png" srcset="/img/loading.gif" lazyload alt="image-20260308155224860" style="zoom:70%;" />
-<p>下图是 9 个盘子的截图</p>
-<img src="image-20260308155835859.png" srcset="/img/loading.gif" lazyload alt="image-20260308155835859" style="zoom:100%;" />
-<p>本文到这里就结束了。</p>
-<p>同时，整个教程也结束了。</p>
-<p>如果读者能在我的帮助下走进编译原理的大门并找到未来的路，就是对我最大的褒奖。</p>
-<p>今天是个特别的日子，2026.3.8</p>
-<p>碰巧我在今天完稿，这是我送给自己的最好的节日礼物。</p>
+                <h1 id="第27天：汇编器的语法分析之代码实现">第27天：汇编器的语法分析之代码实现</h1>
+<p>上一节我们构造了汇编器的文法，这一节我们就根据产生式来写代码。</p>
+<h2 id="如何获得下一个token">如何获得下一个token</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">ass_token_e <span class="hljs-title function_">ass_next_token</span><span class="hljs-params">(<span class="hljs-type">scanner_t</span> *scanner)</span><br>&#123;<br>    __ass_next_token(scanner);<br>    <span class="hljs-keyword">while</span> (scanner-&gt;token == ASS_COMMENT ||<br>           scanner-&gt;token == ASS_INVALID) &#123;<br>        __ass_next_token(scanner);<br>    &#125;<br>    ass_token_inqueue(scanner);<br>    <span class="hljs-keyword">return</span> scanner-&gt;token;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>__ass_next_token 这个函数实现词法分析，每调用它一次就会得到一个词法记号。</p>
+<p>第 3 行，先得到一个词法记号。</p>
+<p>第 4~7 行，如果是注释或者是无效符号，就忽略，继续得到下一个词法记号。</p>
+<p>第 8 行是把当前的词法记号存入队列，方便做语法上色或者打印输出等，这不是重点，不必懂。</p>
+<p>第 9 行把当前的词法记号返回给调用它的函数。</p>
+<p>先介绍几个宏：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> ASS_TEST(x)   (scanner-&gt;token == x)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> next_token()   ass_next_token(scanner)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> match(x)       ass_match(x, scanner)</span><br></code></pre></td></tr></table></figure>
+<p>第 1 行，判断当前符号是不是 x；</p>
+<p>第 2 行，调用刚才讲的 ass_next_token 函数，得到新的词法记号。这样写可以少写一个参数。</p>
+<p>第 3 行，需要解释一下 ass_match 函数；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title function_">ass_match</span><span class="hljs-params">(ass_token_e need, <span class="hljs-type">scanner_t</span> *scanner)</span><br>&#123;<br>	<span class="hljs-keyword">if</span>(ASS_TEST(need)) &#123;<br>		ass_next_token(scanner);<br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>	&#125; <span class="hljs-keyword">else</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;	<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这个函数的作用是：判断参数 need 和当前的词法记号（scanner-&gt;token）是不是一致，一致则取下一个词法记号并返回 true，否则什么也不做，返回 false；</p>
+<h2 id="对换行的处理"><strong>对换行的处理</strong></h2>
+<p>前面我们说过，汇编中的换行有结束当前指令的功能。</p>
+<p>下面的函数完成一个换行符或者连续多个换行符的匹配。</p>
+<img src="image-20260125165606577.png" srcset="/img/loading.gif" lazyload alt="image-20260125165606577" style="zoom:50%;" />
+<p>第 92 行，如果当前词法记号是换行，则继续取下一个词法记号，直到遇到的不是换行为止。</p>
+<p>第 97 行，如果一个换行都没有，则根据参数 report_error 的值选择报错或者沉默。</p>
+<p>把这个函数包装一下，又有 2 个宏</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> MATCH_NEWLINE()  match_newline(scanner, 1)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EAT_NEWLINE()    match_newline(scanner, 0)</span><br></code></pre></td></tr></table></figure>
+<p>第 1 行的意思必须匹配到至少一个的换行，否则就报错；</p>
+<p>第 2 行的意思是能否匹配换行不重要，重要的是把换行（如果有的话）都“吃掉”；</p>
+<h2 id="入口函数">入口函数</h2>
+<img src="image-20260125171022627.png" srcset="/img/loading.gif" lazyload alt="image-20260125171022627" style="zoom:50%;" />
+<p>第 596 行就是语法分析的入口函数了；</p>
+<p>第 598，读入第一个词法记号（后文中叫 token）；</p>
+<p>第 599 行，吃掉一个或多个换行（如果有的话）；</p>
+<p>第 600 行，调用 ass_program；</p>
+<p>我们看看 ass_program 函数，这是一个递归。</p>
+<p>第 588 行，如果遇到文件结束就返回，这是递归的出口。</p>
+<p>第 591~592，根据 584 行的产生式，先调用 fragment，解析一条声明或者指令， 然后调用 ass_program（递归）</p>
+<h2 id="fragment">fragment</h2>
+<img src="image-20260125171455390.png" srcset="/img/loading.gif" lazyload alt="image-20260125171455390" style="zoom:50%;" />
+<p>fragment 函数的产生式已经写在注释里了，方便读者对照。</p>
+<p>根据产生式，当前的 token 逃不过下面几种</p>
+<p>1、section</p>
+<p>2、global</p>
+<p>3、extern</p>
+<p>4、标识符</p>
+<p>5、指令助记符</p>
+<p>那我们就一个一个来。</p>
+<p>第 123 行，折叠的部分是为了跳过</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">section .note.GNU-<span class="hljs-built_in">stack</span> noalloc noexec nowrite progbits<br></code></pre></td></tr></table></figure>
+<p>在使用 nasm + gcc 验证我们生成的汇编代码的时候，假设 cusb 把 test.c 编译为 test.asm;</p>
+<p>当使用 gcc 链接 test.o 和其他文件的时候，有警告</p>
+<p><code>missing .note.GNU-stack section implies executable stack</code></p>
+<p>给 test.asm 加上这句话就不会产生警告了。</p>
+<p>但是我们的汇编器功能有限，实在是没有能力解析这句话，只好全部跳过，就当看不见。</p>
+<p>我们支持的段只有 3 个 .text 和 .data 和 .bss(虽然现在没有生成这样的段，后面可能会加上)</p>
+<p>第 128 行比较标识符和这三个标准段名，如果都匹配不上就报错。</p>
+<p>毕竟我们对汇编器的要求不高，所以没有做错误恢复，只要能正确识别我们的 .asm 就好。</p>
+<p>第 135 取下一个 token，应该是换行。</p>
+<p>第 136 检查到底是不是换行。</p>
+<p>继续看代码。</p>
+<img src="image-20260125182405881.png" srcset="/img/loading.gif" lazyload alt="image-20260125182405881" style="zoom:50%;" />
+<p>139 和 149 是对 global xxx 和 extern xxx 的处理，它们的后面都需要一个标识符，如果不是就报错;</p>
+<p>第 159 行，解析产生式 ASS_ID &lt;decl_tail&gt;</p>
+<p>第 160 行，拷贝标识符的字符串到 id</p>
+<p><code>strdup</code> 是 <strong>POSIX 标准</strong> 而非 C 标准库（ANSI C）中的函数;</p>
+<p>函数原型是 <code>char *strdup(const char *s);</code></p>
+<p>先为参数字符串<code>s</code>分配一块新的内存空间，然后将<code>s</code>的内容复制到新分配的内存中，最后返回指向新字符串的指针;</p>
+<p>第 162，调用 decl_tail，马上会讲。</p>
+<p>如果不属于</p>
+<p>1、section</p>
+<p>2、global</p>
+<p>3、extern</p>
+<p>4、标识符</p>
+<p>那应该是指令助记符，执行第 165 行，调用 ass_inst 解析指令;</p>
+<h2 id="decl-tail函数">decl_tail函数</h2>
+<img src="image-20260125183052489.png" srcset="/img/loading.gif" lazyload alt="image-20260125183052489" style="zoom:50%;" />
+<p>根据第 172 行的产生式，要么是冒号，要么是 &lt;init_value&gt;;</p>
+<p>因为冒号后面可以没有换行，所以第 180 行用的是 EAT_NEWLINE;</p>
+<p>需要说明的是，对于数据的定义，标识符后面也可以加个冒号。</p>
+<p>例如</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> list<br>	list : <span class="hljs-built_in">dd</span> <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>  <span class="hljs-comment">; 注意冒号</span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">995</span> <span class="hljs-built_in">dd</span> <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<p>不过 csub 生成汇编代码的时候，没有加这个冒号。</p>
+<p>所以，遇到带冒号的标签，肯定是代码段的标签。</p>
+<h2 id="init-value函数">init_value函数</h2>
+<img src="image-20260125184116058.png" srcset="/img/loading.gif" lazyload alt="image-20260125184116058" style="zoom:50%;" />
+<p><code>&lt;init_value&gt;</code> 由一个或多个 <code>&lt;item&gt;</code> 组成。</p>
+<p><code>&lt;item&gt;</code> 的 first 集合很好求，就是第 195 行我写的注释。</p>
+<p>第 202 行，判断当前 token 是不是在 <code>&lt;item&gt;</code> 的 first 集中，如果是，就调用 205 行的函数 item()</p>
+<p>第 200 行的 flag 是一个标记，标识 while 循环有没有进去过，如果压根就没有进去，那说明缺少数据定义，第 210 行会报错。</p>
+<p><strong>需要说明的是，这不是最终的代码，为了突出语法分析，我删了很多代码。</strong></p>
+<p>第 201 行，分配了一片内存（分配 100 字节仅仅是举例子），item 解析到的 value 都拷贝到这片内存中。</p>
+<img src="image-20260125184628738.png" srcset="/img/loading.gif" lazyload alt="image-20260125184628738" style="zoom:50%;" />
+<p>第 224 行，判断是不是 times 关键字，如果是说明有 times xxx;</p>
+<p>第 232 行，解析非终结符 <code>&lt;values&gt;</code></p>
+<img src="image-20260125184847033.png" srcset="/img/loading.gif" lazyload alt="image-20260125184847033" style="zoom:50%;" />
+<p>第 243 ~ 252 解析 &lt;data_size&gt;</p>
+<p>第 259 行，创建一个空的链表</p>
+<p>第 260 行，解析 &lt;value_list&gt;, 并且把 size、链表的头节点 val_head 和 init_value 作为参数，传给 value_list 函数</p>
+<img src="image-20260125191256182.png" srcset="/img/loading.gif" lazyload alt="image-20260125191256182" style="zoom:50%;" />
+<p>value_list 至少有一个 <code>&lt;value&gt;</code></p>
+<p>后面可能有 0 个或者多个  “COMMA <code>&lt;value&gt;</code>”</p>
+<p>所以第 275 行用 while 循环匹配逗号;</p>
+<p>这里可以给读者展示一下用 “教科书式 CFG 写法” 和 “EBNF” 写法在编码的时候有何不同。</p>
+<p>如果用教科书式 CFG 写法，产生式和代码是下面这样</p>
+<img src="image-20260125191630655.png" srcset="/img/loading.gif" lazyload alt="image-20260125191630655" style="zoom:50%;" />
+<p>可以看到，针对这个例子（解析 &lt;value_list&gt;），“EBNF” 写法在编码的时候用 while 循环取代了递归，而且一个函数就搞定。这也算是 “EBNF” 写法的一个优点。</p>
+<p>下面看 value 函数:</p>
+<img src="image-20260125192451965.png" srcset="/img/loading.gif" lazyload alt="image-20260125192451965" style="zoom:50%;" />
+<p>第 380、383、383 的 list_add_value 函数里会申请内存，保存每个值，再把值作为节点挂在链表上。</p>
+<p>但是我都注释掉了，因为 list_add_value 函数里面要申请内存，所以还要有对应的释放内存的代码，这又会牵扯到符号表等一大堆和本文主旨无关的代码，所以先注释掉；</p>
+<p>只要读者明白解析出的每个值要保存起来就行。</p>
+<p>parse_signed_num 的作用是解析数字（前面可以有正号、负号），这个函数很简单，按下不表。到了这里，对数据定义的解析就完成了。</p>
+<h2 id="解析汇编指令">解析汇编指令</h2>
+<img src="image-20260125194102744.png" srcset="/img/loading.gif" lazyload alt="image-20260125194102744" style="zoom:50%;" />
+<p>第 552 行，判断 token 是不是双操作数指令，如果是，第 554 行和 556 行，调用 oprand 函数解析操作数。</p>
+<p>同理，其他 2 个 else if 分支是解析单操作数指令和无操作数指令。</p>
+<p>oprand()函数用来解析操作数。</p>
+<img src="image-20260125194705741.png" srcset="/img/loading.gif" lazyload alt="image-20260125194705741" style="zoom:50%;" />
+<p>第 480 行的 reg() 很简单，不赘述。</p>
+<p>我们重点看第 486 的 mem()，用来处理内存操作数。</p>
+<p>因为有下面的产生式</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;mem&gt; ::= [&lt;op_size&gt;] ASS_LBRACKET &lt;addr&gt; ASS_RBRACKET<br>&lt;op_size&gt; ::= KW_BYTE | KW_WORD | KW_DWORD | ^<br></code></pre></td></tr></table></figure>
+<p>所以 <code>&lt;mem&gt;</code> 的 first 集合是 KW_BYTE | KW_WORD | KW_DWORD | ASS_LBRACKET</p>
+<p>这就是代码 482~485 行的意思，罗列出所有可能的 token；</p>
+<p>我们看看 mem 函数</p>
+<img src="image-20260125195058427.png" srcset="/img/loading.gif" lazyload alt="image-20260125195058427" style="zoom:50%;" />
+<p>注意，产生式里面的 [] 表示 0 个或 1 个，不要和指令中内存操作数的方括号混淆。</p>
+<p>指令中内存操作数的方括号用 ASS_LBRACKET 和 ASS_RBRACKET 表示。</p>
+<p>op_size 很简单，就不贴代码了。</p>
+<p>我们看 addr</p>
+<img src="image-20260125195951566.png" srcset="/img/loading.gif" lazyload alt="image-20260125195951566" style="zoom:50%;" />
+<p>第 414 行，地址可以是一个数字，这是绝对地址寻址，也有叫直接寻址的。</p>
+<p>第 417，地址可以是标识符，标识符后面可以有偏移，也可以没有。</p>
+<p>注意，第 426 的 disp() 在本质上和第 420 行的 parse_signed_num() 一样。</p>
+<p>因为 disp 调用了 parse_signed_num</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">int</span> <span class="hljs-title function_">disp</span><span class="hljs-params">(<span class="hljs-type">scanner_t</span> *scanner)</span><br>&#123;<br>    <span class="hljs-type">int</span> num = parse_signed_num(scanner);<br>    <span class="hljs-keyword">return</span> num;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>我之所以给 parse_signed_num 外面封一层叫 disp，是为了强调 “基址+偏移寻址” 中的 “偏移”</p>
+<p>到这里，汇编器的语法分析就完成了。还是比较简单的，因为产生式不多，而且也不复杂。</p>
+<p>下节课我们学习汇编器的符号表。</p>
 
                 
               </div>
@@ -511,8 +546,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>最终成果展示</div>
-      <div>https://leslieche.github.io/2026/03/29/最终成果展示/</div>
+      <div>第27天：汇编器的语法分析之代码实现</div>
+      <div>https://leslieche.github.io/2026/04/18/第27天：汇编器的语法分析之代码实现/</div>
     </div>
     <div class="license-meta">
       
@@ -524,7 +559,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2026年3月29日</div>
+          <div>2026年4月18日</div>
         </div>
       
       
@@ -568,15 +603,15 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2026/03/29/%E7%AC%AC0%E5%A4%A9%EF%BC%9A%E5%89%8D%E8%A8%80/" title="第0天：前言">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">第0天：前言</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
+                    
+                      <a href="/2026/04/18/%E7%AC%AC26%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BA%A7%E7%94%9F%E5%BC%8F/" title="第26天：汇编器的语法分析之产生式">
+                        <span class="hidden-mobile">第26天：汇编器的语法分析之产生式</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
                     
                   </article>
                 </div>

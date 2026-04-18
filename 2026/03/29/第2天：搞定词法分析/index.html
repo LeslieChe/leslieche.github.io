@@ -405,7 +405,8 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第2天：搞定词法分析"><a href="#第2天：搞定词法分析" class="headerlink" title="第2天：搞定词法分析"></a>第2天：搞定词法分析</h1><p>上一节，我们写了 scan() 函数（或者说扫描器）。这一节，我们就利用扫描器完成词法分析。</p>
+                <h1 id="第2天：搞定词法分析">第2天：搞定词法分析</h1>
+<p>上一节，我们写了 scan() 函数（或者说扫描器）。这一节，我们就利用扫描器完成词法分析。</p>
 <p>复习一下，所谓“词法分析”，就是把源代码的字符序列转换为一个个词法记号（Token）。例如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> sum=<span class="hljs-number">0</span>;<br></code></pre></td></tr></table></figure>
 <p>我们可以把这段代码拆成“int”、“sum”、“=”、“0”以及“；”。拆出来的这些单元都属于词法记号。</p>
@@ -414,7 +415,6 @@
 <p>以下面的代码为例：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">char</span> *p = <span class="hljs-string">&quot;hello world\n&quot;</span>;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%s&quot;</span>, p);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>如果按照类型划分，拆出来的词法记号如下表：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -442,15 +442,15 @@
 <tr>
 <td style="text-align:center">运算符及分隔符</td>
 <td style="text-align:center"><code>;</code>, <code>{ }</code>，<code>()</code>，<code>*</code>，<code>=</code>，<code>,</code></td>
+<td style="text-align:center"></td>
 </tr>
 </tbody>
 </table>
-</div>
 <p>至此，词法分析的任务已经具象化：我们的目标是写一个词法分析器，它的功能是把源文件拆分为一个个词法记号。为了展示效果，需要打印出每个词法记号，另外判断一下这个词法记号属于什么类型。</p>
-<h2 id="csub-支持哪些词法记号"><a href="#csub-支持哪些词法记号" class="headerlink" title="csub 支持哪些词法记号"></a>csub 支持哪些词法记号</h2><p>“csub”是我起的名字， 表示 c 语言的子集。为了降低难度，我不打算写一个功能齐全的 c 编译器，而是写一个简易编译器，仅实现 c 语言的一部分语法特性。</p>
+<h2 id="csub-支持哪些词法记号">csub 支持哪些词法记号</h2>
+<p>“csub”是我起的名字， 表示 c 语言的子集。为了降低难度，我不打算写一个功能齐全的 c 编译器，而是写一个简易编译器，仅实现 c 语言的一部分语法特性。</p>
 <p>本书中提到的 csub，可能指我们定义的语言，也可能指我们的编译器。请大家根据语境区分。</p>
 <p>csub 支持的词法记号如下表：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -492,10 +492,8 @@
 </tr>
 <tr>
 <td style="text-align:center">运算符</td>
-<td style="text-align:center">`\</td>
-<td style="text-align:center">\</td>
-<td><code>`&amp;&amp;</code> <code>!</code></td>
-<td>逻辑或、逻辑与、逻辑非</td>
+<td style="text-align:center"><code>||</code> <code>&amp;&amp;</code> <code>!</code></td>
+<td style="text-align:center">逻辑或、逻辑与、逻辑非</td>
 </tr>
 <tr>
 <td style="text-align:center">运算符</td>
@@ -529,20 +527,23 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>需要说明的是，我们的指针仅支持指向整数变量的指针和指向字符串的指针。另外，csub 没有预处理的功能。</p>
-<h2 id="状态转换图"><a href="#状态转换图" class="headerlink" title="状态转换图"></a>状态转换图</h2><p>scan()函数返回的是一个个字符，如何从这些字符中识别出词法记号呢？</p>
+<h2 id="状态转换图">状态转换图</h2>
+<p>scan()函数返回的是一个个字符，如何从这些字符中识别出词法记号呢？</p>
 <p>答案是状态转换图。</p>
 <p>状态转换图由状态节点和转移边构成。</p>
 <ul>
-<li><p><strong>状态节点</strong>：用圆圈表示（对于最终状态，用双圈表示）。</p>
+<li>
+<p><strong>状态节点</strong>：用圆圈表示（对于最终状态，用双圈表示）。</p>
 </li>
-<li><p><strong>转移边</strong>：用箭头表示。箭头上标记有<strong>字符</strong>或<strong>字符集</strong>，表示某一状态接受箭头上的字符或字符集后转换到另一状态。</p>
+<li>
+<p><strong>转移边</strong>：用箭头表示。箭头上标记有<strong>字符</strong>或<strong>字符集</strong>，表示某一状态接受箭头上的字符或字符集后转换到另一状态。</p>
 </li>
-<li><p>一张状态转换图中的状态个数是有限的，其中有一个<strong>初态</strong>，至少有一个<strong>终态</strong>。</p>
+<li>
+<p>一张状态转换图中的状态个数是有限的，其中有一个<strong>初态</strong>，至少有一个<strong>终态</strong>。</p>
 </li>
 </ul>
-<p><img src="image-20250824113956461.png" srcset="/img/loading.gif" lazyload alt="image-20250824113956461" style="zoom:50%;" /></p>
+<img src="image-20250824113956461.png" srcset="/img/loading.gif" lazyload alt="image-20250824113956461" style="zoom:50%;" />
 <p>上图是整数常量的状态转换图。这张图有 3 个圆圈，分别表示状态 1、状态 2、状态 3；</p>
 <p>注意，这里的 1、2、3 就是为了区分 3 种不同的状态，你也可以改成别的名字。</p>
 <p>1 是初始状态。在读入任何字符前，状态转换图总是处于初始状态。</p>
@@ -559,20 +560,23 @@
 <p>细心的读者会问，状态 3 上面为什么有个 “*” 呢？</p>
 <p>这个星号表示“回退”。通俗讲就是识别出来的 108 并不包括步骤 4 中的  ‘+’。</p>
 <hr>
-<p><img src="image-20250824114515018.png" srcset="/img/loading.gif" lazyload alt="image-20250824114515018" style="zoom:50%;" /></p>
+<img src="image-20250824114515018.png" srcset="/img/loading.gif" lazyload alt="image-20250824114515018" style="zoom:50%;" />
 <p>再举个例子，上图是识别‘&lt;’ 和 ‘&lt;=’ 的状态转换图。</p>
 <p>当遇到 ‘&lt;’ 的时候，进入状态 2，若之后遇到 ‘=’，进入状态 3，这是终止状态，说明识别到了 ‘&lt;=’；注意，状态 3 上面没有星号，表示最后遇到的这个 ‘=’ 是包括在词法记号‘&lt;=’里面的；</p>
 <p>假如进入状态 2 之后，遇到的不是‘=’，那么进入状态 4，这也是终止状态，说明识别到了 ‘&lt;’；因为状态 4 上面有星号，表示最后遇到的这个其他字符不在‘&lt;’里面。</p>
 <p>对于每类词法记号，都可以画出类似的状态转换图，然后把图转换成代码，这样就完成词法分析了。</p>
 <p>需要说明，终止状态也可能是错误状态，这需要在代码中做错误处理。</p>
-<h2 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h2><h3 id="所有词法记号的枚举"><a href="#所有词法记号的枚举" class="headerlink" title="所有词法记号的枚举"></a>所有词法记号的枚举</h3><p>方便起见，我们给每个词法记号起个名字，用枚举类型比较合适。</p>
+<h2 id="代码实现">代码实现</h2>
+<h3 id="所有词法记号的枚举">所有词法记号的枚举</h3>
+<p>方便起见，我们给每个词法记号起个名字，用枚举类型比较合适。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">symbol</span> // 所有词法记号的枚举</span><br><span class="hljs-class">&#123;</span><br>  INVALID, <span class="hljs-comment">// 无效值</span><br>  FILE_END, <span class="hljs-comment">// 文件结束</span><br>  COMMENT, <span class="hljs-comment">// 注释</span><br>  ID,  <span class="hljs-comment">// 标识符</span><br>  NUM, <span class="hljs-comment">// 十进制整数</span><br>  CHARA, <span class="hljs-comment">// 字符</span><br>  STRING,<span class="hljs-comment">// 字符串 </span><br>  ADD,<br>  SUB,<br>  MUL,<br>  DIV, <br>  MOD, <span class="hljs-comment">// %  </span><br>  INC, <span class="hljs-comment">//++ </span><br>  DEC, <span class="hljs-comment">//-- </span><br>  NOT, <span class="hljs-comment">//!</span><br>  LEA, <span class="hljs-comment">// &amp;</span><br>  AND, <span class="hljs-comment">// &amp;&amp;</span><br>  OR,  <span class="hljs-comment">// ||</span><br>  ASSIGN, <span class="hljs-comment">// 赋值 =</span><br>  GT, <span class="hljs-comment">// &gt;</span><br>  GE, <span class="hljs-comment">// &gt;=</span><br>  LT, <span class="hljs-comment">// &lt;</span><br>  LE, <span class="hljs-comment">// &lt;=</span><br>  EQU, <span class="hljs-comment">// ==</span><br>  NEQU,<span class="hljs-comment">//!=</span><br>  COMMA, <span class="hljs-comment">// 逗号</span><br>  COLON, <span class="hljs-comment">// 冒号</span><br>  SEMICO,<span class="hljs-comment">//分号</span><br>  LPAREN, <span class="hljs-comment">// 左小括号</span><br>  RPAREN, <span class="hljs-comment">// 右小括号</span><br>  LBRACKET, <span class="hljs-comment">// 左方括号</span><br>  RBRACKET, <span class="hljs-comment">// 右方括号</span><br>  LBRACES, <span class="hljs-comment">// 左大括号</span><br>  RBRACES,<span class="hljs-comment">// 右大括号</span><br>  BREAK, <span class="hljs-comment">// 关键字</span><br>  CASE, <br>  CHAR, <br>  CONTINUE,<br>  DEFAULT,<br>  DO, <br>  ELSE,<br>  EXTERN,<br>  FOR,  <br>  IF,<br>  INT,<br>  RETURN,<br>  SIZEOF,<br>  SWITCH, <br>  VOID,<br>  WHILE,<br>  SYMBOL_CNT,<br>&#125;symbol_e; <br></code></pre></td></tr></table></figure>
 <p>symbol_e 涵盖了前面表格中罗列的所有词法记号，另外还多了 2 个：第 3 行的 INVALID 表示无效值，第 4 行的 FILE_END  表示扫描器遇到了文件结束。</p>
 <p>从第 37 行到第 52 行，就是 csub 的关键字。注意，我专门按照字典序排列它们。为何这样排列，后文会说。</p>
 <p>第 53 行，SYMBOL_CNT 表示一共定义了多少个词法记号。</p>
-<h3 id="get-token-函数"><a href="#get-token-函数" class="headerlink" title="get_token 函数"></a>get_token 函数</h3><p>这是词法分析中最重要的函数，每调用一次，就得到一个词法记号，保存在 token_g 中，取值就是前面罗列的各种枚举类型。</p>
+<h3 id="get-token-函数">get_token 函数</h3>
+<p>这是词法分析中最重要的函数，每调用一次，就得到一个词法记号，保存在 token_g 中，取值就是前面罗列的各种枚举类型。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">    每调用一次，得到一个词法记号，保存在 token_g 中</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">get_token</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-keyword">while</span> (<span class="hljs-built_in">isspace</span>(ch_g)) &#123; <span class="hljs-comment">// 忽略空白字符   </span><br>        scan();<br>    &#125;  <br><br>    <span class="hljs-keyword">if</span> (ch_g == END) &#123;<br>        token_g = FILE_END; <span class="hljs-comment">// 文件结束</span><br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">isalpha</span>(ch_g) || (ch_g == <span class="hljs-string">&#x27;_&#x27;</span>)) &#123;<br>        parse_id();<br>    &#125;<br>    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-built_in">isdigit</span>(ch_g)) &#123;<br>        parse_num();<br>    &#125;<br>    <span class="hljs-keyword">else</span> &#123;<br>        parse_other_syms();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>第 6 行的 isspace 是库函数，用于检测字符是否为空白字符，包括空格，’\t’， ‘\n’， ‘\r’， 垂直制表符 (‘\v’) 和换页符 (‘\f’)；</p>
+<p>第 6 行的 isspace 是库函数，用于检测字符是否为空白字符，包括空格，‘\t’， ‘\n’， ‘\r’， 垂直制表符 (‘\v’) 和换页符 (‘\f’)；</p>
 <p>6~8 行，如果是空白字符，就再次调用 scan()，直到不是空白字符。</p>
 <p>有一个细节要注意，在第一次调用 get_token 的时候，为了让 while 循环的条件为真，我们给全局变量 ch_g  的初始值是空格。</p>
 <p>10-13 行，如果 scan() 函数遇到了文件末尾，就会给 ch_g 赋值 END，所以第 10 行条件为真说明文件结束，此时给 token_g 赋值 FILE_END。</p>
@@ -589,90 +593,102 @@
 <p>因为将来做语法分析的时候，每调用一次 get_token，就会对得到的词法记号做处理，所以用一个变量保存 token 就够了。</p>
 <p>8~11 行，分别存放解析出来的标识符、字符串、整形常量和字符常量。</p>
 <p>MAX_ID_LEN 和 MAX_STR_LEN 是宏定义，表示支持的标识符长度最大是多少，字符串长度最大是多少。</p>
-<h3 id="贪心原则"><a href="#贪心原则" class="headerlink" title="贪心原则"></a>贪心原则</h3><p>词法分析器在识别记号时，会遵循“贪心”原则，也就是尽可能读取最长的有效字符序列。</p>
+<h3 id="贪心原则">贪心原则</h3>
+<p>词法分析器在识别记号时，会遵循“贪心”原则，也就是尽可能读取最长的有效字符序列。</p>
 <p>举个例子， <code>a+++b</code> 应该解析成 <code>(a++) + b</code>还是 <code>a + (++b)</code>?</p>
 <p>根据贪心原则，解析完标识符 a 后，scan（） 的结果是 +，这时候需要再次 scan（），如果得到 +， 那么按 ++ 处理。如果不是 +，这个字符应该留给下一个 token；</p>
 <p>所以，<code>a+++b</code> 会被解析成 <code>(a++) + b</code>；注意，这里面的小括号不是解析出来的结果，只是为了阅读方便我加上去的。</p>
 <p>为了统一，除非遇到文件末尾，我们解析出 token 后会再调用一次 scan（），使 ch_g 获得新的值，下次调用  get_token() 的时候，就从这个值开始处理。</p>
 <p>前文已经讲了 get_token，下文就重点分析这里面调用的 3 个函数。</p>
-<h3 id="解析标识符"><a href="#解析标识符" class="headerlink" title="解析标识符"></a>解析标识符</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 解析标识符（也包括关键字）</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">parse_id</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> id_cnt = <span class="hljs-number">0</span>;   <span class="hljs-comment">// 已经读取的标识符长度</span><br>    <span class="hljs-type">int</span> real_len = <span class="hljs-number">0</span>; <span class="hljs-comment">// 实际标识符长度</span><br>    <span class="hljs-keyword">do</span> &#123;<br>        real_len++;<br>        <span class="hljs-keyword">if</span> (id_cnt &lt; MAX_ID_LEN) &#123;<br>            token_id_g[id_cnt++] = ch_g; <span class="hljs-comment">// 保存字符</span><br>        &#125;<br>        scan(); <span class="hljs-comment">// 获取下一个字符</span><br>    &#125; <span class="hljs-keyword">while</span> (<span class="hljs-built_in">isalnum</span>(ch_g) || (ch_g == <span class="hljs-string">&#x27;_&#x27;</span>));<br><br>    token_id_g[id_cnt] = <span class="hljs-string">&#x27;\0&#x27;</span>;   <span class="hljs-comment">// 结尾</span><br>    <span class="hljs-keyword">if</span> (real_len &gt; MAX_ID_LEN) &#123; <span class="hljs-comment">// 标识符过长</span><br>        lex_err(ID_2_LONG, WARNING);<br>    &#125;<br>    check_reserved(token_id_g); <span class="hljs-comment">// 检查是否是关键字，这里面会设置 token_g</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="解析标识符">解析标识符</h3>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 解析标识符（也包括关键字）</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">parse_id</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> id_cnt = <span class="hljs-number">0</span>;   <span class="hljs-comment">// 已经读取的标识符长度</span><br>    <span class="hljs-type">int</span> real_len = <span class="hljs-number">0</span>; <span class="hljs-comment">// 实际标识符长度</span><br>    <span class="hljs-keyword">do</span> &#123;<br>        real_len++;<br>        <span class="hljs-keyword">if</span> (id_cnt &lt; MAX_ID_LEN) &#123;<br>            token_id_g[id_cnt++] = ch_g; <span class="hljs-comment">// 保存字符</span><br>        &#125;<br>        scan(); <span class="hljs-comment">// 获取下一个字符</span><br>    &#125; <span class="hljs-keyword">while</span> (<span class="hljs-built_in">isalnum</span>(ch_g) || (ch_g == <span class="hljs-string">&#x27;_&#x27;</span>));<br><br>    token_id_g[id_cnt] = <span class="hljs-string">&#x27;\0&#x27;</span>;   <span class="hljs-comment">// 结尾</span><br>    <span class="hljs-keyword">if</span> (real_len &gt; MAX_ID_LEN) &#123; <span class="hljs-comment">// 标识符过长</span><br>        lex_err(ID_2_LONG, WARNING);<br>    &#125;<br>    check_reserved(token_id_g); <span class="hljs-comment">// 检查是否是关键字，这里面会设置 token_g</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>解析标识符的状态转换图如下图：</p>
-<p><img src="image-20250825160144991.png" srcset="/img/loading.gif" lazyload alt="image-20250825160144991" style="zoom:50%;" /></p>
-<p>前文说的 get<em>token 函数，当  `if (isalpha(ch_g) || (ch_g == ‘</em>‘))`  成立的时候执行 parse_id（）；</p>
+<img src="image-20250825160144991.png" srcset="/img/loading.gif" lazyload alt="image-20250825160144991" style="zoom:50%;" />
+<p>前文说的 get_token 函数，当  <code>if (isalpha(ch_g) || (ch_g == '_'))</code>  成立的时候执行 parse_id（）；</p>
 <p>isalpha 是库函数，判断参数是否为字母，是则返回非零值。</p>
 <p>所以，执行 parse_id 的时候，已经在状态 2 了。接下来要做的就是反复获取下一个字符并判断，如果是其他就转到状态 3，否则一直在状态 2.</p>
 <p>翻译成代码就是上面 6-12 行的 do-while 语句。</p>
 <p>15-17 行，如果标识符的长度超出我们的规定则报错。报错函数是 <code>lex_err(...)</code>这个函数我们最后再讲。</p>
 <p>关键字可以看成是特殊的标识符，所以在识别到标识符之后，需要判断它是不是某个关键字。</p>
-<h4 id="判断关键字"><a href="#判断关键字" class="headerlink" title="判断关键字"></a>判断关键字</h4><p>关键字已经按照字典顺序排列。</p>
+<h4 id="判断关键字">判断关键字</h4>
+<p>关键字已经按照字典顺序排列。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 关键字</span><br><span class="hljs-type">static</span> <span class="hljs-type">const</span> <span class="hljs-type">char</span> *keywords_names[] = &#123;<br>    <span class="hljs-string">&quot;break&quot;</span>, <span class="hljs-string">&quot;case&quot;</span>, <span class="hljs-string">&quot;char&quot;</span>, <span class="hljs-string">&quot;continue&quot;</span>, <span class="hljs-string">&quot;default&quot;</span>, <span class="hljs-string">&quot;do&quot;</span>,     <span class="hljs-string">&quot;else&quot;</span>, <span class="hljs-string">&quot;extern&quot;</span>,<br>    <span class="hljs-string">&quot;for&quot;</span>,   <span class="hljs-string">&quot;if&quot;</span>,   <span class="hljs-string">&quot;int&quot;</span>,  <span class="hljs-string">&quot;return&quot;</span>,   <span class="hljs-string">&quot;sizeof&quot;</span>,  <span class="hljs-string">&quot;switch&quot;</span>, <span class="hljs-string">&quot;void&quot;</span>, <span class="hljs-string">&quot;while&quot;</span>,<br>&#125;;<br><br><span class="hljs-comment">// 和 rsv_sym_names 的顺序保持一致</span><br><span class="hljs-type">static</span> symbol_e keywords[] = &#123;<br>    BREAK, CASE, CHAR, CONTINUE, DEFAULT, DO,     ELSE, EXTERN,<br>    FOR,   IF,   INT,  RETURN,   SIZEOF,  SWITCH, VOID, WHILE,<br>&#125;; <br></code></pre></td></tr></table></figure>
 <p>token_id_g[] 中保存了解析好的标识符，我们采用二分法在 keywords_names[] 数组中查找，看看能否找到。</p>
 <p>最关键的代码是第 9 行的 strcmp(token_id, keywords_names[mid]);</p>
 <p>一旦找到，就设置 token_g（第 17 行）。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">check_keyword</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *token_id)</span><br>&#123;<br>    <span class="hljs-type">int</span> start = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">int</span> end = <span class="hljs-keyword">sizeof</span>(keywords_names) / <span class="hljs-keyword">sizeof</span> keywords_names[<span class="hljs-number">0</span>] - <span class="hljs-number">1</span>;<br>    <span class="hljs-type">int</span> mid;<br>    <span class="hljs-type">int</span> res;<br>    <span class="hljs-keyword">while</span> (start &lt;= end) &#123;<br>        mid = (start + end) / <span class="hljs-number">2</span>; <span class="hljs-comment">// 折半查找</span><br>        res = <span class="hljs-built_in">strcmp</span>(token_id, keywords_names[mid]);<br>        <span class="hljs-keyword">if</span> (res &lt; <span class="hljs-number">0</span>) &#123;<br>            end = mid - <span class="hljs-number">1</span>;<br>        &#125;<br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (res &gt; <span class="hljs-number">0</span>) &#123;<br>            start = mid + <span class="hljs-number">1</span>;<br>        &#125;<br>        <span class="hljs-keyword">else</span> &#123; <span class="hljs-comment">// 找到了,是关键字</span><br>            token_g = keywords[mid];<br>            <span class="hljs-keyword">return</span>;<br>        &#125;<br>    &#125;<br>    token_g = ID; <span class="hljs-comment">//搜索失败，是标识符</span><br>&#125;<br></code></pre></td></tr></table></figure>
-<h3 id="解析整形常量"><a href="#解析整形常量" class="headerlink" title="解析整形常量"></a>解析整形常量</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 解析整形常量,仅支持十进制</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">parse_num</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> <br>&#123;<br>    token_g = NUM;<br>    <span class="hljs-type">int</span> num_cnt = <span class="hljs-number">0</span>;<br>    token_num_g = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 记录数值</span><br>    <span class="hljs-type">int</span> real_len = <span class="hljs-number">0</span>; <span class="hljs-comment">// 实际数字长度</span><br><br>    <span class="hljs-keyword">do</span> &#123;<br>        real_len++;<br>        <span class="hljs-keyword">if</span> (num_cnt &lt; MAX_NUM_LEN) &#123;<br>            token_num_g = <span class="hljs-number">10</span> * token_num_g + (ch_g - <span class="hljs-string">&#x27;0&#x27;</span>);<br>            num_cnt++;<br>        &#125;<br>        scan();<br>    &#125; <span class="hljs-keyword">while</span> (<span class="hljs-built_in">isdigit</span>(ch_g));<br><br>    <span class="hljs-keyword">if</span> (real_len &gt; MAX_NUM_LEN) &#123; <span class="hljs-comment">// 数字太长</span><br>        lex_err(NUM_2_LONG, WARNING);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="解析整形常量">解析整形常量</h3>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 解析整形常量,仅支持十进制</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">parse_num</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> <br>&#123;<br>    token_g = NUM;<br>    <span class="hljs-type">int</span> num_cnt = <span class="hljs-number">0</span>;<br>    token_num_g = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 记录数值</span><br>    <span class="hljs-type">int</span> real_len = <span class="hljs-number">0</span>; <span class="hljs-comment">// 实际数字长度</span><br><br>    <span class="hljs-keyword">do</span> &#123;<br>        real_len++;<br>        <span class="hljs-keyword">if</span> (num_cnt &lt; MAX_NUM_LEN) &#123;<br>            token_num_g = <span class="hljs-number">10</span> * token_num_g + (ch_g - <span class="hljs-string">&#x27;0&#x27;</span>);<br>            num_cnt++;<br>        &#125;<br>        scan();<br>    &#125; <span class="hljs-keyword">while</span> (<span class="hljs-built_in">isdigit</span>(ch_g));<br><br>    <span class="hljs-keyword">if</span> (real_len &gt; MAX_NUM_LEN) &#123; <span class="hljs-comment">// 数字太长</span><br>        lex_err(NUM_2_LONG, WARNING);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>代码比较简单，不再赘述。</p>
-<h3 id="解析其他词法记号"><a href="#解析其他词法记号" class="headerlink" title="解析其他词法记号"></a>解析其他词法记号</h3><p>parse_other_syms 这个函数代码比较长，但是很好理解。</p>
+<h3 id="解析其他词法记号">解析其他词法记号</h3>
+<p>parse_other_syms 这个函数代码比较长，但是很好理解。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">parse_other_syms</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-keyword">switch</span> (ch_g) &#123;<br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;+&#x27;</span>:<br>            token_g = ADD;<br>            scan();<br>            <span class="hljs-keyword">if</span> (ch_g == <span class="hljs-string">&#x27;+&#x27;</span>) &#123;<br>                token_g = INC;<br>                scan();<br>            &#125;<br>            <span class="hljs-keyword">return</span>;   <br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;-&#x27;</span>:<br>            token_g = SUB;<br>            scan();<br>            <span class="hljs-keyword">if</span> (ch_g == <span class="hljs-string">&#x27;-&#x27;</span>) &#123;<br>                token_g = DEC;<br>                scan();<br>            &#125;<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;*&#x27;</span>:<br>            token_g = MUL;<br>            scan();<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;/&#x27;</span>:<br>            token_g = DIV;<br>            scan();<br>            parse_after_div(); <span class="hljs-comment">// 里面有 scan</span><br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;%&#x27;</span>:<br>            token_g = MOD;<br>            scan();<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;&gt;&#x27;</span>:<br>            token_g = GT;<br>            scan();<br>            <span class="hljs-keyword">if</span> (ch_g == <span class="hljs-string">&#x27;=&#x27;</span>) &#123;<br>                token_g = GE;<br>                scan();<br>            &#125;<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;&lt;&#x27;</span>:<br>            token_g = LT;<br>            scan();<br>            <span class="hljs-keyword">if</span> (ch_g == <span class="hljs-string">&#x27;=&#x27;</span>) &#123;<br>                token_g = LE;<br>                scan();<br>            &#125;<br>            <span class="hljs-keyword">return</span>;<br>   <br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;=&#x27;</span>:<br>            token_g = ASSIGN;<br>            scan();<br>            <span class="hljs-keyword">if</span> (ch_g == <span class="hljs-string">&#x27;=&#x27;</span>) &#123;<br>                token_g = EQU;<br>                scan();<br>            &#125;<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;!&#x27;</span>:<br>            token_g = NOT;<br>            scan();<br>            <span class="hljs-keyword">if</span> (ch_g == <span class="hljs-string">&#x27;=&#x27;</span>) &#123;<br>                token_g = NEQU;<br>                scan();<br>            &#125;<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;&amp;&#x27;</span>:<br>            token_g = LEA;<br>            scan();<br>            <span class="hljs-keyword">if</span> (ch_g == <span class="hljs-string">&#x27;&amp;&#x27;</span>) &#123;<br>                token_g = AND;<br>                scan();<br>            &#125;<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;|&#x27;</span>:<br>            token_g = INVALID;<br>            scan();<br>            <span class="hljs-keyword">if</span> (ch_g == <span class="hljs-string">&#x27;|&#x27;</span>) &#123;<br>                token_g = OR;<br>                scan();<br>            &#125; <span class="hljs-keyword">else</span> &#123;<br>                lex_err(OR_NO_PAIR, ERROR);<br>            &#125;<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;:&#x27;</span>:<br>            token_g = COLON;<br>            scan();<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;;&#x27;</span>:<br>            token_g = SEMICO;<br>            scan();<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;,&#x27;</span>:<br>            token_g = COMMA;<br>            scan();<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;\&#x27;&#x27;</span>:  <span class="hljs-comment">// 单引号</span><br>            parse_after_single_quot(); <span class="hljs-comment">// 里面有 scan</span><br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;&quot;&#x27;</span>:<br>            parse_after_double_quot(); <span class="hljs-comment">// 里面有 scan</span><br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;(&#x27;</span>:<br>            token_g = LPAREN;<br>            scan();<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;)&#x27;</span>:<br>            token_g = RPAREN;<br>            scan();<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;[&#x27;</span>:<br>            token_g = LBRACKET;<br>            scan();<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;]&#x27;</span>:<br>            token_g = RBRACKET;<br>            scan();<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;&#123;&#x27;</span>:<br>            token_g = LBRACES;<br>            scan();<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;&#125;&#x27;</span>:<br>            token_g = RBRACES;<br>            scan();<br>            <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">default</span>:<br>            token_g = INVALID;<br>            lex_err(UNRECOGNIZED_TOKEN, ERROR);<br>            scan();<br>            <span class="hljs-keyword">return</span>;<br>    &#125; <span class="hljs-comment">// switch end</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>上面代码中第 30 行有 parse_after_div();</p>
 <p>第 110 行有 parse_after_single_quot（）；</p>
 <p>第 114 行有 parse_after_double_quot（）；</p>
 <p>我们把精力放在这 3 个函数上。</p>
-<h4 id="解析注释"><a href="#解析注释" class="headerlink" title="解析注释"></a>解析注释</h4><p>parse_after_div 是为了解析注释。</p>
+<h4 id="解析注释">解析注释</h4>
+<p>parse_after_div 是为了解析注释。</p>
 <p>识别注释的状态转换图如下。虽然有点复杂，但是我们会各个击破。</p>
-<p><img src="image-20250826105735512.png" srcset="/img/loading.gif" lazyload alt="image-20250826105735512" style="zoom:45%;" /></p>
-<p><img src="image-20250826163142521.png" srcset="/img/loading.gif" lazyload alt="image-20250826163142521" style="zoom:50%;" /></p>
+<img src="image-20250826105735512.png" srcset="/img/loading.gif" lazyload alt="image-20250826105735512" style="zoom:45%;" />
+<img src="image-20250826163142521.png" srcset="/img/loading.gif" lazyload alt="image-20250826163142521" style="zoom:50%;" />
 <p>执行 parse_after_div 的时候，已经在状态 1 了。这时候有三种情况，遇到的字符可能是“/”，也可能是“*”，还有可能是其他。分别对应代码里面的 if, else if, 还有 else；接下来我们分情况看代码。</p>
 <p>情况1：单行注释</p>
 <p>如果是“/”，说明这是单行注释。此种情况的状态图如下图：</p>
-<p><img src="image-20250826150311697.png" srcset="/img/loading.gif" lazyload alt="image-20250826150311697" style="zoom:50%;" /></p>
+<img src="image-20250826150311697.png" srcset="/img/loading.gif" lazyload alt="image-20250826150311697" style="zoom:50%;" />
 <p>现在已经在状态 3 了。这个状态又分 3 种情况：</p>
 <p>1） 如果遇到换行，则解析完毕</p>
 <p>2） 如果遇到文件末尾（EOF），也解析完毕</p>
 <p>3） 如果遇到其他字符，仍然在状态 3</p>
 <p>把上面的 3 种情况转换成代码（496~504 行）：</p>
-<p><img src="image-20250826160138729.png" srcset="/img/loading.gif" lazyload alt="image-20250826160138729" style="zoom:50%;" /></p>
+<img src="image-20250826160138729.png" srcset="/img/loading.gif" lazyload alt="image-20250826160138729" style="zoom:50%;" />
 <p>情况2：可能是多行注释</p>
-<p><img src="image-20250826163712800.png" srcset="/img/loading.gif" lazyload alt="image-20250826163712800" style="zoom:50%;" /></p>
+<img src="image-20250826163712800.png" srcset="/img/loading.gif" lazyload alt="image-20250826163712800" style="zoom:50%;" />
 <p>如果上面的代码你理解了，那么这个也不难。套路就是 while(1) 里面读取字符，然后用一系列的 if-else 判断字符并做相应的处理： 到达终止状态就用 return，状态改变到其他非终止态就用 break, 状态不变就让它在 while(1) 里面循环。</p>
 <p>从状态 2 出发的箭头有 2 个，一个是遇到文件末尾（EOF，end of file），一个是遇到 *， 对代码的 510 和 513 行;</p>
 <p>如果 513 的条件成立，就进入了状态 4，此时分 4 种情况，对应 516-527；前面三种（516-525）都好理解，最后一种是遇到其他字符，这需要返回到状态 2，这也不难，用 break 语句就可以。</p>
-<p><img src="image-20250826164558531.png" srcset="/img/loading.gif" lazyload alt="image-20250826164558531" style="zoom: 50%;" /></p>
+<img src="image-20250826164558531.png" srcset="/img/loading.gif" lazyload alt="image-20250826164558531" style="zoom: 50%;" />
 <p>情况3：除号</p>
 <p>这种情况就更简单了，直接 return 就可以（532行）。</p>
 <p>终于把 parse_after_div 分析完了。后还有 2 座大山。</p>
-<h4 id="解析字符常量"><a href="#解析字符常量" class="headerlink" title="解析字符常量"></a>解析字符常量</h4><p><img src="image-20250825203954781.png" srcset="/img/loading.gif" lazyload alt="image-20250825203954781" style="zoom: 40%;" /></p>
+<h4 id="解析字符常量">解析字符常量</h4>
+<img src="image-20250825203954781.png" srcset="/img/loading.gif" lazyload alt="image-20250825203954781" style="zoom: 40%;" />
 <p>状态 1 是初始状态，当遇到单引号后，进入状态 2； 再遇到“\” ，说明是转义字符，进入状态 4。</p>
-<p>csub 支持以下的转义字符：<code>\n, \t, \0, \\, \&#39;</code>，如果是其他字符，会给出警告。</p>
+<p>csub 支持以下的转义字符：<code>\n, \t, \0, \\, \'</code>，如果是其他字符，会给出警告。</p>
 <p>状态 6 是错误状态。如果状态 2 遇到单引号、换行或者 EOF 都会进入错误状态。</p>
 <p>parse_after_single_quot（）代码的前半部分是：</p>
-<p><img src="image-20250826173853403.png" srcset="/img/loading.gif" lazyload alt="image-20250826173853403" style="zoom:50%;" /></p>
+<img src="image-20250826173853403.png" srcset="/img/loading.gif" lazyload alt="image-20250826173853403" style="zoom:50%;" />
 <p>执行这个函数的时候，已经在状态 2 了。根据状态图，代码分成 4 个分支：</p>
 <ol>
 <li>换行或者 EOF（440 行），这种情形报错，字符不完整，然后 return；</li>
 </ol>
-<p>2) 单引号（443 行），报错，字符为空， scan() 之后再 return；<br>3) 反斜杠（447 行），这是转义字符的情况，后面细说；<br>4) 普通字符（475 行），此时要给 token_ch_g 赋值为 ch_g。</p>
+<ol start="2">
+<li>单引号（443 行），报错，字符为空， scan() 之后再 return；</li>
+<li>反斜杠（447 行），这是转义字符的情况，后面细说；</li>
+<li>普通字符（475 行），此时要给 token_ch_g 赋值为 ch_g。</li>
+</ol>
 <p>然后我们看看转义字符的代码：</p>
-<p><img src="image-20250826174434591.png" srcset="/img/loading.gif" lazyload alt="image-20250826174434591" style="zoom:50%;" /></p>
+<img src="image-20250826174434591.png" srcset="/img/loading.gif" lazyload alt="image-20250826174434591" style="zoom:50%;" />
 <p>449~452 对应图中状态 4 到状态 6；</p>
 <p>454~468 处理 5 种转义字符。</p>
 <p>470  的 default 分支处理不支持的转义，首先报警告，然后保存字符，例如 \m  解析为 m；</p>
 <p>switch 语句执行完会进入状态 3；普通字符处理后，也会进入状态 3；</p>
 <p>parse_after_single_quot 代码的后半部分是：</p>
-<p><img src="image-20250826174932140.png" srcset="/img/loading.gif" lazyload alt="image-20250826174932140" style="zoom:50%;" /></p>
+<img src="image-20250826174932140.png" srcset="/img/loading.gif" lazyload alt="image-20250826174932140" style="zoom:50%;" />
 <p>这部分代码处理状态 3，如果遇到单引号，就解析成功（480~484）；否则报错。</p>
-<h4 id="解析字符串"><a href="#解析字符串" class="headerlink" title="解析字符串"></a>解析字符串</h4><p>来到最后一座大山：parse_after_double_quot（）；</p>
-<p><img src="image-20250825211841652.png" srcset="/img/loading.gif" lazyload alt="image-20250825211841652" style="zoom:50%;" /></p>
+<h4 id="解析字符串">解析字符串</h4>
+<p>来到最后一座大山：parse_after_double_quot（）；</p>
+<img src="image-20250825211841652.png" srcset="/img/loading.gif" lazyload alt="image-20250825211841652" style="zoom:50%;" />
 <p>执行 parse_after_double_quot 的时候，我们已经在状态 2 了。</p>
-<p><img src="image-20250827153526828.png" srcset="/img/loading.gif" lazyload alt="image-20250827153526828" style="zoom:50%;" /></p>
+<img src="image-20250827153526828.png" srcset="/img/loading.gif" lazyload alt="image-20250827153526828" style="zoom:50%;" />
 <p>388~391 处理状态 2 到状态 5；</p>
 <p>392~393 对应状态 2 到状态 4，说明成功解析字符串，这时候用 break 跳出死循环；</p>
 <p>394~396 对应状态 2 到状态 2，说明遇到了普通字符； SET_TOKEN_STR 是一个带参数的宏：</p>
-<p><img src="image-20250827153849710.png" srcset="/img/loading.gif" lazyload alt="image-20250827153849710" style="zoom:50%;" /></p>
+<img src="image-20250827153849710.png" srcset="/img/loading.gif" lazyload alt="image-20250827153849710" style="zoom:50%;" />
 <p>首先，增加 real_len，这表示字符串的实际长度；</p>
 <p>然后判断 str_cnt，若小于 MAX_STR_LEN 才可以把字符存入 token_str_g 数组。</p>
 <p>397 表示遇到了转义字符，进入状态 3，代码如下：</p>
-<p><img src="image-20250827154200104.png" srcset="/img/loading.gif" lazyload alt="image-20250827154200104" style="zoom:50%;" /></p>
+<img src="image-20250827154200104.png" srcset="/img/loading.gif" lazyload alt="image-20250827154200104" style="zoom:50%;" />
 <p>399~402 对应状态 3 到 5；</p>
 <p>switch-case 语句里面处理各种转义字符。需要说明的是第 420 行，这种情况是字符串的续行。</p>
 <p>举个例子：</p>
@@ -680,21 +696,24 @@
 <p>1~4 行尾的“\ + 换行”就是续行。等价于：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">char</span> *long_string = <span class="hljs-string">&quot;这是一个非常非常长的字符串,为了使其在编辑器中更好地显示，并且不需要使用横向滚动条，我们使用反斜杠来将这个字符串分割成多行，这样既保持了代码的整洁，也提高了可读性。&quot;</span>;<br></code></pre></td></tr></table></figure>
 <p>我们继续看代码，switch-case 语句执行完 break 之后，还在死循环里面，也就是回到了状态 2，当遇到双引号，就跳出死循环，执行下面的代码：</p>
-<p><img src="image-20250827154748155.png" srcset="/img/loading.gif" lazyload alt="image-20250827154748155" style="zoom:50%;" /></p>
+<img src="image-20250827154748155.png" srcset="/img/loading.gif" lazyload alt="image-20250827154748155" style="zoom:50%;" />
 <p>432：如果字符串太长了，截断后面的，并且报警告。</p>
-<h3 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h3><p>主要的代码都讲完了，别忘了错误处理。</p>
-<p><img src="image-20250827154944145.png" srcset="/img/loading.gif" lazyload alt="image-20250827154944145" style="zoom:50%;" /></p>
+<h3 id="错误处理">错误处理</h3>
+<p>主要的代码都讲完了，别忘了错误处理。</p>
+<img src="image-20250827154944145.png" srcset="/img/loading.gif" lazyload alt="image-20250827154944145" style="zoom:50%;" />
 <p>我们定义了一些错误码，还定义了 2 个错误级别(23~24行)：WARNING 和 ERROR；</p>
 <p>然后我写了 lex_err 函数：</p>
-<p><img src="image-20250827155154486.png" srcset="/img/loading.gif" lazyload alt="image-20250827155154486" style="zoom:50%;" /></p>
+<img src="image-20250827155154486.png" srcset="/img/loading.gif" lazyload alt="image-20250827155154486" style="zoom:50%;" />
 <p>21~30 行和前面定义的错误码是一一对应的。lex_err 函数负责把错误码转换成中文描述。</p>
-<p><img src="image-20250827155433582.png" srcset="/img/loading.gif" lazyload alt="image-20250827155433582" style="zoom:50%;" /></p>
+<img src="image-20250827155433582.png" srcset="/img/loading.gif" lazyload alt="image-20250827155433582" style="zoom:50%;" />
 <p>第 37 行的 HI_RED、CLOSE 等是颜色控制字符。它们都是宏定义。</p>
-<p><img src="image-20250828103131675.png" srcset="/img/loading.gif" lazyload alt="image-20250828103131675" style="zoom:50%;" /></p>
+<img src="image-20250828103131675.png" srcset="/img/loading.gif" lazyload alt="image-20250828103131675" style="zoom:50%;" />
 <p>49~63，根据不同的错误码，做格式化打印，包括文件名、行号、列号、warning 或者 error、出错的原因等。</p>
 <p>为了不直接引用全局变量，我定义了很多 scanner_get_xxx 接口：</p>
-<p><img src="image-20250827171646823.png" srcset="/img/loading.gif" lazyload alt="image-20250827171646823" style="zoom:50%;" /></p>
-<h2 id="成果展示"><a href="#成果展示" class="headerlink" title="成果展示"></a>成果展示</h2><h3 id="基本功能"><a href="#基本功能" class="headerlink" title="基本功能"></a>基本功能</h3><p><img src="image-20250827171329110.png" srcset="/img/loading.gif" lazyload alt="image-20250827171329110" style="zoom:50%;" /></p>
+<img src="image-20250827171646823.png" srcset="/img/loading.gif" lazyload alt="image-20250827171646823" style="zoom:50%;" />
+<h2 id="成果展示">成果展示</h2>
+<h3 id="基本功能">基本功能</h3>
+<img src="image-20250827171329110.png" srcset="/img/loading.gif" lazyload alt="image-20250827171329110" style="zoom:50%;" />
 <p>这段测试代码的功能是：</p>
 <ol>
 <li>打开一个文件，作为词法分析的对象</li>
@@ -703,16 +722,18 @@
 <p>show_token 的代码就不贴了，感兴趣的同学可以下载配套代码后研究。</p>
 <p>我们就用上面这段代码作为测试文件，测试结果是：</p>
 <figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs csharp">关键字		<span class="hljs-built_in">int</span><br>标识符		main<br>界符		(<br>关键字		<span class="hljs-built_in">int</span><br>标识符		argc<br>界符		,<br>标识符		<span class="hljs-keyword">const</span><br>关键字		<span class="hljs-built_in">char</span><br>运算符		*<br>标识符		argv<br>界符		[<br>界符		]<br>界符		)<br>界符		&#123;<br>关键字		<span class="hljs-keyword">if</span><br>界符		(<br>标识符		argc<br>运算符		&lt;<br>数字常量	<span class="hljs-number">2</span><br>界符		)<br>关键字		<span class="hljs-keyword">return</span><br>运算符		-<br>数字常量	<span class="hljs-number">1</span><br>界符		;<br>标识符		FILE<br>运算符		*<br>标识符		<span class="hljs-keyword">file</span><br>运算符		=<br>标识符		fopen<br>界符		(<br>标识符		argv<br>界符		[<br>数字常量	<span class="hljs-number">1</span><br>界符		]<br><span class="hljs-comment">// 后面的内容省略</span><br></code></pre></td></tr></table></figure>
-<h3 id="词法记号染色"><a href="#词法记号染色" class="headerlink" title="词法记号染色"></a>词法记号染色</h3><p>代码和上面的基本一样，只是有一个函数不一样，把 show_token 改成 show_color_token。</p>
+<h3 id="词法记号染色">词法记号染色</h3>
+<p>代码和上面的基本一样，只是有一个函数不一样，把 show_token 改成 show_color_token。</p>
 <p>运行结果如下图：</p>
-<p><img src="image-20250827204426368.png" srcset="/img/loading.gif" lazyload alt="image-20250827204426368" style="zoom:67%;" /></p>
+<img src="image-20250827204426368.png" srcset="/img/loading.gif" lazyload alt="image-20250827204426368" style="zoom:67%;" />
 <p>因为词法分析会忽略所有空白字符，所以打印出来的 token 都挤在一起了。</p>
-<h3 id="错误处理-1"><a href="#错误处理-1" class="headerlink" title="错误处理"></a>错误处理</h3><p>测试代码：</p>
-<p><img src="image-20250828111354023.png" srcset="/img/loading.gif" lazyload alt="image-20250828111354023" style="zoom:50%;" /></p>
+<h3 id="错误处理-2">错误处理</h3>
+<p>测试代码：</p>
+<img src="image-20250828111354023.png" srcset="/img/loading.gif" lazyload alt="image-20250828111354023" style="zoom:50%;" />
 <p>测试文件如下图：</p>
-<p><img src="image-20250827204908367.png" srcset="/img/loading.gif" lazyload alt="image-20250827204908367" style="zoom:50%;" /></p>
+<img src="image-20250827204908367.png" srcset="/img/loading.gif" lazyload alt="image-20250827204908367" style="zoom:50%;" />
 <p>运行结果：</p>
-<p><img src="image-20250827205208040.png" srcset="/img/loading.gif" lazyload alt="image-20250827205208040" style="zoom: 50%;" /></p>
+<img src="image-20250827205208040.png" srcset="/img/loading.gif" lazyload alt="image-20250827205208040" style="zoom: 50%;" />
 <p>本文到这里就结束了。下次我们讲语法分析。</p>
 <p>配套代码 <a target="_blank" rel="noopener" href="https://gitee.com/chezi2020/csub">https://gitee.com/chezi2020/csub</a></p>
 

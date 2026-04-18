@@ -424,7 +424,8 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第13天：中间代码生成之流程控制语句"><a href="#第13天：中间代码生成之流程控制语句" class="headerlink" title="第13天：中间代码生成之流程控制语句"></a>第13天：中间代码生成之流程控制语句</h1><p>上节课我们讲了如何生成表达式的中间代码。这节课我们学习如何生成各种控制语句的中间代码。</p>
+                <h1 id="第13天：中间代码生成之流程控制语句">第13天：中间代码生成之流程控制语句</h1>
+<p>上节课我们讲了如何生成表达式的中间代码。这节课我们学习如何生成各种控制语句的中间代码。</p>
 <p>先看下面的代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a = <span class="hljs-number">10</span>;<br><span class="hljs-type">int</span> b = <span class="hljs-number">100</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">()</span>;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> <br>&#123;<br>    <span class="hljs-keyword">while</span>(a + b &gt; <span class="hljs-number">0</span>) &#123;<br>        foo();<br>        a--;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>第 7~10 行，翻译成中间代码是：</p>
@@ -435,22 +436,24 @@
 <ul>
 <li>第 1 行，开头的标签，@L1（叫什么名字无所谓），从这里开始做条件计算或者叫表达式求值</li>
 <li>第 6 行，末尾的标签，@L2，此处表示离开了循环体</li>
-<li>第 3 行的中间指令，“if(条件为假) goto @L2”意思是条件为假就跳转到 @L2，否则执行循环体里面的代码 </li>
+<li>第 3 行的中间指令，“if(条件为假) goto @L2”意思是条件为假就跳转到 @L2，否则执行循环体里面的代码</li>
 <li>第 5 行，无条件跳转，跳转到开头，再次做条件计算</li>
 </ul>
 <p>要生成中间代码，就是要生成以上要素，并且把它们按照合适的顺序组合起来。</p>
 <p>标签（或者说标号）也是中间指令，可以把它看成是特殊的中间指令。</p>
-<h2 id="生成标签"><a href="#生成标签" class="headerlink" title="生成标签"></a>生成标签</h2><p>我们用 new_label_inst 函数生成标签。</p>
-<p><img src="image-20251103115950571.png" srcset="/img/loading.gif" lazyload alt="image-20251103115950571" style="zoom:50%;" /></p>
+<h2 id="生成标签">生成标签</h2>
+<p>我们用 new_label_inst 函数生成标签。</p>
+<img src="image-20251103115950571.png" srcset="/img/loading.gif" lazyload alt="image-20251103115950571" style="zoom:50%;" />
 <p>为了增加中间代码的可读性，可以给标签末尾加一个字符串，也就是上面的 user_lb 参数。如果不需要，这个参数就给 NULL；</p>
 <p>第 68 行，GEN_NAME_LB_PREFIX 是一个宏</p>
 <p><code>#define GEN_NAME_LB_PREFIX  &quot;@L&quot;</code></p>
 <p>以 @ 开头是为了和 C 源码标识符区分开。</p>
 <p>第 68 行的 gen_name 代码如下：</p>
-<p><img src="image-20251103120157844.png" srcset="/img/loading.gif" lazyload alt="image-20251103120157844" style="zoom:50%;" /></p>
+<img src="image-20251103120157844.png" srcset="/img/loading.gif" lazyload alt="image-20251103120157844" style="zoom:50%;" />
 <p>重点看第 29 行，使用 sprintf 函数格式化字符串，把 “@Lxxx_” 和用户的字符串拼接起来。xxx 是一个数字，也就是第 23 行的 name_id，每次使用后递增 1；</p>
-<h2 id="生成跳转指令"><a href="#生成跳转指令" class="headerlink" title="生成跳转指令"></a>生成跳转指令</h2><p>我们用 new_jump_inst 函数来生成条件跳转或者无条件跳转指令。</p>
-<p><img src="image-20251103122103511.png" srcset="/img/loading.gif" lazyload alt="image-20251103122103511" style="zoom:50%;" /></p>
+<h2 id="生成跳转指令">生成跳转指令</h2>
+<p>我们用 new_jump_inst 函数来生成条件跳转或者无条件跳转指令。</p>
+<img src="image-20251103122103511.png" srcset="/img/loading.gif" lazyload alt="image-20251103122103511" style="zoom:50%;" />
 <p>参数 op 有以下几种：</p>
 <p>IR_OP_RET：  无返回值的函数返回；(arg1 和 arg2 用不上)</p>
 <p>IR_OP_RET_VAL： 有返回值的函数返回 （ arg2 用不上）</p>
@@ -462,12 +465,13 @@
 <p>这里面的条件怎么理解呢？其实就是表达式的值</p>
 <p>例如 while(xxx); if(xxx); for(; xxx;)等，这里面的 xxx 都是表达式，在生成中间指令的时候，会做表达式求值。</p>
 <p>不管是函数返回还是各种跳转，返回点和跳转的目标都是标号，也就是 new_jump_inst 函数第 2 个参数 target。</p>
-<h2 id="while-语句"><a href="#while-语句" class="headerlink" title="while 语句"></a>while 语句</h2><p><img src="image-20251103143443647.png" srcset="/img/loading.gif" lazyload alt="image-20251103143443647" style="zoom:50%;" /></p>
+<h2 id="while-语句">while 语句</h2>
+<img src="image-20251103143443647.png" srcset="/img/loading.gif" lazyload alt="image-20251103143443647" style="zoom:50%;" />
 <p>有了前面的铺垫，现在只需要按照箭头把标签或者中间指令添加到代码合适的位置。</p>
 <p>修改后的代码：</p>
-<p><img src="image-20251103144555427.png" srcset="/img/loading.gif" lazyload alt="image-20251103144555427" style="zoom:50%;" /></p>
+<img src="image-20251103144555427.png" srcset="/img/loading.gif" lazyload alt="image-20251103144555427" style="zoom:50%;" />
 <p>第 1161 行是 gen_while_head 函数，它的代码是</p>
-<p><img src="image-20251103143725269.png" srcset="/img/loading.gif" lazyload alt="image-20251103143725269" style="zoom:50%;" /></p>
+<img src="image-20251103143725269.png" srcset="/img/loading.gif" lazyload alt="image-20251103143725269" style="zoom:50%;" />
 <p>第 1204 和 1026 行，生成了 2 个标签，为了表述方便，叫它们“@while”和“@exit”，对应前文图中的 @L1 和 @L2</p>
 <p>因为 C 语言不支持多值返回，所以我把 gen_while_head 这个函数设计成带有 2 个输出参数，因为 new_label_inst 函数的返回值是 <code>inter_inst_t *</code> 类型，所以输出型参数的类型是指向<code>inter_inst_t *</code> 的指针，也就是 <code>inter_inst_t **</code></p>
 <p>前面第 1159 行，我定义了 2 个 <code>inter_inst_t *</code> 类型的参数 _while 和 _exit，初始值都是 NULL，并把它们的地址作为参数传递给 gen_while_head ，当此函数执行后， _while 和 _exit 就分别指向生成的 “@while” 和 “@exit” 标签。</p>
@@ -475,94 +479,98 @@
 <p>第 1207 行，先不用管，我们最后会说。</p>
 <p>再看前面的 1162 行，增加 expr() 的返回值，改为  var_t *cond = expr();因为我们要对表达式求值。</p>
 <p>第 1164 行， 插入 gen_while_cond 函数。此函数代码如下：</p>
-<p><img src="image-20251103144346681.png" srcset="/img/loading.gif" lazyload alt="image-20251103144346681" style="zoom:50%;" /></p>
+<img src="image-20251103144346681.png" srcset="/img/loading.gif" lazyload alt="image-20251103144346681" style="zoom:50%;" />
 <p>第一个参数就是 expr() 的返回值，第二个参数是前面生成的“@exit”标签的地址。</p>
 <p>如果 expr() 有语法或语义错误，那么 cond 就是 NULL，所以第 1215 行判断 cond 是否为空。</p>
 <p>第 1216 行判断 cond 是不是 void 类型，例如 foo() 函数是一个返回值是 void 的函数，那么写 while(foo())这种代码是不合法的。</p>
 <p>1220 行判断 cond 是不是 <code>*p</code> 这种形式，如果是，先要生成中间代码 <code>tmp = *p；</code></p>
 <p>1125 行，生成中间指令 if(!cond) goto @exit</p>
 <p>前面第 1179 行， 插入 gen_while_tail 函数。</p>
-<p><img src="image-20251103152325309.png" srcset="/img/loading.gif" lazyload alt="image-20251103152325309" style="zoom:50%;" /></p>
+<img src="image-20251103152325309.png" srcset="/img/loading.gif" lazyload alt="image-20251103152325309" style="zoom:50%;" />
 <p>这个函数有 2 个参数，分别是前面生成的“@while”和“@exit”标签。</p>
-<p>第 1237 行，生成指令 goto @while，无条件跳转到 @while，也就是前文图中的 @L1 </p>
+<p>第 1237 行，生成指令 goto @while，无条件跳转到 @while，也就是前文图中的 @L1</p>
 <p>第 1238 行，插入标签“@exit”</p>
 <p>1239：先不管，后面会说。</p>
 <p>这样 while 语句的中间代码生成就讲完了。我们趁热打铁，看看 do-while 语句。</p>
-<h2 id="do-while-语句"><a href="#do-while-语句" class="headerlink" title="do-while 语句"></a>do-while 语句</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a = <span class="hljs-number">10</span>;<br><span class="hljs-type">int</span> b = <span class="hljs-number">100</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">()</span>;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> <br>&#123;<br>    <span class="hljs-keyword">do</span> &#123;<br>        foo();<br>        a--;<br>    &#125;<span class="hljs-keyword">while</span>(a + b != <span class="hljs-number">0</span>);<br>&#125;<br><br></code></pre></td></tr></table></figure>
+<h2 id="do-while-语句">do-while 语句</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a = <span class="hljs-number">10</span>;<br><span class="hljs-type">int</span> b = <span class="hljs-number">100</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">()</span>;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> <br>&#123;<br>    <span class="hljs-keyword">do</span> &#123;<br>        foo();<br>        a--;<br>    &#125;<span class="hljs-keyword">while</span>(a + b != <span class="hljs-number">0</span>);<br>&#125;<br><br></code></pre></td></tr></table></figure>
 <p>7~10 行翻译成中间代码是：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c">@L2_do:<br>	decl .t4<br>	.t4 = foo()<br>	decl .t5<br>	.t5 = a<br>	a = a - <span class="hljs-number">1</span><br>	decl .t6<br>	.t6 = a + b<br>	decl .t7<br>	.t7 = .t6 != <span class="hljs-number">0</span><br>	<span class="hljs-keyword">if</span>(.t7) <span class="hljs-keyword">goto</span> @L2_do<br>@L3_exit:<br></code></pre></td></tr></table></figure>
 <p>我们忽略细节，把此中间代码的结构提取出来：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">@L2_do:<br>	...<span class="hljs-comment">// 循环体</span><br>    ...<span class="hljs-comment">// 条件计算</span><br>    <span class="hljs-keyword">if</span>(条件为真) <span class="hljs-keyword">goto</span> @L2_do    <br>@L3_exit:       <br></code></pre></td></tr></table></figure>
-<p><img src="image-20251103153833748.png" srcset="/img/loading.gif" lazyload alt="image-20251103153833748" style="zoom:50%;" /></p>
+<img src="image-20251103153833748.png" srcset="/img/loading.gif" lazyload alt="image-20251103153833748" style="zoom:50%;" />
 <p>如上图所示，do-while 比 while 语句还要简单，分成 2 部分插入到代码中就可以了。</p>
-<p><img src="image-20251103154059510.png" srcset="/img/loading.gif" lazyload alt="image-20251103154059510" style="zoom:50%;" /></p>
+<img src="image-20251103154059510.png" srcset="/img/loading.gif" lazyload alt="image-20251103154059510" style="zoom:50%;" />
 <p>第一部分是在第 1193 行，插入 gen_do_while_head 函数。</p>
-<p><img src="image-20251103154156115.png" srcset="/img/loading.gif" lazyload alt="image-20251103154156115" style="zoom:50%;" /></p>
-<p>此函数的作用是生成 @do 和 @exit 标签，并且插入 @do 标签。 </p>
+<img src="image-20251103154156115.png" srcset="/img/loading.gif" lazyload alt="image-20251103154156115" style="zoom:50%;" />
+<p>此函数的作用是生成 @do 和 @exit 标签，并且插入 @do 标签。</p>
 <p>第二部分是在第 1213行，插入 gen_do_while_tail 函数。</p>
-<p><img src="image-20251103154431755.png" srcset="/img/loading.gif" lazyload alt="image-20251103154431755" style="zoom:50%;" /></p>
-<p>第 1275 行，插入指令 if(cond) goto @do </p>
+<img src="image-20251103154431755.png" srcset="/img/loading.gif" lazyload alt="image-20251103154431755" style="zoom:50%;" />
+<p>第 1275 行，插入指令 if(cond) goto @do</p>
 <p>第 1277 行，插入标签  @exit</p>
-<h2 id="if-else-语句"><a href="#if-else-语句" class="headerlink" title="if-else 语句"></a>if-else 语句</h2><p>有的读者说我是马后炮，不应该从生成的中间代码推出中间代码的结构，因为我们讨论的就是如何生成中间代码啊。</p>
+<h2 id="if-else-语句">if-else 语句</h2>
+<p>有的读者说我是马后炮，不应该从生成的中间代码推出中间代码的结构，因为我们讨论的就是如何生成中间代码啊。</p>
 <p>说得好！假设我们不知道 if-else 语句的中间代码是什么，那可以根据源码推出中间代码的结构。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a = <span class="hljs-number">10</span>;<br><span class="hljs-type">int</span> b = <span class="hljs-number">100</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">()</span>;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> <br>&#123;<br>    <span class="hljs-keyword">if</span>(b == a) &#123;    <span class="hljs-comment">// 如果条件为假则跳转到 @ else</span><br>        foo();            ... <br>                          ...<br>                      <br>                   <span class="hljs-comment">//  这里应该有个跳转，不然会继续执行 else 分支 </span><br>                   <span class="hljs-comment">//  goto @exit</span><br>    &#125; <span class="hljs-keyword">else</span> &#123;       <span class="hljs-comment">//  @else</span><br>        a++;              ...<br>                          ...<br>    &#125;<br>&#125;                  <span class="hljs-comment">//  @exit</span><br></code></pre></td></tr></table></figure>
 <p>再把右边的注释整理一下，变成中间指令的语法。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c">	<span class="hljs-comment">// 条件计算</span><br>	<span class="hljs-keyword">if</span>(条件为假) <span class="hljs-keyword">goto</span> @<span class="hljs-keyword">else</span><br>	<span class="hljs-comment">// 条件为真则执行</span><br>	<span class="hljs-keyword">goto</span> @<span class="hljs-built_in">exit</span><br>@<span class="hljs-keyword">else</span>:<br>	<span class="hljs-comment">// 条件为假则执行</span><br>@<span class="hljs-built_in">exit</span>:<br></code></pre></td></tr></table></figure>
 <p>ok,中间代码的框架有了，现在考虑如何把中间代码分为几部分，插入到原有代码中：</p>
-<p><img src="image-20251103162100863.png" srcset="/img/loading.gif" lazyload alt="image-20251103162100863" style="zoom:50%;" /></p>
+<img src="image-20251103162100863.png" srcset="/img/loading.gif" lazyload alt="image-20251103162100863" style="zoom:50%;" />
 <p>修改后的代码如下图：</p>
-<p><img src="image-20251103162203077.png" srcset="/img/loading.gif" lazyload alt="image-20251103162203077" style="zoom:50%;" /></p>
+<img src="image-20251103162203077.png" srcset="/img/loading.gif" lazyload alt="image-20251103162203077" style="zoom:50%;" />
 <p>第 1337 行，插入 gen_if_head 函数（代码略）。此函数的主要功能是：</p>
 <p>1、生成 @else 标签</p>
 <p>2、添加指令 if(!cond) goto @else</p>
 <p>第 1353 行插入  gen_else_head 函数（代码略）。此函数的主要功能是：</p>
 <p>1、生成 @exit 标签</p>
-<p>2、添加指令 goto @exit </p>
-<p>3、添加标签 @else </p>
-<p>第 1357 行插入 gen_else_tail 函数（代码略）。此函数的主要功能是添加标签 @exit </p>
+<p>2、添加指令 goto @exit</p>
+<p>3、添加标签 @else</p>
+<p>第 1357 行插入 gen_else_tail 函数（代码略）。此函数的主要功能是添加标签 @exit</p>
 <p>对了，如果是没有 else 分支的 if 语句呢？以上的代码依然适用，因为有没有 else 分支是在下面的 else_stat 函数中解析的。</p>
-<p><img src="image-20251103162744014.png" srcset="/img/loading.gif" lazyload alt="image-20251103162744014" style="zoom:50%;" /></p>
+<img src="image-20251103162744014.png" srcset="/img/loading.gif" lazyload alt="image-20251103162744014" style="zoom:50%;" />
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c">	<span class="hljs-comment">// 条件计算</span><br>	<span class="hljs-keyword">if</span>(条件为假) <span class="hljs-keyword">goto</span> @<span class="hljs-keyword">else</span><br>	<span class="hljs-comment">// 条件为真则执行</span><br>	<span class="hljs-keyword">goto</span> @<span class="hljs-built_in">exit</span><br>@<span class="hljs-keyword">else</span>:<br>	<span class="hljs-comment">//这里没有中间代码</span><br>@<span class="hljs-built_in">exit</span>:<br></code></pre></td></tr></table></figure>
 <p>假设没有 else 分支，那么 @else 和  @exit 之间就没有任何中间代码。 if()语句的逻辑不受影响。</p>
-<h2 id="for-语句"><a href="#for-语句" class="headerlink" title="for 语句"></a>for 语句</h2><p>先写个 C 代码，尝试推出中间代码的结构。</p>
+<h2 id="for-语句">for 语句</h2>
+<p>先写个 C 代码，尝试推出中间代码的结构。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">100</span>; i++) &#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;hello\n&quot;</span>);<br>&#125;<br><br><br><span class="hljs-comment">// 初始化</span><br>@<span class="hljs-keyword">for</span>:<br>	<span class="hljs-comment">// 条件计算</span><br>    <span class="hljs-keyword">if</span>(!cond) <span class="hljs-keyword">goto</span> @<span class="hljs-built_in">exit</span><br>	<span class="hljs-comment">// 循环体</span><br><br>@iter:  <span class="hljs-comment">// 为 continue 语句服务      </span><br>	<span class="hljs-comment">// 迭代表达式</span><br> 	<span class="hljs-keyword">goto</span> @<span class="hljs-keyword">for</span><br>@<span class="hljs-built_in">exit</span>:<br></code></pre></td></tr></table></figure>
 <p>第 6~15 行就是我琢磨出来的中间代码结构。</p>
 <p>不过仔细想想，有个问题。从中间代码生成的顺序上讲，第 9 行插入  if(!cond) goto @exit，然后是循环体的代码生成，最后是迭代表达式的代码生成；但是编译器解析源码的顺序是先解析迭代表达式，再解析循环体。</p>
 <p>也就是说解析源码的顺序和中间指令的顺序不一致，这可怎么办呢？</p>
 <p>办法还是有的。别忘了，中间代码是用链表保存的，链表的优点就是插入和删除节点都很方便。所以，在第 9 行插入  if(!cond) goto @exit 之后，我们做个标记，记录此时中间代码链表的最后一个节点。如图 1</p>
-<p><img src="image-20251103214558003.png" srcset="/img/loading.gif" lazyload alt="image-20251103214558003" style="zoom:50%;" /></p>
+<img src="image-20251103214558003.png" srcset="/img/loading.gif" lazyload alt="image-20251103214558003" style="zoom:50%;" />
 <p>​                                                              图1↑</p>
 <p>然后，生成迭代表达式的中间代码。如图 2</p>
-<p><img src="image-20251103214637193.png" srcset="/img/loading.gif" lazyload alt="image-20251103214637193" style="zoom:50%;" /></p>
+<img src="image-20251103214637193.png" srcset="/img/loading.gif" lazyload alt="image-20251103214637193" style="zoom:50%;" />
 <p>​                                图2↑</p>
 <p>此时，根据刚才标记的位置，找到迭代表达式的第一条中间指令（第一个绿色方块），从它开始到链表末尾，整体移动到另一个空的链表中。见图 3：</p>
-<p><img src="image-20251103214813883.png" srcset="/img/loading.gif" lazyload alt="image-20251103214813883" style="zoom:50%;" /></p>
+<img src="image-20251103214813883.png" srcset="/img/loading.gif" lazyload alt="image-20251103214813883" style="zoom:50%;" />
 <p>​                                                              图3↑</p>
 <p>再然后，继续生成循环体的中间代码，再插入标签@iter；如图 4</p>
-<p><img src="image-20251103215209659.png" srcset="/img/loading.gif" lazyload alt="image-20251103215209659" style="zoom:100%;" /></p>
+<img src="image-20251103215209659.png" srcset="/img/loading.gif" lazyload alt="image-20251103215209659" style="zoom:100%;" />
 <p>​    图4↑</p>
 <p>最后，把临时链表上的指令整体移动到当前链表的末尾。如图 5</p>
-<p><img src="image-20251103215541031.png" srcset="/img/loading.gif" lazyload alt="image-20251103215541031" style="zoom:100%;" /></p>
+<img src="image-20251103215541031.png" srcset="/img/loading.gif" lazyload alt="image-20251103215541031" style="zoom:100%;" />
 <p>​      图5↑</p>
 <p>这样就完成了“移花接木”.</p>
 <p>整个流程分为 6 个步骤，我都标注出来了。</p>
-<p><img src="image-20251103221635952.png" srcset="/img/loading.gif" lazyload alt="image-20251103221635952" style="zoom:100%;" /></p>
+<img src="image-20251103221635952.png" srcset="/img/loading.gif" lazyload alt="image-20251103221635952" style="zoom:100%;" />
 <p>修改后的代码如下图。我为读者依次解释 6 个步骤。</p>
-<p><img src="image-20251104094446063.png" srcset="/img/loading.gif" lazyload alt="image-20251104094446063" style="zoom:50%;" /></p>
+<img src="image-20251104094446063.png" srcset="/img/loading.gif" lazyload alt="image-20251104094446063" style="zoom:50%;" />
 <p>对于步骤 1：第 1240 行，插入函数 gen_for_head</p>
-<p><img src="image-20251103215806937.png" srcset="/img/loading.gif" lazyload alt="image-20251103215806937" style="zoom:50%;" /></p>
+<img src="image-20251103215806937.png" srcset="/img/loading.gif" lazyload alt="image-20251103215806937" style="zoom:50%;" />
 <p>这个函数有两个作用，第一是生成标签 @for, @exit, @iter； @iter 这个标签是为 continue 语句服务的（后文会讲）；</p>
 <p>第二是 1292 行，添加标签 @for；</p>
 <p>对于步骤 2，第 1245 行，插入函数 gen_for_body（代码略），主要功能是添加指令 IR_OP_JF (cond) @exit；</p>
 <p>另外，步骤 2 要打标记，见下面第 1248 行。</p>
-<p><img src="image-20251104095053395.png" srcset="/img/loading.gif" lazyload alt="image-20251104095053395" style="zoom:50%;" /></p>
+<img src="image-20251104095053395.png" srcset="/img/loading.gif" lazyload alt="image-20251104095053395" style="zoom:50%;" />
 <p>1248 行，定义局部变量 cond_last_inst，记录链表中最后一条指令的地址（链表节点的地址），因为从这条指令开始，将要生成迭代表达式的中间指令。</p>
 <p>对于步骤 3，第 1250 行，定义一个空的链表；第 1251 行， 调用 move_list_to_new_head 函数把生成的迭代表达式的中间指令转移到空链表。</p>
-<p>对于步骤 4，插入函数 gen_for_iter，此函数就干了一件事：添加 @iter； </p>
+<p>对于步骤 4，插入函数 gen_for_iter，此函数就干了一件事：添加 @iter；</p>
 <p>对于步骤 5，第 1266 行，调用 put_list_back 函数，再把临时链表上的指令整体移动到当前链表的末尾。</p>
 <p>对于步骤 6， 第 1271 行，插入函数 gen_for_tail，此函数添加指令 goto @for；添加标签 @exit</p>
 <p>至此， for 语句的中间代码生成就讲完了。</p>
-<h2 id="switch-case-语句"><a href="#switch-case-语句" class="headerlink" title="switch-case 语句"></a>switch-case 语句</h2><p>先举个例子。</p>
+<h2 id="switch-case-语句">switch-case 语句</h2>
+<p>先举个例子。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">int</span> a)</span> <br>&#123;<br>    <span class="hljs-keyword">switch</span>(a) &#123;<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;I am case 1\n&quot;</span>);<br>            <span class="hljs-keyword">break</span>;<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">2</span>:<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;I am case 2\n&quot;</span>);<br>            <span class="hljs-keyword">break</span>;<br>        <span class="hljs-keyword">default</span>:<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;I am default\n&quot;</span>);<br>            <span class="hljs-keyword">break</span>;<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">3</span>:<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;I am case 3\n&quot;</span>);<br>            <span class="hljs-keyword">break</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>请问 foo(3) 会输出什么？</p>
 <p>有的读者是这么想的：先匹配 case 1，匹配不上，然后匹配 case 2, 还是匹配不上，接下来是 default，匹配上了，所以最后输出 I am default</p>
@@ -570,7 +578,7 @@
 <p>另外，还有一点要注意，一旦匹配上了某个 case/default 标签，如果没有遇到 break 或 return，会继续执行下面的 case/default 标签。</p>
 <p>例如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">int</span> a)</span> <br>&#123;<br>    <span class="hljs-keyword">switch</span>(a) &#123;<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;I am case 1\n&quot;</span>);<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">2</span>:<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;I am case 2\n&quot;</span>);<br>        <span class="hljs-keyword">default</span>:<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;I am default\n&quot;</span>);<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">3</span>:<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;I am case 3\n&quot;</span>);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p> foo(4) 会输出什么？</p>
+<p>foo(4) 会输出什么？</p>
 <p>I am default</p>
 <p>I am case 3</p>
 <p>因为 case 1,2,3 都匹配不上，所以执行  default 分支，输出 I am default 后，没有遇到 break 或者 return ,会继续往下执行，再输出 I am case 3；</p>
@@ -585,34 +593,34 @@
 <p>如何解决呢？有了前面 for 语句的经验，很容易想到我们可以先解析 case 语句，然后把 case 语句的中间代码移动到临时链表，再生成第 1~4 行的中间代码，最后把临时链表上的中间代码移动回来。</p>
 <p>另外，在解析 case 语句的时候，还需要做语义分析，如果发现 case 值重复了，或者出现了一个以上的 default，则报错。</p>
 <p>思路理清后，我们直接看修改后的代码。</p>
-<p><img src="image-20251104114337685.png" srcset="/img/loading.gif" lazyload alt="image-20251104114337685" style="zoom:50%;" /></p>
+<img src="image-20251104114337685.png" srcset="/img/loading.gif" lazyload alt="image-20251104114337685" style="zoom:50%;" />
 <p>第 1395 行，判断 switch(cond)  的 cond，此变量不能是 void 类型，而且必须是整数。</p>
 <p>第 1408 行，仅生成 @exit 标签。为什么要先生成这个标签？后文会讲。</p>
-<p><img src="image-20251104114701786.png" srcset="/img/loading.gif" lazyload alt="image-20251104114701786" style="zoom:50%;" /></p>
+<img src="image-20251104114701786.png" srcset="/img/loading.gif" lazyload alt="image-20251104114701786" style="zoom:50%;" />
 <p>因为要移动 case 语句，所以要标记 case 语句的开头，第 1420 行标记出当前链表上最后一条中间指令。</p>
 <p>第 1425 行定义了一个空的链表 lb_head，注意这个 lb_head 链表不是用来移动指令的，而是用来记录 case 信息的。</p>
 <p>第 1426 行的 case_stat 解析 case 或者 default 标签及标签下面的语句。</p>
-<p><img src="image-20251104115032738.png" srcset="/img/loading.gif" lazyload alt="image-20251104115032738" style="zoom:50%;" /></p>
+<img src="image-20251104115032738.png" srcset="/img/loading.gif" lazyload alt="image-20251104115032738" style="zoom:50%;" />
 <p>第 1457 行，给 case_label 函数增加返回值，并调用 gen_case_entry 函数</p>
 <p>gen_case_entry 函数的作用是：</p>
 <ol>
 <li>遍历 lb_head 链表，检查 val 或者 default 是否已经存在，如果存在则报错，返回 false</li>
 <li>遍历完链表，如发现没有重复，则把 val 或者 default 加入链表；</li>
-<li>插入标号 @case_x 或者 @default </li>
+<li>插入标号 @case_x 或者 @default</li>
 </ol>
 <p>如果遇到了 default 标签, 则执行第 1468 行的 new_literal,创建一个常量字符串“default”;然后调用 gen_case_entry，判断“default”标签是否已经存在，如果存在就报错，并返回 false,执行第 1474 行，释放常量字符串“default”占用的内存；否则会插入标号 @default，并且返回 true，然后执行第 1472 行，把常量字符串“default”加入符号表，作用是避免内存泄漏，不然第 1468 行 val 指向的内存会丢失。</p>
 <p>所以，gen_case_entry 函数一箭双雕，一是语义分析，检查标签是否重复，二是生成每个 case 或者 default 对应的标号。</p>
 <p>现在我们看看 gen_case_entry 的代码</p>
-<p><img src="image-20251104141138841.png" srcset="/img/loading.gif" lazyload alt="image-20251104141138841" style="zoom:50%;" /></p>
+<img src="image-20251104141138841.png" srcset="/img/loading.gif" lazyload alt="image-20251104141138841" style="zoom:50%;" />
 <p>lb_head 链表初始状态是空，每当遇到新的 case 标签的时候，就构造上图的 case_info_t 结构体，把它加入 lb_head 链表</p>
-<p><img src="image-20251104141359385.png" srcset="/img/loading.gif" lazyload alt="image-20251104141359385" style="zoom:50%;" /></p>
+<img src="image-20251104141359385.png" srcset="/img/loading.gif" lazyload alt="image-20251104141359385" style="zoom:50%;" />
 <p>第一个参数是链表的头节点的地址，就是 &amp;lb_head</p>
 <p>第二个参数是前面 1457 行得到的值</p>
 <p>第 1387 行，遍历链表，取出 case_info_t 中的 case_val 字段，先看第 1394 行，如果为真说明 case 标签重复，报错，返回 false;</p>
 <p>对于 “default” 标签的识别比较特殊，因为它是一个关键字，不是一个整数，所以我们要构造出一个 var_t 类型的变量，为了把它和普通的标签区分开，我特意构造出常量字符串“default（其实叫什么都行）”（具体代码在前文的 case_stat 函数中），常量字符串是以字符数组的形式存储的，所以  is_arr 字段是 true，普通的 case 标签是按照整数常量存储的， is_arr 字段是 false,所以单靠这一点就可以判断链表中有没有 “default” 标签</p>
 <p>所以第 1389 行使用 is_arr 字段判断是不是 “default” 标签。</p>
 <p>我们继续看 gen_case_entry 的代码</p>
-<p><img src="image-20251104142121941.png" srcset="/img/loading.gif" lazyload alt="image-20251104142121941" style="zoom:50%;" /></p>
+<img src="image-20251104142121941.png" srcset="/img/loading.gif" lazyload alt="image-20251104142121941" style="zoom:50%;" />
 <p>如果查找链表后没有发现重复，那么就执行第 1401 行，分配内存，第 1406 填写 case_val 字段；</p>
 <p>第 1407~1411 是为了给要插入的标签（中间指令）起个名字，增强可读性。</p>
 <p>第 1409 行，直接把 case 标签的值写进标号里，方便和源码对照。</p>
@@ -620,7 +628,7 @@
 <p>第 1414 行向中间代码中插入标号。</p>
 <p>第 1416 行，把构造好的  case_info_t  结构体加入 lb_head 链表。</p>
 <p>现在，再回到 switch_stat 函数</p>
-<p><img src="image-20251104114701786.png" srcset="/img/loading.gif" lazyload alt="image-20251104114701786" style="zoom:50%;" /></p>
+<img src="image-20251104114701786.png" srcset="/img/loading.gif" lazyload alt="image-20251104114701786" style="zoom:50%;" />
 <p>当 1426 行执行后， case 分支或者 default 分支的中间代码已经生成，标号也插入了。</p>
 <p>1428~1430 把 case 语句（包括 default）生成的中间指令转移到临时链表。</p>
 <p>第 1432 行，调用 gen_case_select 函数，生成类似于下面的中间代码</p>
@@ -629,43 +637,49 @@
 <p>第 1436 行，把临时链表上的指令移动回来。</p>
 <p>第 1442 行，插入 @exit 标号。</p>
 <p>gen_case_select  函数代码如下：</p>
-<p><img src="image-20251104165850835.png" srcset="/img/loading.gif" lazyload alt="image-20251104165850835" style="zoom:50%;" /></p>
+<img src="image-20251104165850835.png" srcset="/img/loading.gif" lazyload alt="image-20251104165850835" style="zoom:50%;" />
 <p>此函数遍历 lb_head 链表，拿出每个用户节点，如果是 default 则先不生成跳转指令，仅标记一下(1370 行)</p>
 <p>如果不是 default  则生成 if(cond == lb) goto @case_xxx 的中间指令</p>
 <p>这样就能保证先比较非 default 标签。</p>
 <p>第 1375 行为真说明存在 default 标签，则最后生成 goto  @default</p>
 <p>为假则说明不存在 default 标签，则最后生成 goto @exit</p>
-<h2 id="函数入口和出口"><a href="#函数入口和出口" class="headerlink" title="函数入口和出口"></a>函数入口和出口</h2><p>下面是生成函数入口的中间代码。</p>
-<p><img src="image-20251104143829999.png" srcset="/img/loading.gif" lazyload alt="image-20251104143829999" style="zoom:50%;" /></p>
+<h2 id="函数入口和出口">函数入口和出口</h2>
+<p>下面是生成函数入口的中间代码。</p>
+<img src="image-20251104143829999.png" srcset="/img/loading.gif" lazyload alt="image-20251104143829999" style="zoom:50%;" />
 <p>第 1105 行，添加函数入口指令，这个指令仅需要 2 个参数，一个是操作码 IR_OP_FUN_ENTRY，一个是 fun_t 类型的指针；</p>
-<p>第 1108 创建函数返回点，其实就是生成一个标号，假设名字叫 @return </p>
+<p>第 1108 创建函数返回点，其实就是生成一个标号，假设名字叫 @return</p>
 <p>让 fun-&gt;ret_point 指向这个标号。这个标号有什么用呢？后文会说。</p>
 <p>下面是生成函数出口的中间代码。</p>
-<p><img src="image-20251104144104528.png" srcset="/img/loading.gif" lazyload alt="image-20251104144104528" style="zoom:50%;" /></p>
+<img src="image-20251104144104528.png" srcset="/img/loading.gif" lazyload alt="image-20251104144104528" style="zoom:50%;" />
 <p>第 1120 行，插入 @return 标号。</p>
 <p>第 1122 行，插入函数出口指令。</p>
-<p><img src="image-20251104145355606.png" srcset="/img/loading.gif" lazyload alt="image-20251104145355606" style="zoom:50%;" /></p>
+<img src="image-20251104145355606.png" srcset="/img/loading.gif" lazyload alt="image-20251104145355606" style="zoom:50%;" />
 <p>根据 526 和 528 行，可以知道函数的中间代码类似这样：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c">ENTRY<br>    <br>    <span class="hljs-comment">// 函数内的代码</span><br>    <br>@<span class="hljs-keyword">return</span>:<br>EXIT<br></code></pre></td></tr></table></figure>
 <p>开始的  ENTRY 会生成如下汇编代码</p>
-<p> push ebp<br> mov ebp,esp<br> sub esp,xx</p>
+<p>push ebp<br>
+mov ebp,esp<br>
+sub esp,xx</p>
 <p>最后的 EXIT 会生成如下汇编代码</p>
-<p> mov esp,ebp<br> pop ebp<br> ret  </p>
+<p>mov esp,ebp<br>
+pop ebp<br>
+ret</p>
 <p>以上只是提一下，等后面生成汇编代码的时候，还会讨论。</p>
-<h2 id="return-语句"><a href="#return-语句" class="headerlink" title="return 语句"></a>return 语句</h2><p><img src="image-20251104144249584.png" srcset="/img/loading.gif" lazyload alt="image-20251104144249584" style="zoom:50%;" /></p>
+<h2 id="return-语句">return 语句</h2>
+<img src="image-20251104144249584.png" srcset="/img/loading.gif" lazyload alt="image-20251104144249584" style="zoom:50%;" />
 <p>gen_return 函数用来生成 return 语句的中间代码。 参数是 return 语句的返回值，如果没有返回值呢？</p>
-<p><img src="image-20251104144630583.png" srcset="/img/loading.gif" lazyload alt="image-20251104144630583" style="zoom:50%;" /></p>
+<img src="image-20251104144630583.png" srcset="/img/loading.gif" lazyload alt="image-20251104144630583" style="zoom:50%;" />
 <p>“return；” 当解析完 return 关键字后，会执行上面的 expr_stat()  函数，执行第 1076 行，获得特殊变量 void_var</p>
 <p>我们再回到 gen_return 函数，第 1139 行语义分析，看看函数的返回值和 ret_val 是否匹配。</p>
 <p>第 1144 行，拿到函数返回点的标号，也就是 @return</p>
 <p>第 1147 行，如果函数返回值是 void，则生成中间代码 return goto @return；此中间代码被翻译成 x86 汇编时，就是 jmp @return 指令；</p>
 <p>第 1152 行，当函数返回值不为空，则生成中间代码  return val goto @return；此中间代码被翻译成 x86 汇编时，先 mov  eax,  val 设置好返回值，再执行  jmp @return</p>
-<h2 id="break-和-continue-语句"><a href="#break-和-continue-语句" class="headerlink" title="break 和 continue 语句"></a>break 和 continue 语句</h2><p>break 可以用在循环语句及 switch-case 语句中，作用是跳出本层循环，或者跳出本层  switch 语句。</p>
+<h2 id="break-和-continue-语句">break 和 continue 语句</h2>
+<p>break 可以用在循环语句及 switch-case 语句中，作用是跳出本层循环，或者跳出本层  switch 语句。</p>
 <p>continue 可以用在循环语句中，作用是跳过当前这次循环中 continue 之后的语句，直接进入下一次循环判断（对于 while,  do-while）或者迭代表达式的求值（对于 for）。</p>
 <p>我们可以用无条件跳转实现 break 和 continue 语句的中间代码。</p>
 <p>下面的表格列出了四种控制语句中 break 和 continue 语句如何翻译。</p>
 <p>注意，下表格的标签名仅是一个简称，实际代码中会用 gen_name 函数生成标签，格式类似 @Lxx_exit，保证标签名不会重复。</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -697,7 +711,6 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>另外，不管是循环还是 switch-case 都是可以嵌套的，每一层都有自己的标签，为了让 break 和 continue 语句跳转到正确的标签，我们需要动态跟踪每一层的标签，这和我们之前跟踪大括号记录作用域很像，所以同样用栈来实现。</p>
 <p>我们准备 2 个栈，一个叫 begin 栈，用来存放 continue 语句要跳转的标签；另一个叫 end 栈，用来存放 break 语句要跳转的标签。</p>
 <p>开始的时候这两个栈都是空的，每当进入控制语句（上面表格中的四种之一，if-else 不算），就把一对标号入栈(准确说是标号的地址)。</p>
@@ -712,39 +725,41 @@
 <p>例如下面的代码，请读者看我的注释。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">100</span>; ++i) &#123;  <span class="hljs-comment">// @1_iter 和 @1_exit 入栈</span><br>        <span class="hljs-keyword">switch</span>(i) &#123; <span class="hljs-comment">// NULL 和 @2_exit 入栈</span><br>            <span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:<br>                <span class="hljs-keyword">break</span>; <span class="hljs-comment">// 获得标签 @2_exit，生成 goto  @2_exit</span><br>                ...<span class="hljs-comment">//</span><br>            <span class="hljs-keyword">case</span> <span class="hljs-number">2</span>:<br>                ...<span class="hljs-comment">//</span><br>        &#125; <span class="hljs-comment">// NULL 和 @2_exit 出栈</span><br>    &#125;  <span class="hljs-comment">// @1_iter 和 @1_exit 出栈</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>原理说完了，下面看代码。</p>
-<p><img src="image-20251104210152679.png" srcset="/img/loading.gif" lazyload alt="image-20251104210152679" style="zoom:50%;" /></p>
+<img src="image-20251104210152679.png" srcset="/img/loading.gif" lazyload alt="image-20251104210152679" style="zoom:50%;" />
 <p>第 9~12 行，我们定义一个结构体，里面存放 2 个链表的头节点。代表 begin 栈和 end 栈。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">label_stack_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	INIT_LIST_HEAD(&amp;lb_stack_g.begin);<br>	INIT_LIST_HEAD(&amp;lb_stack_g.end);<br>&#125;<br><br><span class="hljs-comment">/*</span><br><span class="hljs-comment">	入栈一对标签</span><br><span class="hljs-comment">	// 注意，参数可以是 NULL</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">push_labels</span><span class="hljs-params">(<span class="hljs-type">inter_inst_t</span> *lb_begin, <span class="hljs-type">inter_inst_t</span> *lb_end)</span><br>&#123;<br>	gp_node_add_tail(lb_begin, &amp;lb_stack_g.begin);<br>	gp_node_add_tail(lb_end, &amp;lb_stack_g.end);<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>1~5 行，这是栈初始化的代码，在编译器初始化的阶段调用。</p>
 <p>第 11 行，push_labels 函数用来把一对标签入栈。</p>
 <p>gp_node_add_tail 函数是之前讲过的，这里再贴一下代码。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">gp_node</span>&#123;</span> <span class="hljs-comment">// 通用节点</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">entry</span>;</span><br>	<span class="hljs-type">void</span> *addr; <span class="hljs-comment">// 仅保存地址</span><br>&#125;<span class="hljs-type">gp_node_t</span>;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">gp_node_add_tail</span><span class="hljs-params">(<span class="hljs-type">void</span> *node_addr, <span class="hljs-keyword">struct</span> list_head *head)</span><br>&#123;<br>	<span class="hljs-keyword">if</span>(!head)<br>		<span class="hljs-keyword">return</span>;<br>	<span class="hljs-type">gp_node_t</span> *new = <span class="hljs-built_in">malloc</span>(<span class="hljs-keyword">sizeof</span>(<span class="hljs-type">gp_node_t</span>));<br>	<span class="hljs-keyword">if</span>(!new)&#123;<br>		SYSTEM_FATAL_ERR(MEM_ALLOC_FAILED);<br>	&#125;<br>	new-&gt;addr = node_addr;<br>	list_add_tail(&amp;new-&gt;entry, head);<br>&#125;<br></code></pre></td></tr></table></figure>
-<p><img src="image-20251104210658547.png" srcset="/img/loading.gif" lazyload alt="image-20251104210658547" style="zoom:50%;" /></p>
+<img src="image-20251104210658547.png" srcset="/img/loading.gif" lazyload alt="image-20251104210658547" style="zoom:50%;" />
 <p>获取栈顶标签的函数是 get_top_label，从第 50 行开始。</p>
 <p>首先判断链表是否为空，为空则返回 NULL；</p>
 <p>否则，利用 head-&gt;prev 获取链表最后一个元素（也就是栈顶的元素，链表的尾巴对应栈顶）</p>
 <p>第 55 行，返回标签的地址。</p>
 <p>现在看第 41~45 行，如何出栈一对标签？其实就是把链表尾部的节点删除。</p>
-<p><img src="image-20251104210938392.png" srcset="/img/loading.gif" lazyload alt="image-20251104210938392" style="zoom:50%;" /></p>
+<img src="image-20251104210938392.png" srcset="/img/loading.gif" lazyload alt="image-20251104210938392" style="zoom:50%;" />
 <p>第 26 行得到最后一个节点的地址，第 27 行把这个节点从链表拿下来，这两步顺序不能交换。</p>
 <p>第 28 行释放空间，注意不是释放标签自身的空间，是释放 gp_note_t 这个结构体的空间。</p>
 <p>有了以上铺垫，再看代码就容易了。</p>
-<p><img src="image-20251103143725269.png" srcset="/img/loading.gif" lazyload alt="image-20251103143725269" style="zoom:50%;" /></p>
+<img src="image-20251103143725269.png" srcset="/img/loading.gif" lazyload alt="image-20251103143725269" style="zoom:50%;" />
 <p>这是前面讲过的函数，第 1207 行，刚进入 while 循环的时候，把 @while 和 @exit 标签入栈。</p>
-<p><img src="image-20251103152325309.png" srcset="/img/loading.gif" lazyload alt="image-20251103152325309" style="zoom:50%;" /></p>
+<img src="image-20251103152325309.png" srcset="/img/loading.gif" lazyload alt="image-20251103152325309" style="zoom:50%;" />
 <p>第 1239 行，标签出栈，因为这时候已经离开 while 循环了。</p>
 <p>do-while 语句类似，不再赘述。</p>
-<p><img src="image-20251103215806937.png" srcset="/img/loading.gif" lazyload alt="image-20251103215806937" style="zoom:50%;" /></p>
+<img src="image-20251103215806937.png" srcset="/img/loading.gif" lazyload alt="image-20251103215806937" style="zoom:50%;" />
 <p>第 1293 行，进入 for 语句的时候，把 @iter 和 @exit 入栈。</p>
-<p><img src="image-20251104212737011.png" srcset="/img/loading.gif" lazyload alt="image-20251104212737011" style="zoom:50%;" /></p>
+<img src="image-20251104212737011.png" srcset="/img/loading.gif" lazyload alt="image-20251104212737011" style="zoom:50%;" />
 <p>离开 for 语句的时候，第 1334 行，把标签出栈。</p>
-<p><img src="image-20251104212938285.png" srcset="/img/loading.gif" lazyload alt="image-20251104212938285" style="zoom:50%;" /></p>
+<img src="image-20251104212938285.png" srcset="/img/loading.gif" lazyload alt="image-20251104212938285" style="zoom:50%;" />
 <p>进入 switch 语句的时候，第 1349 行，把 NULL 和 @exit 入栈。出栈的代码就不贴了。</p>
-<h2 id="成果展示"><a href="#成果展示" class="headerlink" title="成果展示"></a>成果展示</h2><h3 id="for-循环两层嵌套"><a href="#for-循环两层嵌套" class="headerlink" title="for 循环两层嵌套"></a>for 循环两层嵌套</h3><p>测试源码：</p>
+<h2 id="成果展示">成果展示</h2>
+<h3 id="for-循环两层嵌套">for 循环两层嵌套</h3>
+<p>测试源码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">test_for</span><span class="hljs-params">(<span class="hljs-type">int</span> n, <span class="hljs-type">int</span> m)</span><br>&#123;<br>    <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; n; ++i) &#123;<br>        <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> j = <span class="hljs-number">0</span>; j &lt; m; j++) &#123;<br>            <span class="hljs-keyword">if</span>(j % <span class="hljs-number">3</span> == <span class="hljs-number">0</span>)<br>                <span class="hljs-keyword">continue</span>;<br>            <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(j % <span class="hljs-number">7</span> == <span class="hljs-number">0</span>)<br>                <span class="hljs-keyword">break</span>;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>生成的中间代码如下：</p>
 <p>（最左边的是指令的编号）</p>
-<p><img src="image-20251105115653162.png" srcset="/img/loading.gif" lazyload alt="image-20251105115653162" style="zoom:67%;" /></p>
+<img src="image-20251105115653162.png" srcset="/img/loading.gif" lazyload alt="image-20251105115653162" style="zoom:67%;" />
 <p>首先，黄色框外面是外层 for 循环的初始化、条件计算、迭代计算、退出标签。</p>
 <p>4： decl i = 0; 变量 i 的初始化，仅执行一次。</p>
 <p>5： 标签 @L2_for，从这里开始到黄色框上面为条件计算和判断；为真则执行循环体（黄色框里面），为假则跳出循环（goto @L3_exit）</p>
@@ -759,17 +774,19 @@
 <p>前文已经分析了，@L9_iter是内层循环的迭代标签，对应右边代码的 j++ 的入口,所以 continue 的翻译没有问题。</p>
 <p>32：goto @L15_exit，意思是执行完 if 语句后跳转到末尾的标签，也是对的。</p>
 <p>最后我们看看 28~40 （图中绿色条状）的指令。它对应的是 if(j % 7 == 0) break;</p>
-<p>  37:@L18_else:<br>  40:@L19_exit:</p>
+<p>37:@L18_else:<br>
+40:@L19_exit:</p>
 <p>因为没有 else 分支，这两个标签之间没有语句，也是对的。</p>
 <p>39:goto @L8_exit ，这句应该对应 break;跳出本层循环。@L8_exit 确实是内层循环结尾的标签。</p>
-<h3 id="switch-两层嵌套"><a href="#switch-两层嵌套" class="headerlink" title="switch 两层嵌套"></a>switch 两层嵌套</h3><p>测试源码</p>
+<h3 id="switch-两层嵌套">switch 两层嵌套</h3>
+<p>测试源码</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>; <span class="hljs-comment">// 声明</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">test_swtch</span><span class="hljs-params">(<span class="hljs-type">int</span> n, <span class="hljs-type">int</span> m)</span><br>&#123;<br>    <span class="hljs-keyword">switch</span>(m) &#123;<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">2</span>:<br>            foo();<br>            <span class="hljs-keyword">break</span>;<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">3</span>:<br>            m = m + n;<br>            <span class="hljs-keyword">break</span>;<br>        <span class="hljs-keyword">default</span>:<br>            n = m - n;<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">4</span>:<br>            <span class="hljs-keyword">switch</span>(n) &#123;<br>                <span class="hljs-keyword">case</span> <span class="hljs-number">5</span>:<br>                    n++;<br>                    <span class="hljs-keyword">break</span>;<br>                <span class="hljs-keyword">case</span> <span class="hljs-number">6</span>:<br>                    n--;<br>            &#125;<br>            m = m * n;<br>            <span class="hljs-keyword">break</span>;<br>    &#125;<br>    foo();<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>生成的中间代码如下：</p>
 <p>43~47，根据 m 的值生成 goto 到不同标签的跳转指令；当所有 case 值都不匹配，会执行 47：goto @L10_default；这满足了前文说的“default 在其他所有的 case 标签都匹配不上才能轮到它”。</p>
 <p>中间代码的标签顺序，和右边源码的标签顺序是一致的。</p>
 <p>如果有 break，则翻译成跳转到本层 switch 语句的 @exit 标签。例如  9：goto @L2_exit 和 29：goto @L14_exit；</p>
 <p>黄色框里面的是内层的 switch 语句。因为没有 default,所以当所有 case 标签都匹配不上时，生成了 36： goto @L14_exit</p>
-<p><img src="image-20251105144059601.png" srcset="/img/loading.gif" lazyload alt="image-20251105144059601" style="zoom: 67%;" /></p>
+<img src="image-20251105144059601.png" srcset="/img/loading.gif" lazyload alt="image-20251105144059601" style="zoom: 67%;" />
 <p>本文的内容到这里就结束了，至此，我们完成了中间代码的生成。恭喜你学到这里！</p>
 
                 
