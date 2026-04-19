@@ -1,0 +1,1042 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="包括寻找入口点、地址分配、符号地址解析、符号的重定位。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第38天：静态链接(中)">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="包括寻找入口点、地址分配、符号地址解析、符号的重定位。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419223114864.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419223329859.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419223415776.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419223433393.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419223458775.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419223539333.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419223658730.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419223712719.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419223859466.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419224010340.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419224041444.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419224117099.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419224149833.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419224223673.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419224254666.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419224330835.png">
+<meta property="article:published_time" content="2026-04-19T14:44:14.000Z">
+<meta property="article:modified_time" content="2026-04-19T14:48:11.725Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC38%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%AD)/image-20260419223114864.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第38天：静态链接(中) - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/download/" target="_self">
+                <i class="iconfont icon-gitee-fill"></i>
+                <span>代码下载</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/download/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-gitee-fill"></i>
+                  <span>代码下载</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第38天：静态链接(中)"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-19 22:44" pubdate>
+          2026年4月19日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          50 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第38天：静态链接(中)</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第38天：静态链接(中)">第38天：静态链接(中)</h1>
+<p>接上一篇文章。</p>
+<h2 id="寻找入口点">寻找入口点</h2>
+<p>在生成目标文件的展示环节中，我们用的是 Linux 系统的链接器；<br>
+当时用的命令是：</p>
+<p><code>ld test1.o test2.o start.o -melf_i386 -o test</code><br>
+start.o 源于 start.asm<br>
+为什么需要 start.asm 呢？<br>
+当我们在终端输入 ./a.out 时，到底发生了什么？<br>
+有人认为当敲出 ./a.out 并敲回车后，操作系统（内核）就开始执行 main 函数了。<br>
+其实不是这样的。这里面有很多复杂的细节。</p>
+<p>从敲下回车到 main 函数执行，可以分成 2 个阶段：<br>
+第一阶段：</p>
+<ol>
+<li>内核通过 execve() 系统调用加载程序；</li>
+<li>解析 ELF 头和程序头表（Program Header Table）；</li>
+<li>将 .text、.data 等段映射到进程虚拟内存；</li>
+<li>将 CPU 指令指针（RIP/EIP）设置为 ELF 的入口点（Entry Point），即 _start。</li>
+</ol>
+<p>这个 _start 可以看成是一个函数，由 glibc 的启动文件（如 crt1.o）提供，通常用汇编写成；</p>
+<p>第二阶段：<br>
+执行 _start，主要的工作包括：</p>
+<ol>
+<li>从栈上解析内核传入的 argc、argv[]、envp[]（命令行参数和环境变量）；</li>
+<li>准备好调用 __libc_start_main 所需的寄存器/栈参数；</li>
+<li>跳转到 __libc_start_main（C 函数）；</li>
+</ol>
+<p>__libc_start_main 是 glibc 中的关键函数，会初始化线程系统，注册退出处理函数，调用全局构造函数等，最后才是调用用户写的 main 函数。</p>
+<p>glibc（GNU C Library） 是 Linux 系统中最核心、最基础的 C 标准库实现，它为用户程序提供了与操作系统内核交互的标准接口（API），是几乎所有 Linux 应用程序运行所依赖的“桥梁”。</p>
+<img src="image-20260419223114864.png" srcset="/img/loading.gif" lazyload alt="image-20260419223114864" style="zoom:50%;" />
+<p>虽然程序的入口是 _start（通常由汇编编写，放在 crt1.o 中），但 _start 的唯一任务就是准备好参数，然后立即跳入 glibc 提供的 __libc_start_main。</p>
+<p>一旦进入这个函数，程序就正式从“荒芜的汇编世界”进入了“功能齐全的 C 语言库世界”。</p>
+<p>CRT 是 C Runtime Library（C 运行时库）它是 C 语言程序运行时所依赖的基础库的统称，可以理解为一个程序跑起来所需的“环境”总称。</p>
+<p>具体来说，CRT 主要包括以下三个部分：</p>
+<ol>
+<li>标准库函数的实现 (C Standard Library)<br>
+这是 CRT 最显而易见的部分，提供了 C 标准定义的各种 API 实现：<br>
+内存管理：如 malloc()、free() 等。<br>
+输入输出 (I/O)：如 printf()、scanf()、文件操作 fopen() 等。<br>
+字符串处理：如 strcpy()、strlen() 等。<br>
+数学运算、日期时间等工具函数。</li>
+<li>程序的启动与退出支持 (Startup Code)<br>
+在 main() 函数执行之前，CRT 会先进行一系列初始化工作，并在 main() 结束后负责清理;<br>
+入口函数：操作系统加载程序后，实际先调用 CRT 的入口点（如 Windows 下的 mainCRTStartup），而非直接跳转到 main。<br>
+初始化环境：包括初始化全局变量、静态变量，准备堆内存（Heap），以及配置环境变量和命令行参数。<br>
+清理工作：当 main 返回后，CRT 会负责调用通过 atexit() 注册的函数，并最终调用操作系统的退出 API 关闭进程。</li>
+<li>运行时的底层支撑 (Low-level Support)<br>
+CRT 还充当了程序与操作系统（OS）之间的“中转站”：<br>
+系统调用封装：将高级的 C 函数转换为底层操作系统的系统调用（System Calls）。<br>
+堆栈管理：维护程序运行所需的调用栈环境。<br>
+异常/错误处理：处理浮点数溢出、非法内存访问等运行时错误（Runtime Errors）</li>
+</ol>
+<p>CRT 和 glibc 是什么关系呢？</p>
+<p>简单来说：CRT 是一个“规格/标准”，而 glibc 是这个标准在 Linux 上的“具体实现”。例如在 Windows 下，CRT 就不是 glibc 了，而是微软提供的 MSVCRT.dll 或 UCRT。</p>
+<p>另外，glibc 不仅仅实现了 C 运行时，它还是 Linux 系统的核心接口库。它比标准的 CRT 多了一些极其庞大的内容：包括 POSIX 扩展、本地化支持、动态链接器等等。</p>
+<p>说了这么多，我们回到主题。我们的 start.asm 里面有什么？<br>
+里面最重要的函数就是 _start</p>
+<img src="image-20260419223329859.png" srcset="/img/loading.gif" lazyload alt="image-20260419223329859" style="zoom:50%;" />
+<p>如果程序从 _start 开始执行<br>
+第 5 行，可以做一些初始化工作;<br>
+第 6 行，调用 main 函数;<br>
+第 7 行，可以做清理工作;<br>
+第 8~10 行，执行 sys_exit 系统调用。</p>
+<p>sys_exit 是操作系统内核层面的一个系统调用，它的核心作用是终止当前进程。<br>
+为什么要调用 sys_exit 呢？或者说不调用它会发生什么？<br>
+首先是指令流溢出，CPU 执行完你的代码后，不会自动停下，而是继续向后读取内存中的“垃圾数据”并尝试将其作为指令执行。<br>
+其次是程序崩溃，由于后续内存通常不包含合法指令或属于不可执行区域，内核会立即触发 SIGSEGV 信号，强制杀死进程。你在终端会看到 Segmentation fault 报错。</p>
+<p>有读者问，如果没有 _start，强制让程序从 main 函数执行会发生什么？<br>
+我们可以做个实验，指定程序入口为 main（用 <code>-e main</code>）<br>
+<code>ld *.o -melf_i386 -e main</code><br>
+<code>./a.out</code><br>
+运行结果:</p>
+<img src="image-20260419223415776.png" srcset="/img/loading.gif" lazyload alt="image-20260419223415776" style="zoom:50%;" />
+<p>看来排序没有问题，但是排序完成后，触发了“段错误”。</p>
+<p>这是为什么呢？</p>
+<p>我们看 main 函数的汇编代码:</p>
+<img src="image-20260419223433393.png" srcset="/img/loading.gif" lazyload alt="image-20260419223433393" style="zoom:50%;" />
+<p>从本质上讲，main 函数和其他函数没有什么区别，包含同样的入口代码和出口代码；<br>
+用 main 作为入口，本质上是在链接的时候把 main 的虚拟地址填入文件头的 e_entry 字段。<br>
+当程序加载后， CPU 就会从 main 开始执行。3~5 行的代码没有什么问题；<br>
+当执行到 10~11 行，栈已经恢复为刚进入 main 时的样子，也没有问题；<br>
+但是执行到 ret 指令，就有问题了。因为 ret 指令会从栈顶取出 4 字节作为返回地址，然后跳到这个地址去执行。然而，刚进入 main 时，栈顶的数据是未知的，大概率是一个无效的地址，所以触发了“段错误”！</p>
+<p>再回到前面的代码 _start<br>
+假设 main 函数不带参数，我们可以这样写:</p>
+<img src="image-20260419223458775.png" srcset="/img/loading.gif" lazyload alt="image-20260419223458775" style="zoom:50%;" />
+<p>以上代码可以算是一个极简版的 crt;<br>
+把上面的代码编译成 .o，再和其他 .o 链接起来，并把 _start 的虚拟地址作为 elf 头的入口，就可以让 C 程序跑起来了。<br>
+当运行 ld 命令时，它会扫描所有输入的 .o 文件（目标文件）的全局符号表;<br>
+如果找到了 <code>_start</code>,它会将该符号对应的内存地址写入 ELF 文件头的 Entry point address 字段。<br>
+我们也模仿 ld, 把 _start 当成程序的入口点。</p>
+<img src="image-20260419223539333.png" srcset="/img/loading.gif" lazyload alt="image-20260419223539333" style="zoom:50%;" />
+<p><code>#define PROGRAM_ENTRY_POINT  &quot;_start&quot;</code></p>
+<p>第 435 行，遍历哈希表，查找 _start 符号，如果找不到，则报错。</p>
+<h2 id="地址分配">地址分配</h2>
+<p>在之前的“程序头表”这节，我们已经讨论了段的偏移和虚拟地址。<br>
+这里总结一下：<br>
+1、首先是文件头，然后是程序头表，这部分占了一个独立的页面;<br>
+2、然后是代码段和数据段；每个段的起始地址必须按页对齐（对齐到 0x1000）;<br>
+3、对于 Linux 系统 32 位可执行文件，默认的基地址是 0x08048000；<br>
+4、段在文件内的偏移加上这个基地址，就是最终的虚拟地址。这一点可以从下图看出来（和上一篇文章的图一样）。</p>
+<img src="image-20260419223658730.png" srcset="/img/loading.gif" lazyload alt="image-20260419223658730" style="zoom:50%;" />
+<p>明白了以上规则，就可以看代码了。</p>
+<img src="image-20260419223712719.png" srcset="/img/loading.gif" lazyload alt="image-20260419223712719" style="zoom:50%;" />
+<p>第 470 行，遍历 segs 数组。</p>
+<p>此数组只有 3 个元素，在定义数组的时候，值如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">const</span> <span class="hljs-type">char</span> *linker_segs_name[] = &#123;<span class="hljs-string">&quot;ehdr_phdr&quot;</span>, <span class="hljs-string">&quot;.text&quot;</span>, <span class="hljs-string">&quot;.data&quot;</span>&#125;;<br></code></pre></td></tr></table></figure>
+<p>ehdr_phdr 表示文件头和程序头表，因为它们组成了一个可加载的段，而且是第一个段；</p>
+<p>所以，执行第 473 行，seg-&gt;offset = 0; 意思是这个段在文件内的偏移是 0；</p>
+<p>然后执行 seg-&gt;vaddr = VIRT_BASE_ADDR + seg-&gt;offset;</p>
+<p>意思是段在文件内的偏移加上基址，就是虚拟地址。</p>
+<p>VIRT_BASE_ADDR 是宏，如下第 1 行;</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRT_BASE_ADDR 		0x08048000</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PAGE_SIZE 		    4096</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ALIGN(x,a)          __ALIGN_MASK(x, (typeof(x))(a)-1)  </span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __ALIGN_MASK(x,mask)    (((x)+(mask))&amp;~(mask))</span><br></code></pre></td></tr></table></figure>
+<p>第 3 行是我们用来对齐的宏;</p>
+<p>第 475 行，求 seg-&gt;size，就是段的长度：文件头的长度加上头表项的大小 * 头表项的数目（E_PHNUM = 3）;</p>
+<p>之后执行第 507 行，为下一个段做准备，把当前的地址对齐到 4096；</p>
+<p>现在看 else 部分：</p>
+<img src="image-20260419223859466.png" srcset="/img/loading.gif" lazyload alt="image-20260419223859466" style="zoom:50%;" />
+<p>进入 else 的时候，seg 就指向数组 linker-&gt;segs[] 的下一个元素了；<br>
+第 481 行，填写这个段的偏移（就是刚才对齐后的地址）;<br>
+第 482 行，计算段的虚拟地址;<br>
+第 483 行，变量 off_in_seg 表示段内的偏移，初始值是 0;<br>
+第 484 行，段的大小设置为 0;<br>
+第 486 行，之前我们已经把拥有某个节的文件加入到了 seg-&gt;owners 链表里面，现在遍历这个链表，取出 elf （.o 对应的 my_elf_t 结构）;<br>
+第 489 行，根据 seg-&gt;name 查找节头表;<br>
+第 492 行，创建 block，获得这个节的大小和数据，可以认为 block 就是这个节（section）;<br>
+第 493 行，把 block 加入这个段的 blocks 链表;<br>
+第 494 行，在把 block 拼接到此段之前，先按照要求对齐;<br>
+第 496 行，对齐后，这个 block 在段里面的偏移就确定了;<br>
+第 497 行，段的虚拟地址已经定了，节在段里面的偏移也定了，那么节的虚拟地址就出来了;<br>
+第 498 行，想象把这个节放到了段里面，off_in_seg 肯定要增加，增加节的大小;<br>
+如果 seg-&gt;owners 链表还有未处理的节点，那就处理下一个节点（回到第 486 行）;<br>
+下面我们详细说第 492 行的代码。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 一个数据块</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">data_block</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">char</span> *data;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> offset;     <span class="hljs-comment">// 块在 seg 内的偏移</span><br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> size;       <span class="hljs-comment">// 块大小</span><br>	Elf32_Shdr *from_shdr;     <span class="hljs-comment">// 根据哪个表项生成的</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">entry</span>;</span>  <span class="hljs-comment">// 加入 seg_t 的 blocks 链表</span><br>&#125; <span class="hljs-type">data_block_t</span>;<br></code></pre></td></tr></table></figure>
+<p>第 4 行，数据指针，初始化的时候会分配空间;<br>
+第 5 行，段内的偏移，和段的基地址没有关系;<br>
+第 6 行，和 section 的 sh_size 一致;<br>
+第 7 行，这是一个指针，指向生成它的节头表项;<br>
+第 8 行，用来加入seg_t 的 blocks 链表;<br>
+假设某个段由 10 个 .o 的.text 节组成，那么 seg-&gt;blocks 链表上就有 10 个 block。</p>
+<img src="image-20260419224010340.png" srcset="/img/loading.gif" lazyload alt="image-20260419224010340" style="zoom:50%;" />
+<p>此函数的作用是创建一个 block，并读取某个节的数据，最后把 block 加入到 seg-&gt;blocks 链表;<br>
+此函数有 2 个参数，第一个表示这个 block 是由哪个节创建的，第二个参数表示此节来自哪个 .o;<br>
+第 450 行，根据节表项的 sh_size 字段，分配内存，这片内存用来存段的实际内容;<br>
+第 453 行，打开 .o 文件;<br>
+第 459 行，让文件位置指针移动到这个节的开始;<br>
+第 460 行，读取节的数据到 block-&gt;data 指向的内存;<br>
+第 462 行，填写数据大小;</p>
+<h2 id="符号地址解析">符号地址解析</h2>
+<p>当地址分配完成后，每个段的虚拟地址就确定了。<br>
+此时可以做符号地址解析。<br>
+具体分为 3 个步骤<br>
+1、扫描 linker-&gt;sym_defs 链表，也就是导出符号，计算导出符号的虚拟地址;<br>
+2、扫描 linker-&gt;sym_refs 链表，也就是导入符号，把步骤 1 计算出的地址传递到引用该符号的 .o 的符号表内;<br>
+3、确定所有 .o 中局部符号的地址。</p>
+<img src="image-20260419224041444.png" srcset="/img/loading.gif" lazyload alt="image-20260419224041444" style="zoom:50%;" />
+<p>第 524 行，遍历导出符号的链表;</p>
+<p>525~527：根据符号的名字，在定义此符号的 .o 的符号表中查找，返回 Elf32_Sym 结构;</p>
+<p>528 ~ 531：根据此符号的 st_shndx，查找此符号所属的节，进而得到节的虚拟地址;</p>
+<p>532~533：符号在节内的偏移加上节的虚拟地址，就是符号的最终地址。</p>
+<img src="image-20260419224117099.png" srcset="/img/loading.gif" lazyload alt="image-20260419224117099" style="zoom:50%;" />
+<p>第 542，扫描导入符号的链表;<br>
+第 543~546，根据符号的名字，先在定义此符号的 .o 的符号表中查找 Elf32_Sym 结构，再在引用此符号的 .o 的符号表中查找 Elf32_Sym 结构;<br>
+第 547 行， sym_recv-&gt;st_value = sym_prov-&gt;st_value; 把符号的最终地址传递到引用该符号的 .o 的符号表内;<br>
+另外，局部符号也需要计算地址。</p>
+<img src="image-20260419224149833.png" srcset="/img/loading.gif" lazyload alt="image-20260419224149833" style="zoom:50%;" />
+<p>第 558~559 行，遍历所有 .o 的符号表;</p>
+<p>第 560 行，取出本地符号，根据符号所属的节，得到节的 Elf32_Shdr 结构;</p>
+<p>第 569 行，符号在节内的偏移加上节的虚拟地址，就是符号的最终地址</p>
+<h2 id="符号的重定位">符号的重定位</h2>
+<p>因为前面针对符号的重定位做了很多铺垫，所以直接看代码。</p>
+<img src="image-20260419224223673.png" srcset="/img/loading.gif" lazyload alt="image-20260419224223673" style="zoom:50%;" />
+<p>第二个参数可以是 SECTION_REL_TEXT 或者 SECTION_REL_DATA，针对代码段或数据段的重定位都会调用这个函数;<br>
+第 592，遍历 .o 文件;<br>
+第 593~596：根据参数选择 text_rel_head 或者 data_rel_head 链表;<br>
+第 597，遍历 text_rel_head 或者 data_rel_head 链表;<br>
+第 598，根据符号名字查找 .o 的符号表，取出需要重定位的符号;</p>
+<img src="image-20260419224254666.png" srcset="/img/loading.gif" lazyload alt="image-20260419224254666" style="zoom:50%;" />
+<p>第 600~601，得到此符号的虚拟地址;<br>
+第 602 行：找到符号被引用的节;<br>
+第 604 行：节的虚拟地址加上 r_offset 就是要打补丁的地方，我们需要修改这个位置的数据;<br>
+第 606 行：提取重定位类型;<br>
+因为每个节的内容都保存到 block 结构中了，现在需要找到那个 block，然后精确到 block 中的某 4 个字节;<br>
+第 607 行：根据节的名字找到 seg_t 结构;<br>
+第 608 行：遍历 seg 的 blocks 链表，找到这个节对应的 block，代码比较简单;</p>
+<img src="image-20260419224330835.png" srcset="/img/loading.gif" lazyload alt="image-20260419224330835" style="zoom:50%;" />
+<p>第 610~611 行，因为 block-&gt;data 指向此节内容的起始位置， block-&gt;data 加上 r_offset 就找到了要修改的那 4 个字节;<br>
+第 612，如果是绝对重定位，公式是 S + A，即把符号的虚拟地址累加到加数上（加数就在原地）;<br>
+第 615，如果是相对重定位，我们再推导一下公式;<br>
+P 表示打补丁的位置（虚拟地址）<br>
+相对地址 = S -下一条指令的地址<br>
+= S - (P + 4)<br>
+= S - P - 4<br>
+= S + (-4) - P<br>
+= A + (S - P)<br>
+所以把 (S - P) 累加到加数上;<br>
+至此，重定位完成。</p>
+<p>整个链接过程基本完成，就差组装和输出可执行文件了。胜利就在眼前！</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第38天：静态链接(中)</div>
+      <div>https://leslieche.github.io/2026/04/19/第38天：静态链接(中)/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月19日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/04/19/%E7%AC%AC39%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%8B)/" title="第39天：静态链接(下)">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">第39天：静态链接(下)</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/19/%E7%AC%AC37%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%8A)/" title="第37天：静态链接(上)">
+                        <span class="hidden-mobile">第37天：静态链接(上)</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"LeslieChe/comment_for_blog","repo-id":"R_kgDOR6CL3g","category":"General","category-id":"DIC_kwDOR6CL3s4C6Ez9","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":1,"input-position":"top","lang":"zh-CN","strict":0,"theme":"preferred_color_scheme","loading":"lazy"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
