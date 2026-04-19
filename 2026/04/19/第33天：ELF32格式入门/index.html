@@ -1,0 +1,1172 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="记不住没有关系，用到的时候再查本文。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第33天：ELF32格式入门">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="记不住没有关系，用到的时候再查本文。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419180914327.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419181547244.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419181637959.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419183457673.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419184053142.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419184355304.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419184500594.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419184531558.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419184612571.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419184645719.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419184716319.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419185340423.png">
+<meta property="article:published_time" content="2026-04-19T10:59:25.000Z">
+<meta property="article:modified_time" content="2026-04-19T11:00:07.146Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC33%E5%A4%A9%EF%BC%9AELF32%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260419180914327.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第33天：ELF32格式入门 - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/download/" target="_self">
+                <i class="iconfont icon-gitee-fill"></i>
+                <span>代码下载</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/download/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-gitee-fill"></i>
+                  <span>代码下载</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第33天：ELF32格式入门"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-19 18:59" pubdate>
+          2026年4月19日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          9.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          79 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第33天：ELF32格式入门</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第33天：elf32格式入门">第33天：ELF32格式入门</h1>
+<h2 id="背景知识">背景知识</h2>
+<h3 id="什么是目标文件？">什么是目标文件？</h3>
+<p>简单来说，目标文件（Object File） 是源代码经过编译后、链接前的一个“半成品”。</p>
+<p>例如输入下面的命令：<br>
+<code>gcc -c main.c</code><br>
+-c 的意思是：只编译，不链接。<br>
+所以，会生成一个叫 main.o 的文件，这个 .o 就是目标文件。</p>
+<p>.o 文件包括机器码，但“地址未定”。虽然这些机器码是 CPU 能读懂的二进制指令，但它里面的函数和变量地址是相对的。</p>
+<p>比如你在 main.c 里调用了 printf，目标文件知道这里要“跳到printf函数”，但它不知道 printf 的内存地址是多少。</p>
+<p>不过 .o 也不完全都是机器码，还有相当一部分内容是给链接器看的，例如它会包含一个叫<strong>重定位表</strong>（Relocation Table）的部分，此概念在上节课已经介绍了。</p>
+<p><strong>.o 文件是 ELF 格式的一种。</strong></p>
+<h3 id="什么是ELF-格式">什么是ELF 格式</h3>
+<p>ELF (Executable and Linkable Format) 是 Linux 环境下二进制文件的统一标准格式。<br>
+不管是 main.o（目标文件）、还是可以执行的 a.out，包括系统里的 .so（动态链接库），它们在底层都遵循同一种“排版方式”，也就是 ELF 格式。</p>
+<p><strong>ELF 的四大组成部分</strong></p>
+<ol>
+<li>
+<p>ELF Header（文件头）</p>
+<p>记录了这是 32 位还是 64 位、是大端还是小端、程序的入口地址（Entry point）在哪里等等。</p>
+</li>
+<li>
+<p>Program Header Table（程序头表）：</p>
+<p>这是给 操作系统 看的。举个例子：可执行文件利用这部分内容告诉操作系统：“运行我时，请把文件偏移 0x1000 处的内容加载到内存 0x08049000，并赋予只读权限。”</p>
+</li>
+<li>
+<p>Sections（节/段）：<br>
+.text：对应我们之前生成的指令编码<br>
+.data：对应我们之前生成的数据段<br>
+.strtab：字符串表<br>
+.symtab：符号表<br>
+…（这里省略，马上会学习到）</p>
+</li>
+<li>
+<p>Section Header Table（节头表）：</p>
+<p>这是给链接器和调试器看的“目录”。记录了每个段的名字、大小、在文件中的位置、属性等。</p>
+</li>
+</ol>
+<h3 id="为什么会有ELF格式呢">为什么会有ELF格式呢</h3>
+<p>在 ELF (1990年代初) 诞生之前，Unix 世界处于一种“格式战”的混乱状态（比如早期的 a.out 和后来的 COFF）。发明 ELF 格式主要为了解决以下三个“痛点”：</p>
+<ol>
+<li>动态链接的“救星”<br>
+早期的 a.out 格式非常死板，很难实现高效的动态链接（Shared Libraries）。<br>
+痛点：旧格式要求每个动态库在内存中的地址必须是固定的。如果两个库地址冲突，程序就崩溃。<br>
+ELF 的创新：引入了 GOT (全局偏移表) 和 PLT (过程链接表)。这让代码可以写成“位置无关”的（PIC），无论动态库加载到内存哪个角落，程序都能通过查找 ELF 里的这张“表”找到函数。</li>
+<li>跨平台的“通用语言”<br>
+以前每种硬件架构（Intel, Motorola, SPARC）都有自己的二进制格式。<br>
+痛点：开发者不得不为每种机器写一套链接器和加载器。<br>
+ELF 的创新：它被设计得极其通用且灵活。它用统一的 Header 描述所有信息。无论是在 32 位还是 64 位，或者在大端还是小端机器上，解析逻辑几乎是一样的。</li>
+<li>“链接”与“运行”的完美分离<br>
+痛点：旧格式把调试信息、符号名和机器码混在一起，操作系统加载时很头疼。<br>
+ELF 的创新：它定义了两套视角：链接视角和运行视角。<br>
+前者颗粒度很细，由 <code>.text</code>、<code>.data</code>、<code>.bss</code>、<code>.symtab</code>、<code>.rel.text</code>等组成。<br>
+后者颗粒度很粗，当程序要跑起来时，操作系统根本不在乎可执行文件是由多少个 .o 拼成的，它关注的是加载地址和权限。可执行文件把属性相似的 section 揉成一个大的 Segment（通常是 LOAD 类型），内核加载器像“搬运工”一样，把这个大的 Segment 直接映射到内存。</li>
+</ol>
+<h3 id="编译器和编译系统">编译器和编译系统</h3>
+<p>之前，我们把 csub 叫做编译器，其实它不仅仅是编译器。<br>
+编译器一般是把高级语言翻译成汇编代码。把汇编语言翻译成目标文件，是汇编器的任务；把多个目标文件和库文件链接在一起，生成最终的可执行文件，是链接器的任务。</p>
+<p>编译系统是一个更广义的概念，涵盖从源代码到可执行程序所需的全部工具和流程。<br>
+所以，我们马上就要通关了！<br>
+还有两道关卡：</p>
+<ol>
+<li>把汇编语言翻译成目标文件，目前做了一半，因为符号表和指令编码都完成了</li>
+<li>把多个目标文件链接在一起，生成最终的可执行文件</li>
+</ol>
+<p>所以，我们打起精神，完成冲刺！<br>
+下面，为大家具体介绍 ELF32 格式的每个部分。</p>
+<h2 id="ELF文件头">ELF文件头</h2>
+<p><code>nasm -f elf32 test.asm</code><br>
+-f elf32 表示指定生成 elf32 格式的 .o<br>
+以上命令会生成 test.o<br>
+用下面的命令查看 .o<br>
+<code>readelf -a test.o</code><br>
+首先输出的就是文件头</p>
+<img src="image-20260419180914327.png" srcset="/img/loading.gif" lazyload alt="image-20260419180914327" style="zoom:50%;" />
+<p>⬆文件头示意图<br>
+需要关注的我都框出来了。首先，是一串 16 字节的魔数。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7f 45 4c 46</td>
+<td>magic</td>
+<td>del(0x7f),‘E’,‘L’,‘F’</td>
+</tr>
+<tr>
+<td>01</td>
+<td>32位，ELFCLASS32</td>
+<td>00 表示 ELFCLASSNONE，02 表示 ELFCLASS64</td>
+</tr>
+<tr>
+<td>01</td>
+<td>小端序</td>
+<td>ELFDATA2LSB</td>
+</tr>
+<tr>
+<td>01</td>
+<td>版本</td>
+<td>EV_CURRENT</td>
+</tr>
+<tr>
+<td>00 00 00 00 00 00 00 00 00</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>偏移 0：7f 45 4c 46 对应 4 字节的 ASCII 码：del(0x7f),‘E’,‘L’,‘F’；<br>
+偏移 4：01，表示这是 32 位的文件；<br>
+偏移 5：01，表示小端格式;<br>
+偏移 6：表示版本，通常设为 01;<br>
+偏移 7~15：通常设为 0;<br>
+除了魔数，文件头还有其他字段。</p>
+<p>下面就是文件头结构体的定义。<br>
+来自 Linux 的系统文件/usr/include/elf.h</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span>	e_ident[EI_NIDENT];	<span class="hljs-comment">/* Magic number and other info */</span><br>  Elf32_Half	e_type;			<span class="hljs-comment">/* Object file type */</span><br>  Elf32_Half	e_machine;		<span class="hljs-comment">/* Architecture */</span><br>  Elf32_Word	e_version;		<span class="hljs-comment">/* Object file version */</span><br>  Elf32_Addr	e_entry;		<span class="hljs-comment">/* Entry point virtual address */</span><br>  Elf32_Off	e_phoff;		<span class="hljs-comment">/* Program header table file offset */</span><br>  Elf32_Off	e_shoff;		<span class="hljs-comment">/* Section header table file offset */</span><br>  Elf32_Word	e_flags;		<span class="hljs-comment">/* Processor-specific flags */</span><br>  Elf32_Half	e_ehsize;		<span class="hljs-comment">/* ELF header size in bytes */</span><br>  Elf32_Half	e_phentsize;		<span class="hljs-comment">/* Program header table entry size */</span><br>  Elf32_Half	e_phnum;		<span class="hljs-comment">/* Program header table entry count */</span><br>  Elf32_Half	e_shentsize;		<span class="hljs-comment">/* Section header table entry size */</span><br>  Elf32_Half	e_shnum;		<span class="hljs-comment">/* Section header table entry count */</span><br>  Elf32_Half	e_shstrndx;		<span class="hljs-comment">/* Section header string table index */</span><br>&#125; Elf32_Ehdr;<br></code></pre></td></tr></table></figure>
+<p>查看文件头的原始数据，可以用命令</p>
+<p><code>hexdump -C -n 64 test.o</code></p>
+<p><code>-n 64</code> 表示查看前 64 个字节结果如下图：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c">$ hexdump -C -n <span class="hljs-number">64</span> test.o<br><span class="hljs-number">00000000</span>  <span class="hljs-number">7f</span> <span class="hljs-number">45</span> <span class="hljs-number">4</span>c <span class="hljs-number">46</span> <span class="hljs-number">01</span> <span class="hljs-number">01</span> <span class="hljs-number">01</span> <span class="hljs-number">00</span>  <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span>  |.ELF............|<br><span class="hljs-number">00000010</span>  <span class="hljs-number">01</span> <span class="hljs-number">00</span> <span class="hljs-number">03</span> <span class="hljs-number">00</span> <span class="hljs-number">01</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span>  <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span>  |................|<br><span class="hljs-number">00000020</span>  <span class="hljs-number">40</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span>  <span class="hljs-number">34</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">28</span> <span class="hljs-number">00</span>  |@.......<span class="hljs-number">4.</span>....(.|<br><span class="hljs-number">00000030</span>  <span class="hljs-number">09</span> <span class="hljs-number">00</span> <span class="hljs-number">04</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span>  <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span> <span class="hljs-number">00</span>  |................|<br><span class="hljs-number">00000040</span>     <br></code></pre></td></tr></table></figure>
+<p>除了魔数，每个字段的含义我都列出来了。<br>
+“我们的取值”这列是说我们的汇编器需要生成 .o, 应该取什么值。</p>
+<img src="image-20260419181547244.png" srcset="/img/loading.gif" lazyload alt="image-20260419181547244" style="zoom:50%;" />
+<h2 id="目标文件结构示意图">目标文件结构示意图</h2>
+<p>既然要生成 .o，不如研究一下 nasm 生成的 .o 是什么样的 ，我们依葫芦画瓢。</p>
+<img src="image-20260419181637959.png" srcset="/img/loading.gif" lazyload alt="image-20260419181637959" style="zoom:50%;" />
+<center>⬆目标文件结构示意图</center>
+<p>上图是某个 .o 文件的结构图。<br>
+首先是文件头，然后是段表，这个段表是什么呢？马上就讲。<br>
+段表后面是每个段。<br>
+注意，虽然叫“段”，但是英文是 section，节的意思。在讲链接器之前，我们可以把节叫做段，认为这二者是同一个概念。</p>
+<p>相信读者对 .text 和 .data 段不会陌生，在上节课“合并同类项”这一节，有示意图。<br>
+然后是段表字符串表（.shstrtab）、符号表（.symtab）、字符串表（.strtab）；<br>
+最后是针对 .text 段的重定位表（.rel.text）和针对 .data 段的重定位表（.rel.data）；<br>
+虽然名字都带个“表”，但是它们也是 section;</p>
+<p>因为上节课我们介绍了重定位表，所以，陌生的概念有 4 个，分别是<br>
+1、段表<br>
+2、段表字符串表(.shstrtab)<br>
+3、符号表(.symtab)<br>
+4、字符串表(.strtab)<br>
+下面我们就一一学习。</p>
+<h2 id="段表">段表</h2>
+<p>段表（也叫节头表）由若干段表项组成，对于 ELF32，每个表项是 40 字节。<br>
+可以说段表就是段的目录，有几个段就有几个表项。<br>
+细心的读者一定发现，图中段表是 40 * 8，说明有 8 个，可是一共就 7 个段啊。<br>
+观察得很细，确实只有 7 个段，多出来的段表项是一个空的表项，它的 40 个字节全是 0；<br>
+文件头里面有一个字段叫 e_shoff，意思是段表在 elf 文件内的偏移地址（单位是字节）；<br>
+就是本文开头那张图片，我用蓝色框框住的“64”；</p>
+<p>所以，要查看段表的原始数据，可以用命令<br>
+<code>hexdump -C -s 64 test1_nasm.o -n 320 -v</code><br>
+<code>-s 64</code> 表示跳过前面 64 字节<br>
+<code>-n 320</code> 表示显示 320 个字节，因为 40 * 8=320，所以我们查看 320 字节就够了。</p>
+<p>查看结果如下：</p>
+<img src="image-20260419183457673.png" srcset="/img/loading.gif" lazyload alt="image-20260419183457673" style="zoom:50%;" />
+<p>前 40 个字节，确实都是 0，这是一个空的段表项。</p>
+<p>图中的数字都是什么意思呢？</p>
+<p>需要弄清楚这 40 个字节都代表什么。</p>
+<p>描述段表项的结构体叫 Elf32_Shdr；</p>
+<p>定义如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Section header.  */</span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  Elf32_Word	sh_name;		<span class="hljs-comment">/* Section name (string tbl index) */</span><br>  Elf32_Word	sh_type;		<span class="hljs-comment">/* Section type */</span><br>  Elf32_Word	sh_flags;		<span class="hljs-comment">/* Section flags */</span><br>  Elf32_Addr	sh_addr;		<span class="hljs-comment">/* Section virtual addr at execution */</span><br>  Elf32_Off	    sh_offset;		<span class="hljs-comment">/* Section file offset */</span><br>  Elf32_Word	sh_size;		<span class="hljs-comment">/* Section size in bytes */</span><br>  Elf32_Word	sh_link;		<span class="hljs-comment">/* Link to another section */</span><br>  Elf32_Word	sh_info;		<span class="hljs-comment">/* Additional section information */</span><br>  Elf32_Word	sh_addralign;	<span class="hljs-comment">/* Section alignment */</span><br>  Elf32_Word	sh_entsize;		<span class="hljs-comment">/* Entry size if section holds table */</span><br>&#125; Elf32_Shdr;<br></code></pre></td></tr></table></figure>
+<p>注释有点简单，我总结了下面的表格。</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sh_name</td>
+<td>是一个4字节的偏移量，记录了段名字符串在段表字符串表内的偏移。</td>
+<td></td>
+</tr>
+<tr>
+<td>sh_type</td>
+<td>段的类型。SHT_PROGBITS(1):程序数据；SHT_SYMTAB(2):符号表；SHT_STRTAB(3):字符串表 SHT_RELA(4):带加数的重定位表项；SHT_REL(9):不带加数的重定位表项；SHT_NOBITS(8):无内容段（例如.bss）</td>
+<td>不带加数的意思不是没有加数，<strong>加数（Addend）存放在“待修正的地址处”</strong>。即链接器在处理前，会先从目标代码的原始字节中读出这个值。</td>
+</tr>
+<tr>
+<td>sh_flags</td>
+<td>段属性。SHF_WRITE 表示可写；SHF_ALLOC 表示执行期间要占用内存；SHF_EXECINSTR 表示可执行</td>
+<td>属性可以叠加，例如.text 段的属性是 SHF_ALLOC|SHF_EXECINSTR； .data和.bss段的属性是 SHF_ALLOC|SHF_WRITE;对于一般的段，如果执行期间需要分配内存则取值 SHF_ALLOC，如果不需要分配内存则取默认值 0 即可</td>
+</tr>
+<tr>
+<td>sh_addr</td>
+<td>段加载后的线性地址</td>
+<td>**对于可重定位目标文件，无法确定段的虚拟地址，故设置为 0；**对于可执行文件，链接器会计算出需要加载的段的线性地址。</td>
+</tr>
+<tr>
+<td>sh_offset</td>
+<td>段在文件内的偏移</td>
+<td>根据此偏移可以确定段的位置，读取段的内容。</td>
+</tr>
+<tr>
+<td>sh_size</td>
+<td>段的大小，单位为字节。</td>
+<td>如果段的类型是 SHT_NOBITS，表示段加载后占用内存的大小</td>
+</tr>
+<tr>
+<td>sh_link</td>
+<td>节链接索引</td>
+<td>如果是符号表 (SYMTAB)，sh_link 指向与之关联的字符串表 (STRTAB) 的索引；如果是重定位表 (REL/RELA)：sh_link 指向关联的符号表索引</td>
+</tr>
+<tr>
+<td>sh_info</td>
+<td>对于符号表，记录符号表内最后一个局部符号的索引+1；<strong>对于重定位表，指向被修补的节的索引</strong></td>
+<td>ELF 规定所有局部符号必须排在全局符号之前。链接器可以通过这个值快速区分哪些是局部符号，哪些是全局符号；即使你的代码里全都是全局变量，符号表中至少也存在一个索引为 0 的局部符号。 此时 <code>sh_info</code> 的值将为 <strong>1</strong></td>
+</tr>
+<tr>
+<td>sh_addralign</td>
+<td>段的对齐，取值是2的整数幂(1，2，4，8，…),如果取值0或1，则表示无对齐的要求；</td>
+<td>在可重定位目标文件中，代码段和数据段的 sh_addralign 一般是 4，其他类型的段取值是 1（无对齐要求）；在可执行文件中，代码段的取值一般是 16，数据段一般是4，其他类型段取值是1（无对齐要求）</td>
+</tr>
+<tr>
+<td>sh_entsize</td>
+<td>对于有表结构的段，表示表项的大小；对于不是表结构的段，取值 0</td>
+<td>例如符号表的表项大小是 sizeof(Elf32_Sym) = 16 字节；   重定位表的表项大小是 sizeof(Elf32_Rel) = 8 字节；</td>
+</tr>
+</tbody>
+</table>
+<p>有读者会说，这么多字段，拿着原始数据一条一条对，岂不是很麻烦？</p>
+<p>确实很麻烦！好在 readelf 命令会帮我们把“天书”翻译成适合人类阅读的文字。</p>
+<p><code>readelf -a test.o</code></p>
+<p>输出的内容很多，文件头后面就是段表了。</p>
+<img src="image-20260419184053142.png" srcset="/img/loading.gif" lazyload alt="image-20260419184053142" style="zoom:50%;" />
+<center>⬆段表举例图</center>
+<p>注意，Flg 字段，字母的含义是：</p>
+<p>W (write), A (alloc), X (execute)</p>
+<p>从 0 到 7，一共 8 个段表表项。<br>
+从 Name、Type、再到最后一列的 Al， 一共 10 个字段，都在这里了。<br>
+这 10 个字段对 .o 来说，也不是每个都会用到；<br>
+对于我们将要生成 .o，段表的每个字段怎么填呢？<br>
+我们可以模仿上面的表格。</p>
+<img src="image-20260419184355304.png" srcset="/img/loading.gif" lazyload alt="image-20260419184355304" style="zoom:50%;" />
+<p>“？” 表示需要根据具体情况填。</p>
+<h2 id="段表字符串表">段表字符串表</h2>
+<p>上图 sh_type 这一行，段表字符串表（.shstrtab）和字符串表（.strtab）的取值一样，都是 SHT_STRTAB，意思是它们都是字符串表。<br>
+什么是字符串表？字符串表（简称串表）虽然带个“表”，但是和表没有关系，就是一疙瘩字符串。<br>
+为什么需要字符串表？<br>
+段表和符号表都需要记录段的名字和符号的名字，这些名字就是字符串。然而，段表和符号表的表项都是固定长度的，无法存储不定长的字符串。所以，elf 文件把这些字符串集中在一起，放在一个段（section）里面，称为“字符串表”。<br>
+要表示一个名字，可以用这个名字在字符串表内的偏移。</p>
+<p>现在，我们查看段表字符串表的原始数据。<br>
+如果不依赖 readelf  的输出信息，如何找到段表字符串表呢？<br>
+文件头示意图的最后一行，给出了 Section header string table index = 3；<br>
+翻译过来是节头字符串表，也叫段表字符串表，索引是 3， 说明它是段表第 3 个表项（从 0 开始数）<br>
+所以，我们先把段表第 3 个表项找出来。<br>
+段表在 elf 文件内的偏移是 64；再加上 0~2 个表项的大小，就是 64 + 40 * 3 = 184<br>
+跳过文件开头的 184 个字节，查看 40 个字节。<br>
+<code>hexdump -C -s 184 test1_nasm.o -n 40</code></p>
+<img src="image-20260419184500594.png" srcset="/img/loading.gif" lazyload alt="image-20260419184500594" style="zoom:50%;" />
+<p>我们关注 sh_offset 和 sh_size 字段，就是用黄色框框出来的。<br>
+偏移是 0x0360，大小是 0x3b；<br>
+和前面用 readelf 命令得到信息一致；<br>
+然后把节头字符串表的数据打印出来；<br>
+<code>hexdump -C -s 0x0360 test1_nasm.o -n 0x3b</code></p>
+<img src="image-20260419184531558.png" srcset="/img/loading.gif" lazyload alt="image-20260419184531558" style="zoom:50%;" />
+<p>根据右边显示的字符，说明这确实是一大堆字符串。<br>
+“.text” 在其中的偏移是 1;<br>
+“.data” 在其中的偏移是 7;<br>
+“.rel.data” 在其中的偏移是 49;<br>
+所以，.text 段对应的段表项的 sh_name 的值是 1;<br>
+.data 段对应的段表项的 sh_name 的值是 7;<br>
+.rel.data 段对应的段表项的 sh_name 的值是 49(0x31);</p>
+<p>如何验证呢？<br>
+段表在 elf 文件内的偏移是 64；再加上 1 个空表项的大小，就是 64 + 40 = 104;<br>
+<code>hexdump -C -s 104 test1_nasm.o -n 40</code><br>
+查看第 1 个段表项</p>
+<img src="image-20260419184612571.png" srcset="/img/loading.gif" lazyload alt="image-20260419184612571" style="zoom:50%;" />
+<p>前 4 个字节是 1，就是 sh_name，说明第 1 个段表项是 .text 段的;</p>
+<p>查看第 2 个段表项:</p>
+<p><code>hexdump -C -s 144 test1_nasm.o -n 40</code></p>
+<img src="image-20260419184645719.png" srcset="/img/loading.gif" lazyload alt="image-20260419184645719" style="zoom:50%;" />
+<p>前 4 个字节是 7，说明第 2 个段表项是 .data 段的;</p>
+<p>查看第 7 个段表项<br>
+<code>hexdump -C -s 344 test1_nasm.o -n 40</code></p>
+<img src="image-20260419184716319.png" srcset="/img/loading.gif" lazyload alt="image-20260419184716319" style="zoom:50%;" />
+<p>前 4 个字节是 0x31，说明第 7 个段表项是 .rel.data 段的;</p>
+<h2 id="符号表">符号表</h2>
+<p>符号表这个“表”当之无愧，它和段表一样，确实是表结构。</p>
+<p>每个条目 16 字节。每个字段的含义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Symbol table entry.  */</span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  Elf32_Word	st_name;		<span class="hljs-comment">/* Symbol name (string tbl index) */</span><br>  Elf32_Addr	st_value;		<span class="hljs-comment">/* Symbol value */</span><br>  Elf32_Word	st_size;		<span class="hljs-comment">/* Symbol size */</span><br>  <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span>	st_info;		<span class="hljs-comment">/* Symbol type and binding */</span><br>  <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span>	st_other;		<span class="hljs-comment">/* Symbol visibility */</span><br>  Elf32_Section	st_shndx;		<span class="hljs-comment">/* Section index */</span><br>&#125; Elf32_Sym;<br></code></pre></td></tr></table></figure>
+<img src="image-20260419185340423.png" srcset="/img/loading.gif" lazyload alt="image-20260419185340423" style="zoom:50%;" />
+<p>st_name 就不用说了，刚刚讲过；不同的是这个偏移量要去符号表中找。<br>
+st_value 就是我们前面反复提到的符号在段内的偏移。<br>
+st_size 给 0 就可以。<br>
+st_info，低 4 位表示符号类型，高 4 位表示绑定信息；具体给什么值，等讲代码的时候再说。<br>
+st_other，一般给 0；<br>
+st_shndx，表示该符号所在段的索引。<br>
+例如 .text 段定义了函数 foo，那么符号 foo 的 st_shndx 值就是 .text 段的索引；<br>
+.text 段的索引是多少？需要查看段表， .text 段的段表项是第几个条目，索引就是几；</p>
+<p>有关的宏定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> ELF32_ST_BIND(val)		(((unsigned char) (val)) &gt;&gt; 4)     <span class="hljs-comment">// 获取绑定信息</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ELF32_ST_TYPE(val)		((val) &amp; 0xf)                      <span class="hljs-comment">// 获取符号类型</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ELF32_ST_INFO(bind, type)	(((bind) &lt;&lt; 4) + ((type) &amp; 0xf))  <span class="hljs-comment">// 组合绑定信息和符号类型</span></span><br><br><br><span class="hljs-comment">// 绑定信息</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> STB_LOCAL	0		<span class="hljs-comment">/* Local symbol */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> STB_GLOBAL	1		<span class="hljs-comment">/* Global symbol */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> STB_WEAK	2		<span class="hljs-comment">/* Weak symbol */</span></span><br><br><span class="hljs-comment">// 符号类型</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> STT_NOTYPE	0		<span class="hljs-comment">/* Symbol type is unspecified */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> STT_OBJECT	1		<span class="hljs-comment">/* Symbol is a data object */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> STT_FUNC	2		<span class="hljs-comment">/* Symbol is a code object */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> STT_SECTION	3		<span class="hljs-comment">/* Symbol associated with a section */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> STT_FILE	4		<span class="hljs-comment">/* Symbol&#x27;s name is file name */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> STT_COMMON	5		<span class="hljs-comment">/* Symbol is a common data object */</span></span><br><span class="hljs-comment">//....</span><br></code></pre></td></tr></table></figure>
+<h2 id="字符串表">字符串表</h2>
+<p>和段表字符串表的功能一样，只不过字符串表把符号表中所有符号的名字收集到一起了。不再赘述。</p>
+<h2 id="重定位表">重定位表</h2>
+<p>重定位表这个“表”也是当之无愧，确实是表结构。<br>
+重定位表一般位于可重定位目标文件内，上节课已经带大家窥探了一番。<br>
+重定位表一般保存在名字以 “.rel” 开头的段内。该段的类型为 SHT_REL 或者 SHT_RELA（我们采用前者）。<br>
+可重定位目标文件中每个需要重定位的段，一般都对应一个重定位表。<br>
+例如代码段 .text 的重定位表在 .rel.text 段；数据段 .data 的重定位表在 .rel.data 段；<br>
+每个重定位表可以包含若干个表项，每个表项记录一条重定位信息，包括要重定位的符号，偏移，类型等信息。</p>
+<p>重定位表项的数据结构如下（我们用的是不带加数的，2~6 行）</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Relocation table entry without addend (in section of type SHT_REL).  */</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  Elf32_Addr	r_offset;		<span class="hljs-comment">/* Address */</span><br>  Elf32_Word	r_info;			<span class="hljs-comment">/* Relocation type and symbol index */</span><br>&#125; Elf32_Rel;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  Elf32_Addr	r_offset;		<span class="hljs-comment">/* Address */</span><br>  Elf32_Word	r_info;			<span class="hljs-comment">/* Relocation type and symbol index */</span><br>  Elf32_Sword	r_addend;		<span class="hljs-comment">/* Addend */</span><br>&#125; Elf32_Rela;<br></code></pre></td></tr></table></figure>
+<p>相关的宏列举如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* How to extract and insert information held in the r_info field.  */</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ELF32_R_SYM(val)		((val) &gt;&gt; 8)   <span class="hljs-comment">// 获取符号</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ELF32_R_TYPE(val)		((val) &amp; 0xff)  <span class="hljs-comment">// 获取类型</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ELF32_R_INFO(sym, type)		(((sym) &lt;&lt; 8) + ((type) &amp; 0xff)) <span class="hljs-comment">// 组合类型和符号</span></span><br></code></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>r_offset</td>
+<td>要重定位的位置对于段基址的偏移</td>
+<td>只考虑静态链接的情况</td>
+</tr>
+<tr>
+<td>r_info</td>
+<td>低8位标识重定位的类型；高24位表示要重定位的符号</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>重定位表项需要的信息包括符号、偏移和类型，这些我们已经在前面的章节中掌握了，所以生成重定位表很简单。</p>
+<p>本文到这里就结束了。</p>
+<p>如果暂时掌握不了这么多内容也没有关系，等后面写代码的时候再回来复习，肯定有不一样的收获。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第33天：ELF32格式入门</div>
+      <div>https://leslieche.github.io/2026/04/19/第33天：ELF32格式入门/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月19日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/19/%E7%AC%AC32%E5%A4%A9%EF%BC%9A%E6%94%B6%E9%9B%86%E9%87%8D%E5%AE%9A%E4%BD%8D%E4%BF%A1%E6%81%AF/" title="第32天：收集重定位信息">
+                        <span class="hidden-mobile">第32天：收集重定位信息</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"LeslieChe/comment_for_blog","repo-id":"R_kgDOR6CL3g","category":"General","category-id":"DIC_kwDOR6CL3s4C6Ez9","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":1,"input-position":"top","lang":"zh-CN","strict":0,"theme":"preferred_color_scheme","loading":"lazy"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
