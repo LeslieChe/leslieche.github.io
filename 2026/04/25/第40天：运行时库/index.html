@@ -1,0 +1,1115 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/whale.png">
+  <link rel="icon" href="/img/whale.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Che">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="什么是运行时库，什么是 Linux 系统调用？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第40天：运行时库">
+<meta property="og:url" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/index.html">
+<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:description" content="什么是运行时库，什么是 Linux 系统调用？">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307171346534.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307172805078.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307173537336.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260308110415466.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307184852166.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307192020958.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307193153030.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307194036025.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307194212873.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307194426006.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307200910094.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307202547716.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307203359920.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307200910094.png">
+<meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307194212873.png">
+<meta property="article:published_time" content="2026-04-25T13:28:24.000Z">
+<meta property="article:modified_time" content="2026-04-25T14:02:35.427Z">
+<meta property="article:author" content="Che">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307171346534.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>第40天：运行时库 - 49天自制编译器</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leslieche.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":60,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+
+  
+<!-- hexo injector head_end start --><link rel="stylesheet" href="https://registry.npmmirror.com/lxgw-wenkai-screen-web/latest/files/style.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>49 天自制编译器</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/download/" target="_self">
+                <i class="iconfont icon-gitee-fill"></i>
+                <span>代码下载</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/archives/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-archive-fill"></i>
+                  <span>归档</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/download/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-gitee-fill"></i>
+                  <span>代码下载</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="第40天：运行时库"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-25 21:28" pubdate>
+          2026年4月25日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          67 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">第40天：运行时库</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第40天：运行时库"><a href="#第40天：运行时库" class="headerlink" title="第40天：运行时库"></a>第40天：运行时库</h1><p>链接器写完了，但是有一个问题。</p>
+<p>虽然我们生成了可执行文件 b.out，但它如此沉默，跑起来什么效果都没有。就算它的功能是生成 1000 个随机整数然后对它们排序，可是结果呢？</p>
+<p>所以，我们要做点什么，让可执行程序和我们交互起来。</p>
+<p>前面提到过“CRT”。<strong>CRT（C Runtime Library，C 运行时库）</strong>是 C 语言程序运行时所依赖的基础库的统称。打个比方，离开了 CRT，C 语言就好比是个没有门窗、不通水电的毛坯房，根本没有办法居住。</p>
+<p>有 CRT的 C 语言，相当于毛坯房完成了 “基础装修”：门窗装好了、水电通了、厨卫能用、有基础家具和软装。</p>
+<p>那有读者问，这个 CRT 应该谁负责呢？</p>
+<p>CRT 的 “归属” 和 “职责” 是<strong>编译器主导实现，操作系统提供适配支持</strong>。二者分工明确，既不是纯编译器的事，也不是纯操作系统的事，而是 “编译器造轮子，操作系统给跑道” 的关系。</p>
+<p>要说谁主要谁次要，那就是 90% 的责任是编译器。继续刚才的比喻，编译器就是装修公司，负责整个装修工作，操作系统是物业公司或者市政公司，提供水电、暖气等底层支撑。</p>
+<p>CRT 本质是<strong>编译器厂商为自家编译器配套实现的标准库</strong>，编译器对 CRT 负核心责任。所有 CRT 的基础功能，都是编译器厂商（如 GCC、Clang、MSVC）编写的。</p>
+<p>这套代码至少包括入口函数，及其所依赖的函数构成的函数集合。当然，它还理应包括各种标准库函数的实现。一个 CRT 大概包括如下功能：</p>
+<ul>
+<li>标准库函数的实现</li>
+<li>程序启动与退出</li>
+<li>内存管理</li>
+<li>IO 功能的封装和实现</li>
+<li>语言特性支撑</li>
+<li>调试</li>
+</ul>
+<p>操作系统不 “实现” CRT，但为 CRT 提供 “底层运行环境”。CRT 的高级功能，最终都会调用操作系统的系统调用。例如</p>
+<ul>
+<li><code>printf</code> → 调用 Linux 的<code>write</code>系统调用（往 stdout 写数据）</li>
+<li><code>malloc</code> → 调用 Linux 的<code>brk</code>/<code>mmap</code>系统调用（向内核申请内存）</li>
+<li><code>exit</code> → 调用 Linux 的<code>exit_group</code>系统调用（通知内核终止进程）</li>
+</ul>
+<p>本文，我们就实现一个迷你 CRT。</p>
+<p>我们已经有了一个启动文件—— start.asm</p>
+<p>虽然它只有几行代码：</p>
+<p><img src="image-20260307171346534.png" srcset="/img/loading.gif" lazyload alt="image-20260307171346534" style="zoom:50%;" /></p>
+<p>我们要扩充它的代码，增加几个小功能。</p>
+<p>1、模仿 printf，实现一个简单的 my_printf，支持 10 进制整数、16 进制整数、字符串的输出，还要支持可变参数</p>
+<p>2、提供一个返回 32 位随机整数的函数</p>
+<p>3、实现 getchar()，从标准输入（键盘）读取一个字符</p>
+<p>4、实现 putchar()，向标准输出（屏幕）发送一个字符</p>
+<p>下面，为大家讲解代码。</p>
+<h2 id="get-trng"><a href="#get-trng" class="headerlink" title="get_trng"></a>get_trng</h2><p><img src="image-20260307172805078.png" srcset="/img/loading.gif" lazyload alt="image-20260307172805078" style="zoom:50%;" /></p>
+<p>rdrand 这个指令的作用是从硬件获取 32 位随机数，并存入指定的寄存器</p>
+<p>如果标志位 CF == 1，说明成功，否则跳转到第 260 行，继续尝试。</p>
+<p>有读者说，你这里增加了 rdrand 指令，是不是编译器的代码也要增加对 rdrand 指令支持。</p>
+<p>非常正确！</p>
+<p>这里讲一下如何给我们的 csub 添加新的汇编指令支持。</p>
+<p>一共三个步骤：</p>
+<p>1、要修改指令模板初始化函数</p>
+<p>找到 void add_all_inst_description(void) </p>
+<p>在里面增加一行：</p>
+<p><img src="image-20260307173537336.png" srcset="/img/loading.gif" lazyload alt="image-20260307173537336" style="zoom:100%;" /></p>
+<p>2、修改 ass_token_e、ass_token_names、ass_keywords_names；</p>
+<p>1）ass_token_e 增加枚举成员 I_RDRAND</p>
+<p>2）ass_token_names、ass_keywords_names 数组增加字符串 “rdrand”</p>
+<p>3、如果有需要的话，修改对应的编码函数，或函数里面的子函数。</p>
+<p>rdrand 只需要前 2 个步骤。</p>
+<h2 id="Linux-系统调用"><a href="#Linux-系统调用" class="headerlink" title="Linux 系统调用"></a>Linux 系统调用</h2><p>Linux 系统调用（System Call）是<strong>用户程序向 Linux 内核请求服务的唯一合法接口</strong>。简单说，内核是操作系统的 “核心管家”，掌管着 CPU、内存、文件等所有关键资源，普通程序（用户态）不能直接触碰这些资源，只能通过 “系统调用” 这个 “窗口”，让内核帮忙完成操作。</p>
+<p>前文说了，CRT 的高级功能，最终都会调用操作系统的系统调用。</p>
+<p>如何调用呢？</p>
+<p>Linux 为所有系统调用分配了唯一的编号（Syscall Number），内核通过编号识别要执行的操作，而非函数名（函数名是 CRT 封装的）。</p>
+<p>常见系统调用编号（x86_32 架构）：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>系统调用名</th>
+<th>编号</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>read</td>
+<td>3</td>
+<td>从文件 / 设备读取数据</td>
+</tr>
+<tr>
+<td>write</td>
+<td>4</td>
+<td>向文件 / 设备写入数据</td>
+</tr>
+<tr>
+<td>open</td>
+<td>5</td>
+<td>打开文件 / 设备</td>
+</tr>
+<tr>
+<td>close</td>
+<td>6</td>
+<td>关闭文件 / 设备</td>
+</tr>
+<tr>
+<td>exit</td>
+<td>1</td>
+<td>终止进程</td>
+</tr>
+<tr>
+<td>mmap</td>
+<td>90</td>
+<td>内存映射</td>
+</tr>
+<tr>
+<td>brk</td>
+<td>45</td>
+<td>调整进程内存堆</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>我们的 _start 函数，就在调用完 main 之后，发起了编号为 1 的系统调用，意思是终止进程。</p>
+<p>普通函数的调用一般使用 call xxx，但是系统调用不同，</p>
+<p>普通函数调用是 “直接跳转”，系统调用需要触发 “特权切换”。</p>
+<p>有一点需要清楚，现在的 PC 大多是 x86-64 位架构。但是我们编译出来的是 32 位的程序，能在 64 位的 cpu 上跑吗？</p>
+<p>当然可以。这是因为 x86-64 位 CPU 内部包含完整的 32 位指令集。当运行 32 位程序时，CPU 会进入 <strong>IA-32e 子模式</strong>（或称为 Legacy Mode），此时它只识别 32 位指令，并像传统的 32 位处理器一样工作。</p>
+<p>有读者问，CPU 如何知道用户程序是 32 位的？</p>
+<p>这是操作系统告诉 CPU 的。当操作系统发现 ELF 文件头中 ELFCLASS 字段（就是 “ELF” 之后的那个字节）是1，表示这是 32 位程序，操作系统会设置正确的 CS 段选择子，CPU 根据 CS 的值找到 GDT 中的段描述符，根据描述符中某些字段发现这是 32 位程序。</p>
+<p>我们回到主题，继续说系统调用。</p>
+<p>对于 x86 架构、Linux 系统上的 32 位程序：通过 <code>int 0x80</code> 指令触发系统调用，系统调用号存入 <code>eax</code> 寄存器，参数存入 <code>ebx</code>/<code>ecx</code>/<code>edx</code> 等；</p>
+<p>这里的 int 是一条<strong>触发软件中断</strong>的汇编指令，0x80 表示中断号码，但是我们的汇编器不支持 16 进制的数字，所以我们要写 int 128</p>
+<p>int 指令的作用是让 CPU 暂停当前程序的执行，跳去执行由操作系统或 BIOS 预先设定的<strong>中断处理程序</strong>（Interrupt Handler）。</p>
+<p>为什么是 0x80，而不是别的数字？</p>
+<p>x86 架构的前 32 个中断号是被 Intel <strong>预留给 CPU 硬件异常</strong>的。比如</p>
+<ul>
+<li><code>int 0</code>：除以零。</li>
+<li><code>int 3</code>：调试断点。</li>
+<li><code>int 14</code>：页错误（Page Fault）。</li>
+</ul>
+<p>所以，前 32 个肯定不行。在 IBM PC 时代，很多中断号被分配给了<strong>硬件设备</strong>：例如时钟中断、键盘、串口、磁盘驱动器等。为了保证兼容性，Linux 需要找一个“离它们远点”的、没人用的空位。与其给 <code>read</code> 分配一个中断号、给 <code>write</code> 分配一个中断号（那样会很快耗尽有限的 256 个中断名额），不如<strong>只开一扇门</strong>。Linux 创始人林纳斯·托瓦兹（Linus Torvalds）选择了 <strong><code>0x80</code></strong> 作为这扇门的编号。进入这扇门后，内核再去看 <code>EAX</code> 寄存器里的数字（系统调用号），决定具体去执行哪个功能。</p>
+<p>下面可以看代码了。</p>
+<h2 id="getchar"><a href="#getchar" class="headerlink" title="getchar"></a>getchar</h2><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> getchar<br><span class="hljs-symbol">getchar:</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">ebp</span>            <span class="hljs-comment">; 建立栈帧</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebp</span>, <span class="hljs-built_in">esp</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">ebx</span>            <span class="hljs-comment">; 关键：保护 EBX，因为后面 sys_read 会占用它 </span><br>    <span class="hljs-keyword">sub</span> <span class="hljs-built_in">esp</span>, <span class="hljs-number">4</span>          <span class="hljs-comment">; 为单字节缓冲区分配 4 字节（保持对齐）</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">3</span>          <span class="hljs-comment">; 系统调用号: sys_read</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebx</span>, <span class="hljs-number">0</span>          <span class="hljs-comment">; 参数1: 文件描述符 stdin (0)</span><br>    <span class="hljs-keyword">lea</span> <span class="hljs-built_in">ecx</span>, [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">8</span>]    <span class="hljs-comment">; 参数2: 缓冲区地址 (注意：ebp-4 是 ebx 的值, ebp-8 才是空位)</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">edx</span>, <span class="hljs-number">1</span>          <span class="hljs-comment">; 参数3: 读取字节数 (1)</span><br>    <span class="hljs-keyword">int</span> <span class="hljs-number">128</span>             <span class="hljs-comment">; 触发软中断</span><br></code></pre></td></tr></table></figure>
+<p>对于 3，4，6 行，相信读者不陌生，我们翻译函数入口（也有地方叫序言，prologue）和出口（也有地方叫尾声，Epilogue）的时候，反复用到。</p>
+<p>但是第 5 行，push ebx 是为什么？为什么要把 ebx 的值入栈呢？</p>
+<p>根据 cdecl 调用约定：</p>
+<ul>
+<li><strong>主调方保存（Caller-save）</strong>：<code>EAX</code>, <code>ECX</code>, <code>EDX</code>。函数内部可以随便改，如果你想保留它们的值，调用前得自己压栈。</li>
+<li><strong>被调方保存（Callee-save）</strong>：<code>EBX</code>, <code>ESI</code>, <code>EDI</code>, <code>EBP</code>。如果你的函数要用这些寄存器，必须先压栈备份，返回前弹栈恢复。</li>
+</ul>
+<p>ebx 属于被调方保存，如果函数里面用到 ebx，要先备份原来的值，返回前恢复原值。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs xml">高地址<br>┌─────────────┐<br>│  返回地址   │  ebp+4<br>├─────────────┤<br>│  旧 ebp     │   ← ebp 指向这里<br>├─────────────┤<br>│  保存 ebx   │  ebp-4<br>├─────────────┤<br>│  缓冲区     │  ebp-8 (4 字节空间)<br>└─────────────┘<br>低地址<br><br></code></pre></td></tr></table></figure>
+<p>第 6 行，在栈上分配 4 个字节，作为缓冲区</p>
+<p>此时栈的布局如上图。</p>
+<p>第 7 行，eax = 3，对应 read 系统调用</p>
+<p>第 8 行，ebx 存放文件描述符，0 代表标准输入</p>
+<p>第 9 行，ecx 存放一个地址，意思是要把若干字节读取到这个地址。</p>
+<p>给出的地址是 ebp-8</p>
+<p>注意，因为入栈了 ebx，所以 ebp-4 指向 ebx 的值, ebp-8 才是空位</p>
+<p>第 10 行，edx 存放要读取的字节数，我们读 1 个字节。</p>
+<p>第 11 行，发起系统调用。</p>
+<p>所以功能就是从标准输入读取一个字节到 ecx 指向的地方，也就是图中的缓冲区。</p>
+<p>代码还没有完</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">    <span class="hljs-keyword">cmp</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">1</span>          <span class="hljs-comment">; 检查是否读取了 1 字节</span><br>    <span class="hljs-keyword">jne</span> .L_eof           <span class="hljs-comment">; 如果 eax != 1, 跳转到 EOF 处理</span><br><br>    <span class="hljs-keyword">movzx</span> <span class="hljs-built_in">eax</span>, <span class="hljs-built_in">byte</span> [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">8</span>] <span class="hljs-comment">; 取出字符，零扩展到 eax</span><br>    <span class="hljs-keyword">jmp</span> .L_done<br><span class="hljs-symbol">.L_eof:</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, -<span class="hljs-number">1</span>         <span class="hljs-comment">; EOF 或错误：返回 -1</span><br><span class="hljs-symbol">.L_done:</span><br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">esp</span>, <span class="hljs-number">4</span>          <span class="hljs-comment">; 释放缓冲区</span><br>    <span class="hljs-keyword">pop</span> <span class="hljs-built_in">ebx</span>             <span class="hljs-comment">; 恢复 EBX </span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">esp</span>, <span class="hljs-built_in">ebp</span>        <span class="hljs-comment">; 撤销栈帧</span><br>    <span class="hljs-keyword">pop</span> <span class="hljs-built_in">ebp</span><br>    <span class="hljs-keyword">ret</span><br></code></pre></td></tr></table></figure>
+<p>系统调用返回的时候，eax 保存了系统调用的返回值。</p>
+<p>第 1 行，如果不是 1，说明遇到错误或者遇到了文件结束，跳转到第 7 行，让 eax = -1</p>
+<p>如果是 1，说明读取成功，从缓冲区拿出字符，零扩展到 eax</p>
+<p>第 9 行，释放缓冲区</p>
+<p>第 10 行，恢复 ebx</p>
+<p>在 c 代码中调用这个函数，首先要声明</p>
+<p>int getchar(void);</p>
+<p>然后就可以用了。</p>
+<p>例如下面的代码：</p>
+<p><img src="image-20260308110415466.png" srcset="/img/loading.gif" lazyload alt="image-20260308110415466" style="zoom:50%;" /></p>
+<p>这里有 4 个关键点。</p>
+<p>1、<code>getchar</code> <strong>默认是阻塞的</strong>，当程序执行到 284 行的时候，如果你什么都没有输入，程序就会停下来；准确讲是 getchar() 会发起一个 <code>read</code> 系统调用，但是此时内核没有收到数据（内核维护的“终端输入缓冲区”是空的），<code>read</code> 就会让当前的进程进入“休眠”状态</p>
+<p>2、当我们敲下一个按键，例如‘A’，会发生什么呢？</p>
+<p>1）键盘控制器产生一个<strong>硬件中断</strong>。</p>
+<p>2）内核的中断处理程序被激活，读取扫描码（Scan Code）。</p>
+<p>3）内核将扫描码转换为 ASCII 码（<code>0x41</code>），并把它放进该终端对应的<strong>内核缓冲区</strong>里。</p>
+<p><strong>此时，内核的缓冲区里已经有数据了。</strong></p>
+<p>虽然内核缓冲区里有了 <code>0x41</code>，但因为 Linux 默认处于<strong>行缓冲（Canonical Mode）模式</strong>：</p>
+<ul>
+<li>内核在等一个特定的字符——<strong>回车符（<code>\n</code>）</strong>。</li>
+<li>在你按下回车之前，尽管内核缓冲区里躺着 <code>A</code>、<code>B</code>、<code>C</code>，但当前的进程依然在睡觉</li>
+</ul>
+<p>3、当你敲下回车后，内核认为“这一行数据完整了”。内核查看等待队列，发现你的程序正因为执行 <code>read</code> 系统调用而“睡觉”（阻塞），于是<strong>将你的进程状态改为“就绪”</strong>。</p>
+<p>因为 getchar 函数只要求读 1 个字节，所以内核从它的内部缓冲区里取出第一个字符 <strong>‘A’</strong>，拷贝到你的 <code>ecx</code> 指向的地址，将系统调用的返回值 <code>eax</code> 设为 <strong>1</strong>（表示实际只给了你 1 字节）</p>
+<p><strong>关键点</strong>：剩下的 <strong>‘B’, ‘C’, ‘\n’ 依然留在内核的缓冲区里</strong>，并没有消失。</p>
+<p>第 284 行，getchar 返回值就是 ‘A’</p>
+<p>4、因为在 while(1) 中，所以又会执行到第 284 行，此时 <code>read</code> <strong>不会阻塞</strong>！因为内核缓冲区里还躺着 <code>b</code>, <code>c</code>, <code>\n</code>。系统调用立即返回，<code>getchar()</code> 瞬间拿到 <strong><code>&#39;b&#39;</code></strong>。</p>
+<p>putchar 的函数原型是 int putchar(int c);</p>
+<p>它的代码和 my_printf 中的 raw_print 非常类似，所以不赘述。</p>
+<h2 id="my-printf"><a href="#my-printf" class="headerlink" title="my_printf"></a>my_printf</h2><p>这个函数代码有点多，我们分段看。</p>
+<p><img src="image-20260307184852166.png" srcset="/img/loading.gif" lazyload alt="image-20260307184852166" style="zoom:50%;" /></p>
+<p>第 25~27，保存要修改的寄存器，和前面的 getchar 不同，这里是在<strong>函数序言（Function Prologue）</strong>的后面保存，我只是想说明这也是一种写法。</p>
+<p>假设我们有代码</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> num = <span class="hljs-number">100</span>;<br><span class="hljs-type">char</span> *name = <span class="hljs-string">&quot;Bob&quot;</span>;<br>my_printf(<span class="hljs-string">&quot;hello! %d , %s\n&quot;</span>, num, name);<br></code></pre></td></tr></table></figure>
+<p>因为参数从右往左入栈，所以</p>
+<p>ebp + 8 指向 “hello! %d , %s\n” 这个字符串的地址（栈上的内容不是字符串，是它的地址）  </p>
+<p>ebp + 12 指向 num （的值）</p>
+<p>第 29 行，让 esi 等于 “hello! %d , %s\n” 这个字符串的地址</p>
+<p>第 30 行，让 ebx 等于 ebp + 12</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs xml">            高地址<br>             ────────────────────────────────────────<br>            │              ...                       |<br>            ├────────────────────────────────────────┤<br>ebp+16      │  name 的值 (指向 &quot;Bob&quot;)                ← 第3个参数<br>            ├────────────────────────────────────────┤<br>ebp+12      │  num 的值                              ← 第2个参数<br>            ├────────────────────────────────────────┤<br>ebp+8       │  fmt 的值 (指向格式字符串)              ← 第1个参数<br>            ├────────────────────────────────────────┤<br>ebp+4       │  返回地址                              <br>            ├────────────────────────────────────────┤<br>ebp →       │  old ebp                               |<br>            ├────────────────────────────────────────┤<br>ebp-4       │  ebx                                   |<br>            ├────────────────────────────────────────┤<br>ebp-8       │  esi                                   |<br>            ├────────────────────────────────────────┤<br>ebp-12      │  edi                                   |                   <br>            ├────────────────────────────────────────┤<br>ebp-16      │  ...                                   |                  <br>            ├────────────────────────────────────────┤<br>                 <br>            低地址<br><br><br></code></pre></td></tr></table></figure>
+<p><img src="image-20260307192020958.png" srcset="/img/loading.gif" lazyload alt="image-20260307192020958" style="zoom:50%;" /></p>
+<p>我们继续看代码。</p>
+<p>第 33 行，取出 esi 指向的字符，和 0 比较，如果是 0，说明字符串结束了，跳转到 @done</p>
+<p>否则，和 ‘%’ 比较，如果相等，说明是格式控制字符，跳到第 44 行，增加 esi，这样 esi 就指向 % 后面的第一个字符；第 46 行取出这个字符，第 47~54，根据不同的字符，跳转到不同的标号；</p>
+<p>第 36 行，如果不是 %，则是普通字符，直接打印，例如 “hello! …”，原样输出</p>
+<p>第 41 行，调用了 raw_print</p>
+<p>这个函数的函数原型是  void raw_print(char *buf, int len);</p>
+<p>它的代码很简单，连函数序言和结尾都不需要。</p>
+<p><img src="image-20260307193153030.png" srcset="/img/loading.gif" lazyload alt="image-20260307193153030" style="zoom:50%;" /></p>
+<p>使用 4 号系统调用（sys_write）</p>
+<p>参数 1，ebx = 1,表示标准输出，</p>
+<p>参数 2: ecx, 来自 buf，缓冲区地址</p>
+<p>参数 3: edx, 来自 len，要写入字节数</p>
+<p>意思是把 buf 指向的字符串输出到标准输出，且限定 len 个字符。</p>
+<p>再回到第 39 行，push 1，把参数 len 压栈，表示输出 1 个字符，</p>
+<p>push esi，把参数 buf 压栈，esi 指向的是 “hello! …” 中的某个字符</p>
+<p>所以，每次调用 raw_print，都会输出 esi 指向的那一个字符</p>
+<p>第 43 行，跳转到 @next_char，让 esi 增加 1，处理下一个字符</p>
+<p><img src="image-20260307194036025.png" srcset="/img/loading.gif" lazyload alt="image-20260307194036025" style="zoom:50%;" /></p>
+<p>下面我们看对 10 进制整数的处理</p>
+<p><img src="image-20260307194212873.png" srcset="/img/loading.gif" lazyload alt="image-20260307194212873" style="zoom:50%;" /></p>
+<p>不管是 %s,还是 %d,还是 %p（代码我没有贴）,代码都是类似的，只不过第 59 行，第 66 行，调用不同的函数</p>
+<p><img src="image-20260307194426006.png" srcset="/img/loading.gif" lazyload alt="image-20260307194426006" style="zoom:50%;" /></p>
+<p>第 106 行，在栈上开辟一段 16 字节的缓冲区，这是为了存放转换后的字符串。例如把整数 123456 转换成字符串，至少占用 6 字节；</p>
+<p>注意，因为 103 ~ 105 入栈了 3 个寄存器（的值），分别对应地址 ebp - 4, ebp - 8, ebp - 12;</p>
+<p>然后又有 16 字节的缓冲区，所以缓冲区对应的地址（如果以字节为单位）是 ebp - 13, ebp -14, … ebp - 28,</p>
+<p>刚好 16 字节。</p>
+<p>第 108 行，ebp + 8 是什么？是调用 print_int 的函数在栈上最后一次 push 的那个参数</p>
+<p>第 65 行， push dword [ebx]</p>
+<p>前面第 30 行，让 ebx 等于 ebp + 12</p>
+<p>所以，我们要看 ebp + 12 这个地方存的是什么，</p>
+<p>ebp + 12 指向 num （的值）</p>
+<p>所以，最后一次 push 的就是 num</p>
+<p>所以第 108 行，eax = num 的值</p>
+<p>第 109 ， ecx = 10, 这是为除法做准备，例如把 1234 转换成字符串，需要反复除以 10，再把每次的余数转换成单个的字符</p>
+<p>第 110 行，让 esi = epb - 13，指向缓冲区的末尾（缓冲区的最高地址处）</p>
+<p>第 112 行，比较 eax 和 0，如果等于 0，那就不用费事了，直接输出 “0”，也就是 114 行</p>
+<p><img src="image-20260307200910094.png" srcset="/img/loading.gif" lazyload alt="image-20260307200910094" style="zoom:50%;" /></p>
+<p>141~142，连起来，就是 eax = ebp -12</p>
+<p>第 143 行，求字符串的长度</p>
+<p>因为 eax 指向缓冲区的末端的下一个位置</p>
+<p>esi 初始位置是缓冲区末端，填写了一个‘0’，然后 esi 的值没有改变</p>
+<p>所以字符串的长度就是 1，保存在 eax 中</p>
+<p>144，先压入 len = 1</p>
+<p>145，压入 buf = esi ，就是缓冲区的起始地址</p>
+<p>第 146 ，调用 raw_print，输出 “0”</p>
+<p>第 113 行，如果不是 0，那么</p>
+<p><img src="image-20260307202547716.png" srcset="/img/loading.gif" lazyload alt="image-20260307202547716" style="zoom:50%;" /></p>
+<p>第 118 行，让 edi = 0,表示默认是整数</p>
+<p>第 119 行，比较 eax(就是要打印的数)和 0，要是大于等于0，跳转到 124</p>
+<p>否则，让 edi = 1,表示负数</p>
+<p>第 122 行，对 eax 取负，那么负数就变为正数了。</p>
+<p>第 124 行，处理 eax(肯定大于 0)</p>
+<p>第 125 行，把 edx 清零，因为要做除法  edx:eax / ecx </p>
+<ul>
+<li><strong>商</strong> 存放在 <strong><code>EAX</code></strong> 中。</li>
+<li><strong>余数</strong> 存放在 <strong><code>EDX</code></strong> 中。</li>
+</ul>
+<p>因为余数肯定小于 10，所以 dl 是装得下的，第 127 行，把余数转化成字符</p>
+<p>第 128 行，把字符存入 esi 指向的地方</p>
+<p>第 129，比较 eax 和 0，如果 eax 等于 0，说明商是 0，例如 3 除以 10，商 0 余 3，这就不用再做除法了。</p>
+<p>假设不为 0，那就是 esi 自减，往缓冲区低地址移动一个字节，为了存放下一个字符</p>
+<p>再跳到 124 行，继续做除法</p>
+<p>如果为 0，跳转到 134</p>
+<p><img src="image-20260307203359920.png" srcset="/img/loading.gif" lazyload alt="image-20260307203359920" style="zoom: 50%;" /></p>
+<p>第135行，比较 edi 和 1，等于 1 说明是负数</p>
+<p>要存一个“-”</p>
+<p>第 137~138 是存储负号</p>
+<p>然后该执行</p>
+<p><img src="image-20260307200910094.png" srcset="/img/loading.gif" lazyload alt="image-20260307200910094" style="zoom:50%;" /></p>
+<p>这段代码已经分析了，我们再分析一下。</p>
+<p>141~142，连起来，就是 eax = ebp -12，让 eax 指向缓冲区的末端的下一个位置</p>
+<p>前面存储字符的时候，esi 初始位置是缓冲区末端，先填写字符，</p>
+<p>然后判断还有没有字符要写，如果有，往低地址移动一个字节。</p>
+<p>当除法停止的时候，判断要不要加负号，不管加不加负号，</p>
+<p>esi 指向的位置就是要打印输出的第一个字符。</p>
+<p>从第一个字符到缓冲区末端，都是我们要打印的字符。因为字符是倒着填的。</p>
+<p>所以 eax - esi 的值就是字符串的长度。</p>
+<p>对于 print_str 和 print_hex，代码都不如这个难，我就不分析了，留给读者练习。</p>
+<p>还有一点要注意，这个可变参数的“可变”体现在什么地方</p>
+<p>首先，可变也是有迹可循的</p>
+<p>第一个参数是格式控制字符串，这里面出现 %d，%p，%s 的地方，就是需要用参数填充的地方，所以有多少个控制字符，就有多少个参数。</p>
+<p>代码中也是这样处理的，就是从左到右检查控制字符，根据控制字符的个数移动 ebx;</p>
+<p>第 30 行，让 ebx 等于 ebp + 12</p>
+<p>它就指向了第一个可选参数，当然，如果代码是 my_printf(“hello”);</p>
+<p>就没有可选参数，所以说 ebx 是时刻准备着，当发现控制字符的时候，它已经指向参数了。</p>
+<p><img src="image-20260307194212873.png" srcset="/img/loading.gif" lazyload alt="image-20260307194212873" style="zoom:50%;" /></p>
+<p>当把参数处理完后，也就是第 59 行执行完，第 61 行，ebx 会加 4，指向下一个可选参数。</p>
+<p>总结一下就是，ebx 先指向第一个可选参数，只要遇到控制字符，我就打印这个参数，然后指向下一个可选参数。</p>
+<p>本文到这里就结束了。</p>
+<p>虽然我们实现的 CRT 非常简单，不，应该是简陋，但是至少可以和用户交互了。</p>
+<p>下节课，也是最后一篇文章，我们用 csub 支持的语法写一个小游戏，作为最后的成果展示。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>第40天：运行时库</div>
+      <div>https://leslieche.github.io/2026/04/25/第40天：运行时库/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Che</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月25日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-cc-nc"></i>
+                  </span>
+                </a>
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-cc-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/19/%E7%AC%AC39%E5%A4%A9%EF%BC%9A%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5(%E4%B8%8B)/" title="第39天：静态链接(下)">
+                        <span class="hidden-mobile">第39天：静态链接(下)</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"LeslieChe/comment_for_blog","repo-id":"R_kgDOR6CL3g","category":"General","category-id":"DIC_kwDOR6CL3s4C6Ez9","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":1,"input-position":"top","lang":"zh-CN","strict":0,"theme":"preferred_color_scheme","loading":"lazy"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/openkounter.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

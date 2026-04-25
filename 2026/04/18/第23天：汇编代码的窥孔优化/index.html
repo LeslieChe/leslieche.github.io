@@ -331,7 +331,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.9k 字
+          4.8k 字
         
       </span>
     
@@ -386,10 +386,9 @@
             
               <div class="markdown-body">
                 
-                <h1 id="汇编代码的窥孔优化">汇编代码的窥孔优化</h1>
-<p>上节课我们生成了汇编代码，算是一个阶段性的胜利。不过我提醒自己不要得意，能否再向前迈一步呢？</p>
+                <h1 id="汇编代码的窥孔优化"><a href="#汇编代码的窥孔优化" class="headerlink" title="汇编代码的窥孔优化"></a>汇编代码的窥孔优化</h1><p>上节课我们生成了汇编代码，算是一个阶段性的胜利。不过我提醒自己不要得意，能否再向前迈一步呢？</p>
 <p>请看下面的图：</p>
-<img src="image-20260123101236848.png" srcset="/img/loading.gif" lazyload alt="image-20260123101236848" style="zoom:50%;" />
+<p><img src="image-20260123101236848.png" srcset="/img/loading.gif" lazyload alt="image-20260123101236848" style="zoom:50%;" /></p>
 <p>是不是有点眼花缭乱？不要着急，我为读者解读。</p>
 <p>先看左边的 62~63 行</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">0</span><br><span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">16</span>], <span class="hljs-built_in">eax</span><br></code></pre></td></tr></table></figure>
@@ -403,19 +402,15 @@
 <p>目标明确了，如何做呢？</p>
 <p>前面为读者讲解了四种优化方法，分别是常量传播，复写传播，活跃变量分析，懒惰代码移动。</p>
 <p>现在为读者讲解我的最后一招：“窥孔优化”</p>
-<h2 id="什么是窥孔优化">什么是窥孔优化</h2>
-<p>窥孔优化（Peephole Optimization）是编译原理中的一种局部代码优化技术，它通过分析一小段连续的指令（称为&quot;窥孔&quot;窗口），识别并替换其中的低效或冗余指令序列，从而生成更高效的代码。</p>
+<h2 id="什么是窥孔优化"><a href="#什么是窥孔优化" class="headerlink" title="什么是窥孔优化"></a>什么是窥孔优化</h2><p>窥孔优化（Peephole Optimization）是编译原理中的一种局部代码优化技术，它通过分析一小段连续的指令（称为”窥孔”窗口），识别并替换其中的低效或冗余指令序列，从而生成更高效的代码。</p>
 <p>名字中的 “<strong>窥孔</strong>”（peephole）是一个形象的比喻：想象你通过一个小孔观察代码，只看局部片段，不关心全局结构。</p>
 <p><strong>优点</strong>：</p>
 <ul>
-<li>
-<p><strong>实现简单</strong>：只需维护一个滑动窗口，算法复杂度低</p>
+<li><p><strong>实现简单</strong>：只需维护一个滑动窗口，算法复杂度低</p>
 </li>
-<li>
-<p><strong>独立性强</strong>：不依赖全局信息，可独立应用于代码段</p>
+<li><p><strong>独立性强</strong>：不依赖全局信息，可独立应用于代码段</p>
 </li>
-<li>
-<p><strong>多次应用</strong>：可多次遍历代码，每次优化可能产生新的优化机会</p>
+<li><p><strong>多次应用</strong>：可多次遍历代码，每次优化可能产生新的优化机会</p>
 </li>
 </ul>
 <p><strong>局限性</strong>：</p>
@@ -437,27 +432,25 @@
 <p>1、指令 1 的源操作数是一个数字或者寄存器的名字</p>
 <p>2、指令 2 的源操作数和指令 1 的目的操作数是同一个寄存器</p>
 <p>当以上 2 个条件都满足的时候，我们用指令 1 的源操作数去替换指令 2 的源操作数；再把指令 1 删除。</p>
-<h2 id="窗口结构体">窗口结构体</h2>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">slide_window</span>&#123;</span><br>	<span class="hljs-type">int</span> size; <span class="hljs-comment">// 窗口大小，最小值是 1</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> *<span class="hljs-title">code_head</span>;</span> <span class="hljs-comment">// 代码序列</span><br>	<span class="hljs-type">void</span> **inst; <span class="hljs-comment">// 窗口内的指令（数组）</span><br>	<span class="hljs-type">void</span> *begin; <span class="hljs-comment">// 窗口的起始位置</span><br>&#125;<span class="hljs-type">window_t</span>;<br></code></pre></td></tr></table></figure>
+<h2 id="窗口结构体"><a href="#窗口结构体" class="headerlink" title="窗口结构体"></a>窗口结构体</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">slide_window</span>&#123;</span><br>	<span class="hljs-type">int</span> size; <span class="hljs-comment">// 窗口大小，最小值是 1</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> *<span class="hljs-title">code_head</span>;</span> <span class="hljs-comment">// 代码序列</span><br>	<span class="hljs-type">void</span> **inst; <span class="hljs-comment">// 窗口内的指令（数组）</span><br>	<span class="hljs-type">void</span> *begin; <span class="hljs-comment">// 窗口的起始位置</span><br>&#125;<span class="hljs-type">window_t</span>;<br></code></pre></td></tr></table></figure>
 <p>首先，要有一个窗口。slide_window 是滑动窗口的意思。</p>
 <p>第 3 行的 code_head 用于指向指令链表的头节点。</p>
 <p>第 5 行的 begin 表示当前窗口滑动到哪里了，它指向窗口内的第一条有效指令。</p>
 <p>第 4 行的 inst 是一个 void ** 类型的指针，我的设计是这样的：</p>
 <p>假设窗口大小是 3。我们用数组来“装”这 3 条指令。</p>
-<img src="image-20260418153532406.png" srcset="/img/loading.gif" lazyload alt="image-20260418153532406" style="zoom:50%;" />
-<p>​</p>
+<p><img src="image-20260418153532406.png" srcset="/img/loading.gif" lazyload alt="image-20260418153532406" style="zoom:50%;" /></p>
+<p>​                         </p>
 <p>如图所示，中间的 3 个连续的框子代表数组。数组中的元素是 void * 类型，仅保存指令的地址。</p>
 <p>因为窥孔优化不但可以用于汇编代码的优化，对于之前生成的中间指令，也可以用。</p>
 <p>只要指令是一条一条线性排列的，就可以用窥孔优化。</p>
-<p>所以，是 void * 类型，而不是某个具体类型的指针（例如 x86_inst_t *）窗口大小也是不确定的，根据你的优化策略来。</p>
+<p>所以，是 void <em> 类型，而不是某个具体类型的指针（例如 x86_inst_t </em>）窗口大小也是不确定的，根据你的优化策略来。</p>
 <p>例如你发现了一种模式，能把具有某种特征的 4 条连续指令合并成一条，那窗口大小就是 4。</p>
 <p>所以数组大小不确定，需要动态分配内存。</p>
 <p>假设窗口大小是 3，如果是为整型数组分配内存，代码如下面第 1 行。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> *arr = (<span class="hljs-type">int</span> *)<span class="hljs-built_in">malloc</span>(<span class="hljs-keyword">sizeof</span>(<span class="hljs-type">int</span>) * <span class="hljs-number">3</span>);<br><br><span class="hljs-type">void</span> **arr = (<span class="hljs-type">int</span> *)<span class="hljs-built_in">malloc</span>(<span class="hljs-keyword">sizeof</span>(<span class="hljs-type">void</span> *) * <span class="hljs-number">3</span>);<br></code></pre></td></tr></table></figure>
 <p>现在是为 void * 类型的数组分配内存，照猫画虎，就是上面第 3 行。</p>
 <p>所以，才会有 void **inst 这个字段。</p>
-<h2 id="窗口的初始化">窗口的初始化</h2>
-<img src="image-20260123163441306.png" srcset="/img/loading.gif" lazyload alt="image-20260123163441306" style="zoom:50%;" />
+<h2 id="窗口的初始化"><a href="#窗口的初始化" class="headerlink" title="窗口的初始化"></a>窗口的初始化</h2><p><img src="image-20260123163441306.png" srcset="/img/loading.gif" lazyload alt="image-20260123163441306" style="zoom:50%;" /></p>
 <p>第 157，为结构体 window_t 分配内存。</p>
 <p>第 161，根据窗口大小，分配数组的内存。</p>
 <p>第 165，填写 code_head,让它指向指令序列链表的头节点。</p>
@@ -466,13 +459,12 @@
 <p>initial_fill_window 这个参数是一个指向函数的指针，马上就讲。</p>
 <p>之所以设计成指向函数的指针，是因为前面说了，窥孔优化不单单可以用于汇编指令。</p>
 <p>可能有的读者忘了 base_node_t 是什么，我们复习一下。</p>
-<img src="image-20260418154118817.png" srcset="/img/loading.gif" lazyload alt="image-20260418154118817" style="zoom:50%;" />
+<p><img src="image-20260418154118817.png" srcset="/img/loading.gif" lazyload alt="image-20260418154118817" style="zoom:50%;" /></p>
 <p>为了把不同类型的结构体（简称大结构体）加入链表，我们在大结构体里嵌入了 base_node_t 类型的结构体，名字叫 base，且它是大结构体的第一个成员，如上面第 7 行。</p>
 <p>同以前的用法一样，base_node_t 的 struct list_head 用于形成链表，base_node_t 是用户节点。</p>
 <p>因为 base 是大结构体的第一个成员，所以它的地址就是大结构体的地址；可以把 base（base_node_t 类型） 看成是某个指令（x86_inst_t 类型）的化身。</p>
-<h2 id="首次填充窗口">首次填充窗口</h2>
-<p>对于汇编指令的窥孔优化，我们用 asm_fill_window 函数填充窗口。</p>
-<img src="image-20260123163740416.png" srcset="/img/loading.gif" lazyload alt="image-20260123163740416" style="zoom:50%;" />
+<h2 id="首次填充窗口"><a href="#首次填充窗口" class="headerlink" title="首次填充窗口"></a>首次填充窗口</h2><p>对于汇编指令的窥孔优化，我们用 asm_fill_window 函数填充窗口。</p>
+<p><img src="image-20260123163740416.png" srcset="/img/loading.gif" lazyload alt="image-20260123163740416" style="zoom:50%;" /></p>
 <p>window_init 函数执行到第 167 行的时候，win-&gt;begin 等于 NULL，说明是第一次装指令。</p>
 <p>第 52 行，遍历汇编指令链表，第 53 行跳过其他类型的节点。</p>
 <p>第 56 行，跳过死代码，因为窥孔优化可以做多遍，在此过程中，有的指令被标记为死代码。</p>
@@ -481,8 +473,7 @@
 <p>如果窗口移动到了链表的末尾，或者指令本来就特别少，可能会出现指令不够的情况，第 78 行判断是否装载成功。</p>
 <p>如果失败，则返回 false 给调用者，以便结束此轮优化。</p>
 <p>首次填充窗口完毕，就可以做模式识别和优化了。不管能不能优化，接下来需要移动窗口。</p>
-<h2 id="窗口的滑动">窗口的滑动</h2>
-<img src="image-20260123165803073.png" srcset="/img/loading.gif" lazyload alt="image-20260123165803073" style="zoom:50%;" />
+<h2 id="窗口的滑动"><a href="#窗口的滑动" class="headerlink" title="窗口的滑动"></a>窗口的滑动</h2><p><img src="image-20260123165803073.png" srcset="/img/loading.gif" lazyload alt="image-20260123165803073" style="zoom:50%;" /></p>
 <p>此函数第二个参数表示要滑过多少条指令，可正可负，如果是负数，表示窗口往上滑动。</p>
 <p>窗口滑动的本质是移动 begin 指针，让 begin 指向后面的指令或者先前的指令。</p>
 <p>第 131~142 行，是 step 是正数的情况。</p>
@@ -494,19 +485,17 @@
 <p>一直循环，一旦要移动的步数 step 等于计数器 i，就 break</p>
 <p>例如参数 step 是 2，那么此函数执行后，begin 会向后移动 2 个有效位置。</p>
 <p>再打开刚才折叠的代码</p>
-<img src="image-20260123170559550.png" srcset="/img/loading.gif" lazyload alt="image-20260123170559550" style="zoom:50%;" />
+<p><img src="image-20260123170559550.png" srcset="/img/loading.gif" lazyload alt="image-20260123170559550" style="zoom:50%;" /></p>
 <p>如果参数 step 是负数，说明要向前移动。</p>
 <p>list_for_each_entry_continue_reverse 表示从 node 的前一个节点开始遍历，而且是逆序遍历。</p>
 <p>第 159 行的返回值表示实际移动了多少步，因为接近指令序列末尾的时候， i 可能小于 step。</p>
-<h2 id="再次填充窗口">再次填充窗口</h2>
-<p>每次滑动窗口后，都需要重新填充窗口。注意，窗口滑动后，win-&gt;begin 已经指向了新的位置。</p>
+<h2 id="再次填充窗口"><a href="#再次填充窗口" class="headerlink" title="再次填充窗口"></a>再次填充窗口</h2><p>每次滑动窗口后，都需要重新填充窗口。注意，窗口滑动后，win-&gt;begin 已经指向了新的位置。</p>
 <p>asm_fill_window 函数的另一半代码如下：</p>
-<img src="image-20260418154920899.png" srcset="/img/loading.gif" lazyload alt="image-20260418154920899" style="zoom:50%;" />
+<p><img src="image-20260418154920899.png" srcset="/img/loading.gif" lazyload alt="image-20260418154920899" style="zoom:50%;" /></p>
 <p>第 63~66 表示从 begin 指示的位置开始装载指令；</p>
 <p>list_for_each_entry_from(pos, head, member) 表示从 pos 开始遍历，而不是从第一个节点！</p>
 <p>其他的代码不再赘述。</p>
-<h2 id="控制程序">控制程序</h2>
-<p>接下我们看控制程序</p>
+<h2 id="控制程序"><a href="#控制程序" class="headerlink" title="控制程序"></a>控制程序</h2><p>接下我们看控制程序</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">asm_peephole_optimization</span><span class="hljs-params">(<span class="hljs-type">fun_t</span> *fun)</span><br>&#123;<br>    assert(fun);<br>    <span class="hljs-type">window_t</span> *win = window_init(&amp;fun-&gt;asm_code, <span class="hljs-number">2</span>, asm_fill_window);<br>    <span class="hljs-keyword">if</span> (!win)<br>        <span class="hljs-keyword">return</span>;<br><br>    <span class="hljs-keyword">do</span> &#123;<br>        asm_optimize_template_2_insts(win);<br>        <br>      <span class="hljs-comment">// 每次移动一个指令</span><br>    &#125; <span class="hljs-keyword">while</span> (asm_move_and_fill_window(win, <span class="hljs-number">1</span>));  <span class="hljs-comment">// 直到窗口移动不了或者指令填充失败</span><br><br>    window_destroy(win);<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>第 4 行，完成窗口的初始化，指令窗口大小为 2， 填充窗口用的函数是 asm_fill_window，此函数已经介绍了。</p>
 <p>第 8 行开始是 do-while 循环。</p>
@@ -517,12 +506,12 @@
 <p>如果第 3 行的 “==” 不成立，说明到了代码序列的末尾，移动不了了，那就返回 false（第 6 行）</p>
 <p>移动成功后调用 asm_fill_window 往窗口填充新的指令（第 4 行），并返回此函数的结果，如果填充过程出现了问题，也会返回 false;</p>
 <p>下面为读者介绍 asm_optimize_template_2_insts 函数，优化的细节在这里面。</p>
-<img src="image-20260123172520903.png" srcset="/img/loading.gif" lazyload alt="image-20260123172520903" style="zoom:50%;" />
+<p><img src="image-20260123172520903.png" srcset="/img/loading.gif" lazyload alt="image-20260123172520903" style="zoom:50%;" /></p>
 <p>第 360 行的注释打开如下：</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">        inst1 : <span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">48</span>], <span class="hljs-built_in">eax</span><br>        inst2 : <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">48</span>]<br>        优化为:<br>        <span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">48</span>], <span class="hljs-built_in">eax</span><br>特征：op1 == <span class="hljs-keyword">mov</span> &amp;&amp; op2 == <span class="hljs-keyword">mov</span><br>     inst1_arg1 和 inst2_arg2 相同<br>     inst1_arg2 和 inst2_arg1 相同<br></code></pre></td></tr></table></figure>
 <p>假设窗口里面有 2 个指令，</p>
-<p>inst1 : <code>mov [ebp-48], eax</code></p>
-<p>inst2 : <code>mov eax, [ebp-48]</code></p>
+<p> inst1 : <code>mov [ebp-48], eax</code></p>
+<p> inst2 : <code>mov eax, [ebp-48]</code></p>
 <p>很明显，第二条是多余的，可以不要。</p>
 <p>指令的特征我也写出来了，如上面第 5~7 行。</p>
 <p>代码就更简单了，如上面第 370 到 373，首先判断 2 个指令的操作码都是 “mov”，其次 inst1-&gt;arg1 和 inst2-&gt;arg2 相同，inst1-&gt;arg2 和 inst2-&gt;arg1 相同如果符合条件，就可以优化了。</p>

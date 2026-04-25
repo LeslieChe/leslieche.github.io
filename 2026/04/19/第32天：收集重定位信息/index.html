@@ -391,30 +391,20 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第32天：收集重定位信息">第32天：收集重定位信息</h1>
-<p>上节课说，为了让链接器能够正确修补地址，每个目标文件（.o）都会维护一张重定位表（在 ELF 格式中通常称为 .rel.text 或 .rel.data）。</p>
+                <h1 id="第32天：收集重定位信息"><a href="#第32天：收集重定位信息" class="headerlink" title="第32天：收集重定位信息"></a>第32天：收集重定位信息</h1><p>上节课说，为了让链接器能够正确修补地址，每个目标文件（.o）都会维护一张重定位表（在 ELF 格式中通常称为 .rel.text 或 .rel.data）。</p>
 <p>让汇编器生成 .o 是下节课的内容。这节课，我们为生成重定位表做些准备。</p>
 <p>上节课我们把文件 a.o 的重定位表总结成了下面的表格</p>
-<img src="image-20260419162142637.png" srcset="/img/loading.gif" lazyload alt="image-20260419162142637" style="zoom:50%;" />
+<p><img src="image-20260419162142637.png" srcset="/img/loading.gif" lazyload alt="image-20260419162142637" style="zoom:50%;" /></p>
 <p>这节课，我们的任务就是要生成这样的表格。</p>
-<h2 id="寻找要重定位的符号">寻找要重定位的符号</h2>
-<p>首先，要找到需要重定位的符号。</p>
+<h2 id="寻找要重定位的符号"><a href="#寻找要重定位的符号" class="headerlink" title="寻找要重定位的符号"></a>寻找要重定位的符号</h2><p>首先，要找到需要重定位的符号。</p>
 <p>如何找呢？答案就是从产生式里面找，凡是用到（不是定义） ASS_ID（标识符）的地方，就可能需要重定位。</p>
-<img src="image-20260419162222205.png" srcset="/img/loading.gif" lazyload alt="image-20260419162222205" style="zoom:50%;" />
-<p>包含 ASS_ID 的产生式都在这里了。<br>
-第 1~4 行，不是引用符号，是定义符号。<br>
-第 6、8、11 都是对符号的引用。<br>
-分别是三种场景。<br>
-第 6 行，数据定义中引用了数据符号。<br>
-第 8 行，符号作为指令的操作数。<br>
-第 11 行，地址中引用符号。</p>
-<h2 id="数据定义中引用了数据符号">数据定义中引用了数据符号</h2>
-<p>根据第 6 行的产生式，找到解析 <code>&lt;value&gt;</code> 的代码：</p>
+<p><img src="image-20260419162222205.png" srcset="/img/loading.gif" lazyload alt="image-20260419162222205" style="zoom:50%;" /></p>
+<p>包含 ASS_ID 的产生式都在这里了。<br>第 1~4 行，不是引用符号，是定义符号。<br>第 6、8、11 都是对符号的引用。<br>分别是三种场景。<br>第 6 行，数据定义中引用了数据符号。<br>第 8 行，符号作为指令的操作数。<br>第 11 行，地址中引用符号。</p>
+<h2 id="数据定义中引用了数据符号"><a href="#数据定义中引用了数据符号" class="headerlink" title="数据定义中引用了数据符号"></a>数据定义中引用了数据符号</h2><p>根据第 6 行的产生式，找到解析 <code>&lt;value&gt;</code> 的代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">   &lt;value&gt;  ::= [&lt;sign&gt;] NUM | STR | ASS_ID </span><br><span class="hljs-comment">    &lt;sign&gt;  ::= SUB | ADD</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">value</span><span class="hljs-params">(<span class="hljs-type">scanner_t</span> *scanner, <span class="hljs-type">int</span> size,</span><br><span class="hljs-params">                  <span class="hljs-keyword">struct</span> list_head *head, <span class="hljs-type">init_val_t</span> *init_val)</span><br>&#123;<br>    <span class="hljs-type">int</span> num = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">switch</span> (scanner-&gt;token) &#123;<br>        <span class="hljs-comment">// ...</span><br>        <span class="hljs-keyword">case</span> ASS_ID:<br>            <span class="hljs-type">ass_symbol_t</span> *sym = get_or_add_ass_symbol(scanner);<br>           <br>            <span class="hljs-type">int</span> sym_addr = get_list_len(head) * size +<br>                           init_val-&gt;cur_addr +<br>                           get_section_location_cnt();<br>            add_relocation_entry(sym_addr, sym-&gt;addr, R_386_32, sym,<br>                                &amp;init_val-&gt;relocation);<br><br>            num = sym-&gt;addr;  <span class="hljs-comment">// 把符号的偏移地址作为加数</span><br>            list_add_value(head, ASS_NUM, &amp;num);<br>            next_token();<br>            <span class="hljs-keyword">break</span>;     <br>            <span class="hljs-comment">//...</span><br>    &#125;<br>&#125; <br></code></pre></td></tr></table></figure>
 <p>如果读者觉得代码陌生，我们搬出上一节开头的例子。</p>
-<img src="image-20260419162359530.png" srcset="/img/loading.gif" lazyload alt="image-20260419162359530" style="zoom:50%;" />
-<p>汇编代码第 5 行，解析 monkey 和 langlangshan，就会执行 case ASS_ID:<br>
-引用本地和外地的数据符号，需要重定位。</p>
+<p><img src="image-20260419162359530.png" srcset="/img/loading.gif" lazyload alt="image-20260419162359530" style="zoom:50%;" /></p>
+<p>汇编代码第 5 行，解析 monkey 和 langlangshan，就会执行 case ASS_ID:<br>引用本地和外地的数据符号，需要重定位。</p>
 <p>请读者思考，能否在这里添加一段代码，生成重定位条目？</p>
 <p>上一节课，我们讲了重定位条目（Relocation Entry）至少包括 4 个核心信息：</p>
 <ul>
@@ -429,118 +419,57 @@
 <p>最后看偏移，似乎有点难，如何计算被重定位的符号在数据段的偏移？</p>
 <p>请看下面的代码：</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> big_arr<br>	...<br>	...<br><br><span class="hljs-meta">global</span> my_list<br>	my_list <span class="hljs-built_in">dd</span> <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">10</span> <span class="hljs-built_in">dd</span> <span class="hljs-number">0</span><br>	<span class="hljs-built_in">dd</span> monkey, dog, cat<br></code></pre></td></tr></table></figure>
-<p>我的问题是，解析到 cat 的时候，如何计算 cat 在数据段的偏移？<br>
-其实就是计算 cat 之前的所有数据定义占多大的内存。</p>
-<p>这个值分为三个部分：<br>
-一是当前段计数器的值，因为正在解析 my_list，计数器的值尚未更新，所以它表示 my_list 之前的数据大小。<br>
-二是第 6~7 行的 2 个 item 所占的大小，因为这 2 个 item 已经通过 new_item_add 函数提交了，大小可以用 init_val_t 结构体的 cur_addr 表示<br>
-三是当前链表上已经收集的数据的总大小，也就是 monkey 和 dog 一共占的大小。</p>
+<p>我的问题是，解析到 cat 的时候，如何计算 cat 在数据段的偏移？<br>其实就是计算 cat 之前的所有数据定义占多大的内存。</p>
+<p>这个值分为三个部分：<br>一是当前段计数器的值，因为正在解析 my_list，计数器的值尚未更新，所以它表示 my_list 之前的数据大小。<br>二是第 6~7 行的 2 个 item 所占的大小，因为这 2 个 item 已经通过 new_item_add 函数提交了，大小可以用 init_val_t 结构体的 cur_addr 表示<br>三是当前链表上已经收集的数据的总大小，也就是 monkey 和 dog 一共占的大小。</p>
 <p>把这三部分加起来，就是 cat 在数据段的偏移。</p>
 <p>所以有代码：</p>
-<img src="image-20260419162738305.png" srcset="/img/loading.gif" lazyload alt="image-20260419162738305" style="zoom:50%;" />
+<p><img src="image-20260419162738305.png" srcset="/img/loading.gif" lazyload alt="image-20260419162738305" style="zoom:50%;" /></p>
 <p>解决了偏移后，下面要设计一个结构体，把偏移，类型，符号名，加数这些信息收集在一起。</p>
-<img src="image-20260419162754053.png" srcset="/img/loading.gif" lazyload alt="image-20260419162754053" style="zoom:50%;" />
-<p>这是 relocation_info_t 结构，用来描述一个“重定位条目”。<br>
-第 2 行表示偏移，就是需要被修正的内容在当前段内的偏移地址。<br>
-第 3 行是类型，R_386_32 或 R_386_PC32；<br>
-第 5 行表示加数；<br>
-第 4 行是要重定位的符号 sym；<br>
-按理说第 4 行应该是符号的名字，不过为了收集更多的信息，方便调试，索性不保存名字，直接保存符号的指针。<br>
-其实 ass_symbol_t 结构体里面有 addr 这个字段，这样看来第 2 行都不需要了。但是我决定保留第 2 行，这样看起来一目了然。<br>
-还有的读者会疑惑，如果是引用内部的数据符号，那么要重定位的符号不是这个符号的名字，应该是 .data；<br>
-是的，观察得非常仔细！这是一个问题，先记住，后面会讲。<br>
-光有上面这个结构还不行，还需要有创建条目的代码。</p>
-<img src="image-20260419162822746.png" srcset="/img/loading.gif" lazyload alt="image-20260419162822746" style="zoom:50%;" />
-<p>add_relocation_entry 函数做了 2 个工作，一个是分配内存，用参数初始化 relocation_info_t 结构体，一个是把这个结构加入链表。<br>
-加入哪个链表呢？<br>
-看一下刚才的 value 函数，我们是在这个函数里面发现符号需要重定位，在 value 函数的参数参数 init_val 指向的结构体里面增加一个链表的头节点，把重定位条目挂在这个链表上是比较合理的，表示某个数据定义的初始值中包含需要重定位的符号。<br>
-(如果你想定义一个全局变量作为链表的头节点，把重定位条目挂上去也不是不行。）</p>
-<img src="image-20260419162855510.png" srcset="/img/loading.gif" lazyload alt="image-20260419162855510" style="zoom:50%;" />
+<p><img src="image-20260419162754053.png" srcset="/img/loading.gif" lazyload alt="image-20260419162754053" style="zoom:50%;" /></p>
+<p>这是 relocation_info_t 结构，用来描述一个“重定位条目”。<br>第 2 行表示偏移，就是需要被修正的内容在当前段内的偏移地址。<br>第 3 行是类型，R_386_32 或 R_386_PC32；<br>第 5 行表示加数；<br>第 4 行是要重定位的符号 sym；<br>按理说第 4 行应该是符号的名字，不过为了收集更多的信息，方便调试，索性不保存名字，直接保存符号的指针。<br>其实 ass_symbol_t 结构体里面有 addr 这个字段，这样看来第 2 行都不需要了。但是我决定保留第 2 行，这样看起来一目了然。<br>还有的读者会疑惑，如果是引用内部的数据符号，那么要重定位的符号不是这个符号的名字，应该是 .data；<br>是的，观察得非常仔细！这是一个问题，先记住，后面会讲。<br>光有上面这个结构还不行，还需要有创建条目的代码。</p>
+<p><img src="image-20260419162822746.png" srcset="/img/loading.gif" lazyload alt="image-20260419162822746" style="zoom:50%;" /></p>
+<p>add_relocation_entry 函数做了 2 个工作，一个是分配内存，用参数初始化 relocation_info_t 结构体，一个是把这个结构加入链表。<br>加入哪个链表呢？<br>看一下刚才的 value 函数，我们是在这个函数里面发现符号需要重定位，在 value 函数的参数参数 init_val 指向的结构体里面增加一个链表的头节点，把重定位条目挂在这个链表上是比较合理的，表示某个数据定义的初始值中包含需要重定位的符号。<br>(如果你想定义一个全局变量作为链表的头节点，把重定位条目挂上去也不是不行。）</p>
+<p><img src="image-20260419162855510.png" srcset="/img/loading.gif" lazyload alt="image-20260419162855510" style="zoom:50%;" /></p>
 <p>所以，第 6 行定义了链表的头节点。</p>
 <p>可是为什么是链表？</p>
 <p>弄一个 relocation_info_t 类型的字段是不是也可以？</p>
 <p>回到上面的例子：</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> my_list<br>	my_list <span class="hljs-built_in">dd</span> <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">10</span> <span class="hljs-built_in">dd</span> <span class="hljs-number">0</span><br>	<span class="hljs-built_in">dd</span> monkey, dog, cat<br></code></pre></td></tr></table></figure>
 <p>my_list 的初始值中，monkey, dog, cat 这三个符号都要重定位，所以需要链表，把这三个条目链起来。</p>
-<h2 id="符号作为指令的操作数">符号作为指令的操作数</h2>
-<p>三个地雷扫了一个。还有 2 个产生式要分析。</p>
+<h2 id="符号作为指令的操作数"><a href="#符号作为指令的操作数" class="headerlink" title="符号作为指令的操作数"></a>符号作为指令的操作数</h2><p>三个地雷扫了一个。还有 2 个产生式要分析。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;oprand&gt; -&gt; [sign] NUM | ASS_ID | &lt;reg&gt; | &lt;mem&gt;<br></code></pre></td></tr></table></figure>
 <p>相关联的代码是 oprand 函数</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">    &lt;oprand&gt; -&gt; [sign] NUM | ASS_ID | &lt;reg&gt; | &lt;mem&gt;</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">oprand</span><span class="hljs-params">(<span class="hljs-type">scanner_t</span> *scanner, <span class="hljs-type">int</span> oprd_idx)</span><br>&#123;<br>    <span class="hljs-type">operand_info_t</span> *operand = &amp;one_inst_g.operand[oprd_idx];<br>    <span class="hljs-type">int</span> num = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">switch</span> (scanner-&gt;token) &#123;<br>       <span class="hljs-comment">// ...</span><br><br>        <span class="hljs-keyword">case</span> ASS_ID:<br>            <span class="hljs-type">ass_symbol_t</span> *sym = get_or_add_ass_symbol(scanner);<br>            operand-&gt;related_sym = sym;<br>            operand-&gt;operand_type = OPERAND_TYPE_IMM; <span class="hljs-comment">// 立即数</span><br>            operand-&gt;addressing_form = ADDR_FORM_IMM;          <br>            operand-&gt;imm = sym-&gt;addr; <span class="hljs-comment">// 符号的偏移作为立即数</span><br>            next_token();<br>            <span class="hljs-keyword">break</span>;<br>	<span class="hljs-comment">// ...</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>虽然这里的符号需要重定位，但是在这里生成重定位条目恐怕不行。<br>
-还是考察四个要素：偏移，类型，符号名，加数;<br>
-偏移，不知道，因为不知道具体的编码格式;<br>
-类型，不知道，如果是 call 或者 jmp 指令的操作数，那就是 R_386_PC32；如果是类似于 mov eax, list，那就是 R_386_32；<br>
-加数，就是 sym-&gt;addr 的值；<br>
-名字，如果引用的是内部的数据符号，就是 .data；其他情况是 sym-&gt;name；<br>
-所以，这里无法生成重定位条目，因为缺少偏移和类型信息。<br>
-注意，偏移和类型也不是没有办法知道，因为代码执行到这里，关于指令的信息就收集得差不多了，当然可以从有关结构体里面把某些字段找出来，再经过一番计算得出答案。<br>
-但是延迟到指令编码的时候更合理，因为指令编码的时候会解析是什么指令，也会计算偏移。<br>
-所以把这个符号记录下来，等到了生成指令编码的时候，再为它添加重定位条目。<br>
-如何记录呢？可以在操作数的结构体里面加一个字段。</p>
+<p>虽然这里的符号需要重定位，但是在这里生成重定位条目恐怕不行。<br>还是考察四个要素：偏移，类型，符号名，加数;<br>偏移，不知道，因为不知道具体的编码格式;<br>类型，不知道，如果是 call 或者 jmp 指令的操作数，那就是 R_386_PC32；如果是类似于 mov eax, list，那就是 R_386_32；<br>加数，就是 sym-&gt;addr 的值；<br>名字，如果引用的是内部的数据符号，就是 .data；其他情况是 sym-&gt;name；<br>所以，这里无法生成重定位条目，因为缺少偏移和类型信息。<br>注意，偏移和类型也不是没有办法知道，因为代码执行到这里，关于指令的信息就收集得差不多了，当然可以从有关结构体里面把某些字段找出来，再经过一番计算得出答案。<br>但是延迟到指令编码的时候更合理，因为指令编码的时候会解析是什么指令，也会计算偏移。<br>所以把这个符号记录下来，等到了生成指令编码的时候，再为它添加重定位条目。<br>如何记录呢？可以在操作数的结构体里面加一个字段。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">operand_info</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">int</span> operand_type;  <br>    <span class="hljs-type">int</span> operand_size;<br>    ass_token_e reg_name;  <br>    <span class="hljs-comment">//...</span><br>    <span class="hljs-type">ass_symbol_t</span> *related_sym;  <span class="hljs-comment">// 关联的符号，可能需要重定位</span><br>&#125; <span class="hljs-type">operand_info_t</span>;<br></code></pre></td></tr></table></figure>
 <p>第 7 行的 related_sym，如果操作数里面包含符号，就把符号的地址赋值给 related_sym；</p>
 <p>为什么这里不是链表，而是一个指针呢？</p>
 <p>csub 生成的汇编代码，一个操作数最多包括一个符号，还没有遇到过包含两个符号的情况。所以一个指针就够了。</p>
-<h2 id="地址中引用符号">地址中引用符号</h2>
-<p>下面，看最后一个地方。</p>
+<h2 id="地址中引用符号"><a href="#地址中引用符号" class="headerlink" title="地址中引用符号"></a>地址中引用符号</h2><p>下面，看最后一个地方。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;addr&gt; ::= ASS_NUM <br>         | ASS_ID [&lt;sign&gt; ASS_NUM]  <br>         | &lt;reg&gt; [&lt;disp&gt;]<br></code></pre></td></tr></table></figure>
 <p>同理，找到解析 addr 的代码:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">addr</span><span class="hljs-params">(<span class="hljs-type">scanner_t</span> *scanner, <span class="hljs-type">operand_info_t</span> *operand)</span><br>&#123;	<br>    <span class="hljs-type">int</span> num = <span class="hljs-number">0</span>;<br>	<span class="hljs-keyword">switch</span>(scanner-&gt;token) &#123;<br>		<span class="hljs-comment">// ...</span><br>        <span class="hljs-keyword">case</span> ASS_ID:<br>            <span class="hljs-type">ass_symbol_t</span> *sym = get_or_add_ass_symbol(scanner);<br>            next_token();<br>            <span class="hljs-keyword">if</span> (ASS_TEST(ASS_ADD) || ASS_TEST(ASS_SUB)) &#123;<br>                num = parse_signed_num(scanner);<br>            &#125;<br>            operand-&gt;disp = sym-&gt;addr + num;  <span class="hljs-comment">// 加数是 operand-&gt;disp</span><br>            operand-&gt;addressing_form = ADDR_FORM_ABSOLUTE;<br>            operand-&gt;related_sym = sym;<br>            <span class="hljs-keyword">break</span>;<br>		<span class="hljs-comment">// ...</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>能执行到这里，说明指令形如<br>
-mov al, [list + 4]<br>
-mov eax, [list]<br>
-同理，第 14 行记录符号。到了指令编码阶段，再为它添加重定位条目。<br>
-重定位类型，应该是 R_386_32；因为我们生成的 jmp 或者 call 指令后面是一个 32 位的偏移，而不是内存操作数。<br>
-加数，是 operand-&gt;disp;<br>
-名字，是 .data（对于内部符号） 或者 sym-&gt;name（对于外部符号）;</p>
-<p>这里，我们再复习一下重定位，因为这个概念太重要了。<br>
-假设指令是 mov al, [list + 4]；那么第 12 行的 num 就是 4；<br>
-在高级语言中，list 很可能是一个字符类型的数组，这条指令的目的是把 list[4] 的值给寄存器 al;<br>
-list 可能是本地的符号，也可能是外部的符号;<br>
-如果是前者，假设 list 的定义在数据段的偏移是 12;<br>
-sym-&gt;addr + num = 12 + 4 = 16;<br>
-那么生成指令  mov al, [16];<br>
-加数就是 16;<br>
-重定位的时候， 给出的条目是：</p>
+<p>能执行到这里，说明指令形如<br>mov al, [list + 4]<br>mov eax, [list]<br>同理，第 14 行记录符号。到了指令编码阶段，再为它添加重定位条目。<br>重定位类型，应该是 R_386_32；因为我们生成的 jmp 或者 call 指令后面是一个 32 位的偏移，而不是内存操作数。<br>加数，是 operand-&gt;disp;<br>名字，是 .data（对于内部符号） 或者 sym-&gt;name（对于外部符号）;</p>
+<p>这里，我们再复习一下重定位，因为这个概念太重要了。<br>假设指令是 mov al, [list + 4]；那么第 12 行的 num 就是 4；<br>在高级语言中，list 很可能是一个字符类型的数组，这条指令的目的是把 list[4] 的值给寄存器 al;<br>list 可能是本地的符号，也可能是外部的符号;<br>如果是前者，假设 list 的定义在数据段的偏移是 12;<br>sym-&gt;addr + num = 12 + 4 = 16;<br>那么生成指令  mov al, [16];<br>加数就是 16;<br>重定位的时候， 给出的条目是：</p>
 <ul>
 <li>偏移：？</li>
 <li>类型：R_386_32</li>
 <li>符号：.data</li>
 <li>加数：16</li>
 </ul>
-<p>假设 .data 段的虚拟地址是 Base;<br>
-根据公式， S + A = Base + 16;<br>
-修正后的指令是  mov al, [Base + 16];<br>
-Base + 16 代表 .data 段偏移 16，<br>
-先偏移 12，找到数组 list，再偏移 4 就是 list[4]，和高级语言语义一致，没有问题。</p>
-<p>如果 list 是外部的符号，它的偏移地址就是 0;<br>
-针对 mov al, [list + 4] 生成指令;<br>
-mov al, [4]<br>
-加数是 4<br>
-重定位的时候， 给出的条目是：</p>
+<p>假设 .data 段的虚拟地址是 Base;<br>根据公式， S + A = Base + 16;<br>修正后的指令是  mov al, [Base + 16];<br>Base + 16 代表 .data 段偏移 16，<br>先偏移 12，找到数组 list，再偏移 4 就是 list[4]，和高级语言语义一致，没有问题。</p>
+<p>如果 list 是外部的符号，它的偏移地址就是 0;<br>针对 mov al, [list + 4] 生成指令;<br>mov al, [4]<br>加数是 4<br>重定位的时候， 给出的条目是：</p>
 <ul>
 <li>偏移：？</li>
 <li>类型：R_386_32</li>
 <li>符号：list</li>
 <li>加数：4</li>
 </ul>
-<p>假设 list 的虚拟地址是 Base<br>
-根据公式， S + A = Base + 4<br>
-修正后的指令是 mov al, [Base + 4]<br>
-意思是 list 的地址偏移 4，就是 list[4]，没有问题。</p>
-<h2 id="添加重定位条目">添加重定位条目</h2>
-<img src="image-20260419172647033.png" srcset="/img/loading.gif" lazyload alt="image-20260419172647033" style="zoom:50%;" />
-<p>针对 1 个操作数的指令，目前就这么多。<br>
-针对 csub 生成的汇编代码，push，pop 不用考虑，因为它俩的操作数都是寄存器。<br>
-同理，从 neg 到 setge 也不用考虑。<br>
-第 818 的 int 指令，现在没有用，但是后面会用，一般是 “int 128”，也不需要考虑。<br>
-所以，只需要考虑 812~816；也就是编码规则带 “cd” 的。</p>
+<p>假设 list 的虚拟地址是 Base<br>根据公式， S + A = Base + 4<br>修正后的指令是 mov al, [Base + 4]<br>意思是 list 的地址偏移 4，就是 list[4]，没有问题。</p>
+<h2 id="添加重定位条目"><a href="#添加重定位条目" class="headerlink" title="添加重定位条目"></a>添加重定位条目</h2><p><img src="image-20260419172647033.png" srcset="/img/loading.gif" lazyload alt="image-20260419172647033" style="zoom:50%;" /></p>
+<p>针对 1 个操作数的指令，目前就这么多。<br>针对 csub 生成的汇编代码，push，pop 不用考虑，因为它俩的操作数都是寄存器。<br>同理，从 neg 到 setge 也不用考虑。<br>第 818 的 int 指令，现在没有用，但是后面会用，一般是 “int 128”，也不需要考虑。<br>所以，只需要考虑 812~816；也就是编码规则带 “cd” 的。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">encoding_1_op_inst</span><span class="hljs-params">(<span class="hljs-type">inst_description_t</span> *descrip)</span><br>&#123;<br>    <span class="hljs-type">int</span> out = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">const</span> <span class="hljs-type">char</span> *append = descrip-&gt;encoding_append;<br>    <span class="hljs-type">int</span> append_info = parse_encoding_append(append, &amp;out);<br>    <span class="hljs-keyword">if</span> (append_info &lt; <span class="hljs-number">0</span>)<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;  <span class="hljs-comment">// 解读附加信息失败</span><br><br>    <span class="hljs-type">const</span> <span class="hljs-type">char</span> *oprd_fmt0 = descrip-&gt;operand_fmt[<span class="hljs-number">0</span>];<br>    ass_token_e reg_name_0 = one_inst_g.operand[<span class="hljs-number">0</span>].reg_name;<br>    <span class="hljs-type">x86_inst_encoding_t</span> inst_code = &#123;<span class="hljs-number">0</span>&#125;;<br>    inst_code.opcode = descrip-&gt;pri_opcode;<br>    inst_code.opcode_len = descrip-&gt;pri_opcode_len;<br>    inst_code.total_len += descrip-&gt;pri_opcode_len; <br>    <span class="hljs-comment">// 单操作数, &quot;+rd&quot;  &quot;cd&quot;  &quot;/3&quot;   &quot;ib&quot;</span><br>    <span class="hljs-keyword">switch</span> (append_info) &#123;<br>        <span class="hljs-comment">// ...</span><br>        <span class="hljs-keyword">case</span> CODE_OFFSET_FOLLOWS_OPCODE:  <span class="hljs-comment">// &quot;cd&quot;</span><br>            <span class="hljs-type">ass_symbol_t</span> *sym = one_inst_g.operand[<span class="hljs-number">0</span>].related_sym;<br>            <span class="hljs-type">int</span> rel32 = <span class="hljs-number">0</span>;<br>            <span class="hljs-keyword">if</span> (sym &amp;&amp; sym-&gt;is_ext) &#123;<br>                <span class="hljs-type">int</span> addr_to_rel =<br>                    get_section_location_cnt() + inst_code.total_len;<br>                rel32 = <span class="hljs-number">-4</span>;<br>                add_relocation_entry(addr_to_rel, rel32, R_386_PC32, sym,<br>                                    &amp;one_inst_g.relocation);<br>            &#125; <span class="hljs-keyword">else</span> &#123;<br>                rel32 = one_inst_g.operand[<span class="hljs-number">0</span>].imm -<br>                        (get_section_location_cnt() +<br>                         inst_code.total_len + <span class="hljs-number">4</span>);<br>            &#125;<br>            __set_disp_or_imm(SET_IMM_32, rel32, &amp;inst_code);<br>            <span class="hljs-keyword">break</span>;<br>         <span class="hljs-comment">// ...</span><br>    &#125;<br>    write_inst_coding_result(&amp;inst_code);<br>    <span class="hljs-keyword">return</span> inst_code.total_len;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>第 12 行，取出 related_sym，也就是要重定位的符号。肯定不为 NULL，因为 jmp、call 这类指令后面都跟着标号。<br>
-如果是外部符号，才需要重定位，所以有 sym-&gt;is_ext；<br>
-应该是解析指令 call xxx，因为 jcc 类的指令引用的都是本文件的标号。<br>
-add_relocation_entry 的 5 个参数，分别是:</p>
+<p>第 12 行，取出 related_sym，也就是要重定位的符号。肯定不为 NULL，因为 jmp、call 这类指令后面都跟着标号。<br>如果是外部符号，才需要重定位，所以有 sym-&gt;is_ext；<br>应该是解析指令 call xxx，因为 jcc 类的指令引用的都是本文件的标号。<br>add_relocation_entry 的 5 个参数，分别是:</p>
 <ol>
 <li>偏移</li>
 <li>类型</li>
@@ -548,8 +477,7 @@ add_relocation_entry 的 5 个参数，分别是:</p>
 <li>符号结构体的地址</li>
 <li>链表的头节点</li>
 </ol>
-<p>先看偏移，我们采用的 call 指令格式是 call rel32（近调用）;<br>
-主操作码是 0xe8，后面跟着 4 字节的偏移；需要重定位的位置就是这 4 个字节的偏移；</p>
+<p>先看偏移，我们采用的 call 指令格式是 call rel32（近调用）;<br>主操作码是 0xe8，后面跟着 4 字节的偏移；需要重定位的位置就是这 4 个字节的偏移；</p>
 <p>因为编码这条指令的时候，当前段计数器的值还没有更新，它记录的是之前的所有指令占用的内存大小。</p>
 <p>所以偏移就是当前段计数器的值，再加 1 字节；</p>
 <p>第 7 行，操作码的长度 descrip-&gt;pri_opcode_len 已经累加到 inst_code.total_len 了。</p>
@@ -568,30 +496,25 @@ add_relocation_entry 的 5 个参数，分别是:</p>
 <p>mov eax,[monkey]</p>
 <p>mov eax,[monkey + 10]</p>
 <p>所以，我们要关注和 I32、 RM32 有关的代码。</p>
-<img src="image-20260419173046081.png" srcset="/img/loading.gif" lazyload alt="image-20260419173046081" style="zoom:50%;" />
-<p>上图的代码函数是 encoding_2_op_inst 的一部分；<br>
-第 336~343，是对重定位的处理；<br>
-第 341 行，传入 5 个参数。第 1 个是偏移地址，道理和前面一样，不赘述。第 3 个参数是加数，因为 operand() 函数是把 sym-&gt;addr 保存到了 operand-&gt;imm 中。<br>
-最后，我们看看和 RM32 有关的代码。<br>
-下图是 set_modrm_field 函数的一部分</p>
-<img src="image-20260419174919730.png" srcset="/img/loading.gif" lazyload alt="image-20260419174919730" style="zoom:50%;" />
+<p><img src="image-20260419173046081.png" srcset="/img/loading.gif" lazyload alt="image-20260419173046081" style="zoom:50%;" /></p>
+<p>上图的代码函数是 encoding_2_op_inst 的一部分；<br>第 336~343，是对重定位的处理；<br>第 341 行，传入 5 个参数。第 1 个是偏移地址，道理和前面一样，不赘述。第 3 个参数是加数，因为 operand() 函数是把 sym-&gt;addr 保存到了 operand-&gt;imm 中。<br>最后，我们看看和 RM32 有关的代码。<br>下图是 set_modrm_field 函数的一部分</p>
+<p><img src="image-20260419174919730.png" srcset="/img/loading.gif" lazyload alt="image-20260419174919730" style="zoom:50%;" /></p>
 <p>如果指令形如</p>
-<p>mov eax,[monkey]mov</p>
+<p>mov eax,[monkey]mov </p>
 <p>eax,[monkey + 10]</p>
 <p>就会执行第 693 行，属于直接寻址。</p>
 <p>第 700~705 行，添加重定位信息。</p>
 <p>代码说完了，下面是展示成果环节。</p>
-<h2 id="成果展示">成果展示</h2>
-<p>我们写一个 .c</p>
-<img src="image-20260419175009072.png" srcset="/img/loading.gif" lazyload alt="image-20260419175009072" style="zoom:50%;" />
+<h2 id="成果展示"><a href="#成果展示" class="headerlink" title="成果展示"></a>成果展示</h2><p>我们写一个 .c</p>
+<p><img src="image-20260419175009072.png" srcset="/img/loading.gif" lazyload alt="image-20260419175009072" style="zoom:50%;" /></p>
 <p>代码实现什么功能不重要，我们的关注点在重定位上。</p>
 <p>用 csub 编译，生成的汇编代码如下（截取部分）</p>
-<img src="image-20260419175153204.png" srcset="/img/loading.gif" lazyload alt="image-20260419175153204" style="zoom:50%;" />
+<p><img src="image-20260419175153204.png" srcset="/img/loading.gif" lazyload alt="image-20260419175153204" style="zoom:50%;" /></p>
 <p>指令翻译结果是：</p>
-<img src="image-20260419175209168.png" srcset="/img/loading.gif" lazyload alt="image-20260419175209168" style="zoom:50%;" />
+<p><img src="image-20260419175209168.png" srcset="/img/loading.gif" lazyload alt="image-20260419175209168" style="zoom:50%;" /></p>
 <p>上图是我们的汇编器生成的，模仿 “objdump -d test.o” 的格式，左边是指令编码，右边是原来的指令。</p>
 <p>还可以把重定位信息打印出来。</p>
-<img src="image-20260419175227976.png" srcset="/img/loading.gif" lazyload alt="image-20260419175227976" style="zoom:50%;" />
+<p><img src="image-20260419175227976.png" srcset="/img/loading.gif" lazyload alt="image-20260419175227976" style="zoom:50%;" /></p>
 <p>蓝色的字，从左到右分别是偏移、类型、符号名和加数。</p>
 <p>本文到这里就结束了。下节课我们学习 .o 的格式。</p>
 

@@ -400,75 +400,34 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第34天：生成目标文件（上）">第34天：生成目标文件（上）</h1>
-<p>既然要生成目标文件，那就要明确我们生成的目标文件长什么样子。<br>
-上节课的目标文件结构示意图已经给出了方向。不过有些细节，还需要确认一下。<br>
-命令是：<br>
-<code>nasm -f elf32 test.asm -o test_nasm.o</code><br>
-<code>readelf -a test_nasm.o</code><br>
-test_nasm.o  的总大小是 42864 字节,十六进制是 0xA770;<br>
-readelf 命令，正如它的名字一样，是展示 elf 文件信息的;<br>
--a 就是 --all，表示打印所有的信息;</p>
+                <h1 id="第34天：生成目标文件（上）"><a href="#第34天：生成目标文件（上）" class="headerlink" title="第34天：生成目标文件（上）"></a>第34天：生成目标文件（上）</h1><p>既然要生成目标文件，那就要明确我们生成的目标文件长什么样子。<br>上节课的目标文件结构示意图已经给出了方向。不过有些细节，还需要确认一下。<br>命令是：<br><code>nasm -f elf32 test.asm -o test_nasm.o</code><br><code>readelf -a test_nasm.o</code><br>test_nasm.o  的总大小是 42864 字节,十六进制是 0xA770;<br>readelf 命令，正如它的名字一样，是展示 elf 文件信息的;<br>-a 就是 —all，表示打印所有的信息;</p>
 <p>首先，会输出文件头</p>
-<img src="image-20260419192613975.png" srcset="/img/loading.gif" lazyload alt="image-20260419192613975" style="zoom:50%;" />
+<p><img src="image-20260419192613975.png" srcset="/img/loading.gif" lazyload alt="image-20260419192613975" style="zoom:50%;" /></p>
 <p>然后，输出段表</p>
-<img src="image-20260419192630629.png" srcset="/img/loading.gif" lazyload alt="image-20260419192630629" style="zoom:50%;" />
+<p><img src="image-20260419192630629.png" srcset="/img/loading.gif" lazyload alt="image-20260419192630629" style="zoom:50%;" /></p>
 <p>这里有 8 个段表项。</p>
 <p>再然后，输出了重定位表</p>
-<img src="image-20260419192638745.png" srcset="/img/loading.gif" lazyload alt="image-20260419192638745" style="zoom:50%;" />
+<p><img src="image-20260419192638745.png" srcset="/img/loading.gif" lazyload alt="image-20260419192638745" style="zoom:50%;" /></p>
 <p>最后是符号表</p>
-<img src="image-20260419192717953.png" srcset="/img/loading.gif" lazyload alt="image-20260419192717953" style="zoom:50%;" />
+<p><img src="image-20260419192717953.png" srcset="/img/loading.gif" lazyload alt="image-20260419192717953" style="zoom:50%;" /></p>
 <p>我们先看段表，也叫节头表。</p>
-<img src="image-20260419192805620.png" srcset="/img/loading.gif" lazyload alt="image-20260419192805620" style="zoom:50%;" />
-<p>⬆段表举例图</p>
-<p>之前讲过 elf 文件的格式，这里不再赘述。我们要讨论的是 .o 都由哪些部分组成，以及排列顺序是什么？<br>
-虽然 elf 格式并没有规定节头表中每个表项的 off 字段要依次递增，但是 nasm 很讲究，观察 off 这一列，发现是递增的。</p>
-<p>还有一个问题，索引 [1] 是代码段(.text)，从偏移 0x180 开始，那么 0x180 之前是什么？<br>
-根据文件头，Start of section headers:  64 (bytes into file)<br>
-可以知道偏移 64 字节开始就是段表了。</p>
-<p>再根据 Size of section headers:  40 (bytes)<br>
-Number of section headers:  8<br>
-可以知道段表占了 320 字节。<br>
-64 + 320 = 384  = 0x180；<br>
-所以，我们确定  0x180 之前是段表。<br>
-根据段表最后一个条目，也就是 .rel.data  段，偏移是 0xa760, 大小是 8，所以结尾就是 0xa768，再填充 8 个字节的零，刚好是 0xa780；<br>
-我是怎么知道填充了 8 个字节的零？<br>
-<code>hexdump -C -s 0xa768 test_nasm.o</code><br>
--C  意思是 “规范的十六进制 + ASCII 字符同步显示”;<br>
--s 0xa768 表示跳过前面 0xa768 个字节;</p>
-<img src="image-20260419192930237.png" srcset="/img/loading.gif" lazyload alt="image-20260419192930237" style="zoom:50%;" />
+<p><img src="image-20260419192805620.png" srcset="/img/loading.gif" lazyload alt="image-20260419192805620" style="zoom:50%;" /></p>
+<p> ⬆段表举例图</p>
+<p>之前讲过 elf 文件的格式，这里不再赘述。我们要讨论的是 .o 都由哪些部分组成，以及排列顺序是什么？<br>虽然 elf 格式并没有规定节头表中每个表项的 off 字段要依次递增，但是 nasm 很讲究，观察 off 这一列，发现是递增的。</p>
+<p>还有一个问题，索引 [1] 是代码段(.text)，从偏移 0x180 开始，那么 0x180 之前是什么？<br>根据文件头，Start of section headers:  64 (bytes into file)<br>可以知道偏移 64 字节开始就是段表了。</p>
+<p>再根据 Size of section headers:  40 (bytes)<br>Number of section headers:  8<br>可以知道段表占了 320 字节。<br>64 + 320 = 384  = 0x180；<br>所以，我们确定  0x180 之前是段表。<br>根据段表最后一个条目，也就是 .rel.data  段，偏移是 0xa760, 大小是 8，所以结尾就是 0xa768，再填充 8 个字节的零，刚好是 0xa780；<br>我是怎么知道填充了 8 个字节的零？<br><code>hexdump -C -s 0xa768 test_nasm.o</code><br>-C  意思是 “规范的十六进制 + ASCII 字符同步显示”;<br>-s 0xa768 表示跳过前面 0xa768 个字节;</p>
+<p><img src="image-20260419192930237.png" srcset="/img/loading.gif" lazyload alt="image-20260419192930237" style="zoom:50%;" /></p>
 <p>你瞧，确实是 8 字节的 0;</p>
 <p>所以，整个 .o 的内容排列如下图（就是上节课的“目标文件结构示意图”）</p>
-<img src="image-20260419192949312.png" srcset="/img/loading.gif" lazyload alt="image-20260419192949312" style="zoom:50%;" />
-<p>需要说明的是：段表不一定要紧跟着文件头，也可以放在 .o 的最后，如果你愿意，甚至可以把段表塞在某两个段之间。<br>
-为了方便验证（拿我们生成的 .o 和 nasm 生成的 .o 比较），我们模仿 nasm 的布局。<br>
-有读者说，那我们是不是先输出一个文件头，然后需要什么内容就用 fwrite 函数往文件里写。<br>
-道理没有错，不过调用 fwrite 是最后的步骤。我们可以先构造出图中每个模块，例如有几个段表项，每个段表项的字段填什么值，代码段的内容是什么，待所有字段和内容敲定后，再往文件里面写。</p>
-<h2 id="my-elf-t">my_elf_t</h2>
-<p>为了描述整个 .o 的组成，我设计了结构体 my_elf_t</p>
-<img src="image-20260419193020265.png" srcset="/img/loading.gif" lazyload alt="image-20260419193020265" style="zoom:50%;" />
-<p>因为这个结构体不是官方定义的，是我设计的，所以我用 “my” 开头，防止混淆。<br>
-第 32 行的 Elf32_Ehdr 是官方定义的，去哪里找呢？把 Linux 系统的 /usr/include/elf.h 文件拷贝一份，放到我们的项目里，再 include 进来就可以了。<br>
-第 32 行是文件头，我们最后填充它。<br>
-第 33~37 是 5 个链表的头节点。<br>
-第 33 行，程序头表的链表，暂时用不上。<br>
-第 34 行，段表项的链表，所有段表的条目都挂在上面。<br>
-第 35 行，符号表项的链表，所有符号表项都挂在上面。<br>
-36~37，重定位表的链表。<br>
-第 38 行，这个指针指向段表字符串的内容。<br>
-第 39 行，表示段表字符串的长度。<br>
-40~41，描述字符串表。<br>
-因为这个结构和后面要学习的链接器是共用的，所以会有一些链接器才用到的字段，这节课不用关注。</p>
-<p>我们定义一个 my_elf_t 类型的全局变量。<br>
-初始化代码如下：</p>
+<p><img src="image-20260419192949312.png" srcset="/img/loading.gif" lazyload alt="image-20260419192949312" style="zoom:50%;" /></p>
+<p>需要说明的是：段表不一定要紧跟着文件头，也可以放在 .o 的最后，如果你愿意，甚至可以把段表塞在某两个段之间。<br>为了方便验证（拿我们生成的 .o 和 nasm 生成的 .o 比较），我们模仿 nasm 的布局。<br>有读者说，那我们是不是先输出一个文件头，然后需要什么内容就用 fwrite 函数往文件里写。<br>道理没有错，不过调用 fwrite 是最后的步骤。我们可以先构造出图中每个模块，例如有几个段表项，每个段表项的字段填什么值，代码段的内容是什么，待所有字段和内容敲定后，再往文件里面写。</p>
+<h2 id="my-elf-t"><a href="#my-elf-t" class="headerlink" title="my_elf_t"></a>my_elf_t</h2><p>为了描述整个 .o 的组成，我设计了结构体 my_elf_t</p>
+<p><img src="image-20260419193020265.png" srcset="/img/loading.gif" lazyload alt="image-20260419193020265" style="zoom:50%;" /></p>
+<p>因为这个结构体不是官方定义的，是我设计的，所以我用 “my” 开头，防止混淆。<br>第 32 行的 Elf32_Ehdr 是官方定义的，去哪里找呢？把 Linux 系统的 /usr/include/elf.h 文件拷贝一份，放到我们的项目里，再 include 进来就可以了。<br>第 32 行是文件头，我们最后填充它。<br>第 33~37 是 5 个链表的头节点。<br>第 33 行，程序头表的链表，暂时用不上。<br>第 34 行，段表项的链表，所有段表的条目都挂在上面。<br>第 35 行，符号表项的链表，所有符号表项都挂在上面。<br>36~37，重定位表的链表。<br>第 38 行，这个指针指向段表字符串的内容。<br>第 39 行，表示段表字符串的长度。<br>40~41，描述字符串表。<br>因为这个结构和后面要学习的链接器是共用的，所以会有一些链接器才用到的字段，这节课不用关注。</p>
+<p>我们定义一个 my_elf_t 类型的全局变量。<br>初始化代码如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">my_elf_t</span> my_elf_g;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">my_elf_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-built_in">memset</span>(&amp;my_elf_g, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">my_elf_t</span>));<br>    INIT_LIST_HEAD(&amp;my_elf_g.shdr_head);<br>    INIT_LIST_HEAD(&amp;my_elf_g.sym_head);<br>    INIT_LIST_HEAD(&amp;my_elf_g.text_rel_head);<br>    INIT_LIST_HEAD(&amp;my_elf_g.data_rel_head);<br>    INIT_LIST_HEAD(&amp;my_elf_g.phdr_head); <span class="hljs-comment">// 链接器才用</span><br>&#125;<br></code></pre></td></tr></table></figure>
-<p>第 1 行的 static 表示把变量 my_elf_g 的作用域被限制在当前源文件内。<br>
-我们先构造哪个模块呢？<br>
-有读者说是文件头，也不能算错，但是文件头中某些字段要根据段表的结构确定，例如 “Section header string table index”（节头字符串表的索引）。所以不着急构造文件头。<br>
-仔细想想，应该先构造段表。因为每个 section 的偏移、大小、属性等都是按照对应的段表项来的，段表项确定了，整个 .o 的轮廓就出来了。<br>
-如果把 .o 比作一本书，那么文件头就是书的封面，段表就是书的目录，每个段就是书的每一章内容。一本书的框架如何确定，当然是看目录了。</p>
-<h2 id="段表">段表</h2>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">my_shdr</span></span><br><span class="hljs-class">&#123;</span><br>    Elf32_Shdr sh;<br>    <span class="hljs-type">char</span> *name;<br>    shdr_name_e e_name;<br>    <span class="hljs-type">int</span> sh_idx;  <span class="hljs-comment">// 段的索引,链接器用</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">entry</span>;</span>  <span class="hljs-comment">// 用于加入 my_elf_t.shdr_head 链表</span><br>&#125; <span class="hljs-type">my_shdr_t</span>;<br></code></pre></td></tr></table></figure>
+<p>第 1 行的 static 表示把变量 my_elf_g 的作用域被限制在当前源文件内。<br>我们先构造哪个模块呢？<br>有读者说是文件头，也不能算错，但是文件头中某些字段要根据段表的结构确定，例如 “Section header string table index”（节头字符串表的索引）。所以不着急构造文件头。<br>仔细想想，应该先构造段表。因为每个 section 的偏移、大小、属性等都是按照对应的段表项来的，段表项确定了，整个 .o 的轮廓就出来了。<br>如果把 .o 比作一本书，那么文件头就是书的封面，段表就是书的目录，每个段就是书的每一章内容。一本书的框架如何确定，当然是看目录了。</p>
+<h2 id="段表"><a href="#段表" class="headerlink" title="段表"></a>段表</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">my_shdr</span></span><br><span class="hljs-class">&#123;</span><br>    Elf32_Shdr sh;<br>    <span class="hljs-type">char</span> *name;<br>    shdr_name_e e_name;<br>    <span class="hljs-type">int</span> sh_idx;  <span class="hljs-comment">// 段的索引,链接器用</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">entry</span>;</span>  <span class="hljs-comment">// 用于加入 my_elf_t.shdr_head 链表</span><br>&#125; <span class="hljs-type">my_shdr_t</span>;<br></code></pre></td></tr></table></figure>
 <p>上节课介绍了 Elf32_Shdr 这个结构体，它描述了段表项的每个字段。</p>
 <p>不过我们要对它封装一下，一是增加 struct list_head entry，为了加入链表；二是增加 name、sh_idx 等字段，为了编程方便。</p>
 <p>第 4 行是段的名字，name 指向某个字符串。</p>
@@ -487,129 +446,51 @@ Number of section headers:  8<br>
 <p>例如下面的汇编代码</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">section</span> .text<br><span class="hljs-meta">section</span> .data<br><span class="hljs-meta">global</span> apple<br>	apple <span class="hljs-built_in">dd</span> <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
 <p>编译后生成的段表是</p>
-<img src="image-20260419193457291.png" srcset="/img/loading.gif" lazyload alt="image-20260419193457291" style="zoom:50%;" />
+<p><img src="image-20260419193457291.png" srcset="/img/loading.gif" lazyload alt="image-20260419193457291" style="zoom:50%;" /></p>
 <p>条目1 就是 .text 段，但是 size 是 0；</p>
 <p>.data 的 off 和 .text 一样，都是 0x130,说明 .text 段不占物理空间。</p>
-<h3 id="add-shdr">add_shdr</h3>
-<img src="image-20260419193540109.png" srcset="/img/loading.gif" lazyload alt="image-20260419193540109" style="zoom:50%;" />
-<p>此函数用来构造段表项，并且把构造好的段表项加入到 my_elf_g.shdr_head 的链表。<br>
-参数有点多，不过还好，调用这个函数的地方不到 10 个，而且代码写好后，一般不用修改。<br>
-第 327，是给 name 分配内存，因为我们采用的都是标准段名，字符串长度不会超过 ASS_MAX_ID_LEN（= 20） 个字节，所以这里固定分配 21 个。<br>
-第 333 行，sh_name 先填写 0，后面会修改为正确的值。<br>
-第 334~342，填写其他 9 个字段。<br>
-第 345，加入链表。</p>
+<h3 id="add-shdr"><a href="#add-shdr" class="headerlink" title="add_shdr"></a>add_shdr</h3><p><img src="image-20260419193540109.png" srcset="/img/loading.gif" lazyload alt="image-20260419193540109" style="zoom:50%;" /></p>
+<p>此函数用来构造段表项，并且把构造好的段表项加入到 my_elf_g.shdr_head 的链表。<br>参数有点多，不过还好，调用这个函数的地方不到 10 个，而且代码写好后，一般不用修改。<br>第 327，是给 name 分配内存，因为我们采用的都是标准段名，字符串长度不会超过 ASS_MAX_ID_LEN（= 20） 个字节，所以这里固定分配 21 个。<br>第 333 行，sh_name 先填写 0，后面会修改为正确的值。<br>第 334~342，填写其他 9 个字段。<br>第 345，加入链表。</p>
 <p>我们复习一下段表项的字段：</p>
-<img src="image-20260419193710314.png" srcset="/img/loading.gif" lazyload alt="image-20260419193710314" style="zoom:50%;" />
+<p><img src="image-20260419193710314.png" srcset="/img/loading.gif" lazyload alt="image-20260419193710314" style="zoom:50%;" /></p>
 <p>下面看看 add_shdr 这个函数怎么用</p>
-<img src="image-20260419193658130.png" srcset="/img/loading.gif" lazyload alt="image-20260419193658130" style="zoom:50%;" />
-<p>第 101 行，往链表里面添加一个空的表项。<br>
-第 107 行，添加代码段的段表项，第二个参数是代码段的大小。<br>
-第 109 行，第 3 个参数，SHT_PROGBITS 对应 sh_type，全称为 “Program Bits”。它表示该节包含的是程序定义的、由程序员或编译器提供的实际数据或代码，而不是 ELF 格式本身用于管理的元数据。<br>
-第 4 个参数，SHF_ALLOC | SHF_EXECINSTR 对应 sh_flags;<br>
-SHF_ALLOC 表示该节需要在运行时分配内存（即加载到内存）;<br>
-SHF_EXECINSTR 表示该节包含可执行的机器指令;<br>
-第 5 个参数，sh_addr 字段是 0，对于 .o ，不牵扯虚拟地址。<br>
-第 6 个参数，sh_offset，这个字段现在写 0，后面会填上合适的值;<br>
-第 7 个参数，sh_size，来自参数 size;<br>
-第 8、9 个参数，sh_link 和 sh_info 对于代码段，一般是 0;<br>
-第 10 个参数，sh_addralign , 取值 SECTION_TEXT_ALIGN（=16，模仿 nasm）;<br>
-第 11 个参数，sh_entsize,对于有表结构的段，表示表项的大小；对于不是表结构的段，取值 0；因为代码段没有表结构，所以是 0;<br>
-第 114 行，添加数据段的段表项，第二个参数是数据段的大小。<br>
-下面要解决的问题是如何获得代码段和数据段的大小。<br>
-在汇编器做语法分析的时候，我们设置了一个段计数器，每当遇到指令或者数据定义，这个计数器就会增加。</p>
-<img src="image-20260419193755794.png" srcset="/img/loading.gif" lazyload alt="image-20260419193755794" style="zoom:50%;" />
-<p>第 913 和第 917 行，text_sec_size_g、data_sec_size_g 都是全局变量，初始值为 0；<br>
-当遇到 section .xxx 的时候，就会调用第 919 行的函数，第 923~926，根据段的名字，把计数器的值赋给 text_sec_size_g 或者 data_sec_size_g；<br>
-语法分析结束后，代码段和数据段的大小就拿到了；<br>
-其他文件通过调用 get_text_sec_size() 和 get_data_sec_size() 获得这 2 个值。</p>
-<h2 id="make-elf">make_elf</h2>
-<p>这个函数是最后调用的。不过为了让读者心中有数，我们可以看看它的代码。</p>
-<img src="image-20260419193823978.png" srcset="/img/loading.gif" lazyload alt="image-20260419193823978" style="zoom:50%;" />
-<p>此函数用来组装 .o 文件；<br>
-第 771 行，添加空的段表项。<br>
-第 775 行，添加代码段的段表项。<br>
-第 776 行，添加数据段的段表项。<br>
-有读者问，不是说节头表的顺序是先空，然后是代码，再然后是数据段吗，第 773 行有个函数 make_symtab_shdr，为什么加入了符号表的段表项，和我们规定的顺序不一样啊。</p>
-<p>观察得很仔细！<br>
-&amp;my_elf_g.shdr_head 链表中的节点顺序，确实是空表项、符号表项、代码段表项,…<br>
-不过此时链表中的节点顺序并不是最终的顺序，第 782 行，我们会根据 shdr_order 数组，重新排列节点顺序。<br>
-reorder_shdr_list 函数代码如下：</p>
-<img src="image-20260419193857943.png" srcset="/img/loading.gif" lazyload alt="image-20260419193857943" style="zoom:50%;" />
+<p><img src="image-20260419193658130.png" srcset="/img/loading.gif" lazyload alt="image-20260419193658130" style="zoom:50%;" /></p>
+<p>第 101 行，往链表里面添加一个空的表项。<br>第 107 行，添加代码段的段表项，第二个参数是代码段的大小。<br>第 109 行，第 3 个参数，SHT_PROGBITS 对应 sh_type，全称为 “Program Bits”。它表示该节包含的是程序定义的、由程序员或编译器提供的实际数据或代码，而不是 ELF 格式本身用于管理的元数据。<br>第 4 个参数，SHF_ALLOC | SHF_EXECINSTR 对应 sh_flags;<br>SHF_ALLOC 表示该节需要在运行时分配内存（即加载到内存）;<br>SHF_EXECINSTR 表示该节包含可执行的机器指令;<br>第 5 个参数，sh_addr 字段是 0，对于 .o ，不牵扯虚拟地址。<br>第 6 个参数，sh_offset，这个字段现在写 0，后面会填上合适的值;<br>第 7 个参数，sh_size，来自参数 size;<br>第 8、9 个参数，sh_link 和 sh_info 对于代码段，一般是 0;<br>第 10 个参数，sh_addralign , 取值 SECTION_TEXT_ALIGN（=16，模仿 nasm）;<br>第 11 个参数，sh_entsize,对于有表结构的段，表示表项的大小；对于不是表结构的段，取值 0；因为代码段没有表结构，所以是 0;<br>第 114 行，添加数据段的段表项，第二个参数是数据段的大小。<br>下面要解决的问题是如何获得代码段和数据段的大小。<br>在汇编器做语法分析的时候，我们设置了一个段计数器，每当遇到指令或者数据定义，这个计数器就会增加。</p>
+<p><img src="image-20260419193755794.png" srcset="/img/loading.gif" lazyload alt="image-20260419193755794" style="zoom:50%;" /></p>
+<p>第 913 和第 917 行，text_sec_size_g、data_sec_size_g 都是全局变量，初始值为 0；<br>当遇到 section .xxx 的时候，就会调用第 919 行的函数，第 923~926，根据段的名字，把计数器的值赋给 text_sec_size_g 或者 data_sec_size_g；<br>语法分析结束后，代码段和数据段的大小就拿到了；<br>其他文件通过调用 get_text_sec_size() 和 get_data_sec_size() 获得这 2 个值。</p>
+<h2 id="make-elf"><a href="#make-elf" class="headerlink" title="make_elf"></a>make_elf</h2><p>这个函数是最后调用的。不过为了让读者心中有数，我们可以看看它的代码。</p>
+<p><img src="image-20260419193823978.png" srcset="/img/loading.gif" lazyload alt="image-20260419193823978" style="zoom:50%;" /></p>
+<p>此函数用来组装 .o 文件；<br>第 771 行，添加空的段表项。<br>第 775 行，添加代码段的段表项。<br>第 776 行，添加数据段的段表项。<br>有读者问，不是说节头表的顺序是先空，然后是代码，再然后是数据段吗，第 773 行有个函数 make_symtab_shdr，为什么加入了符号表的段表项，和我们规定的顺序不一样啊。</p>
+<p>观察得很仔细！<br>&amp;my_elf_g.shdr_head 链表中的节点顺序，确实是空表项、符号表项、代码段表项,…<br>不过此时链表中的节点顺序并不是最终的顺序，第 782 行，我们会根据 shdr_order 数组，重新排列节点顺序。<br>reorder_shdr_list 函数代码如下：</p>
+<p><img src="image-20260419193857943.png" srcset="/img/loading.gif" lazyload alt="image-20260419193857943" style="zoom:50%;" /></p>
 <p>第 542 行，定义一个临时的链表。</p>
 <p>第 543 行，根据 shdr_order 数组的元素顺序，在链表中查找对应的节点，找到后，第 546 行，把这个节点从原来的链表中拿下来，加入到临时链表的末尾。for 循环执行完毕后，临时链表的节点顺序和 shdr_order 数组是一致的。my_elf_g.shdr_head 链表就空了。</p>
 <p>第 550 行，把临时链表上的节点再依次移动到 my_elf_g.shdr_head 上，这样，my_elf_g.shdr_head 上的节点顺序就是我们想要的。</p>
-<h2 id="符号表">符号表</h2>
-<p>和 my_shdr 类似，为了维护符号表，我设计了 my_sym</p>
-<img src="image-20260419193935968.png" srcset="/img/loading.gif" lazyload alt="image-20260419193935968" style="zoom:50%;" />
+<h2 id="符号表"><a href="#符号表" class="headerlink" title="符号表"></a>符号表</h2><p>和 my_shdr 类似，为了维护符号表，我设计了 my_sym</p>
+<p><img src="image-20260419193935968.png" srcset="/img/loading.gif" lazyload alt="image-20260419193935968" style="zoom:50%;" /></p>
 <p>第 49 行，是符号的名字;</p>
 <p>第 48 行的 Elf32_Sym 类型，也来自 /usr/include/elf.h</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  Elf32_Word	st_name;		<span class="hljs-comment">/* Symbol name (string tbl index) */</span><br>  Elf32_Addr	st_value;		<span class="hljs-comment">/* Symbol value */</span><br>  Elf32_Word	st_size;		<span class="hljs-comment">/* Symbol size */</span><br>  <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span>	st_info;		<span class="hljs-comment">/* Symbol type and binding */</span><br>  <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span>	st_other;		<span class="hljs-comment">/* Symbol visibility */</span><br>  Elf32_Section	st_shndx;		<span class="hljs-comment">/* Section index */</span><br>&#125; Elf32_Sym;<br></code></pre></td></tr></table></figure>
 <p>Elf32_Sym 表示符号表中的一个条目；一共有 6 个字段;</p>
 <p>每个字段的含义，上节课讲了。</p>
 <p>为了添加符号，我设计了 __add_sym 这个函数。</p>
-<img src="image-20260419194054647.png" srcset="/img/loading.gif" lazyload alt="image-20260419194054647" style="zoom:50%;" />
-<p>第 1 个参数是字符串，用于给 my_sym 的 name 字段赋值（第 312 行）；<br>
-第 2 到第 6 个参数，对应代码 307~311；<br>
-第 313 行，把 my_sym 加入链表；<br>
-代码中，有时候直接调用这个函数添加符号，有时候会调用 add_sym；<br>
-add_sym 是对 __add_sym 的封装。</p>
-<img src="image-20260419194119811.png" srcset="/img/loading.gif" lazyload alt="image-20260419194119811" style="zoom:50%;" />
-<p>第一个参数是 ass_symbol_t 类型，这是汇编器做语法分析时用到的数据结构。<br>
-第二个是要加入的链表的头节点，应该传入 &amp;my_elf_g.sym_head；<br>
-第 353 行，如果传入的 sym 是 NULL，则说明要添加空的符号表项，第 355，添加空的符号表项。<br>
-第 359 行，不管是 nasm 还是 gcc 编译出来的 .o, 符号表中的 st_size 都是 0，看来链接器不关心这个字段，我们也填写 0；<br>
-第 360 行，这个字段很重要，对于可重定位文件， st_value 表示 该符号在其所属节（section）内的偏移量（offset）（符号的段内偏移）；它不是最终的虚拟地址，而是一个“节内相对地址”。<br>
-在汇编器的语法分析阶段，我们把当前段计数器的值赋值给 sym-&gt;addr，这就是符号的段内偏移。<br>
-第 362 行，默认符号类型是 STT_NOTYPE，代表该符号的类型未指定（No Type）；<br>
-查看 Nasm 生成的 .o，对于函数和变量，Type 这列都是 STT_NOTYPE；</p>
-<img src="image-20260419194203025.png" srcset="/img/loading.gif" lazyload alt="image-20260419194203025" style="zoom:50%;" />
-<img src="image-20260419194208949.png" srcset="/img/loading.gif" lazyload alt="image-20260419194208949" style="zoom:50%;" />
-<p>还有 3 个条目比较特别。<br>
-Num = 1 的条目，Type 是 FILE，Name 是文件名字。<br>
-Num = 2、3，Type 是 SECTION，Name 是 .text 和 .data；<br>
-其实符号表中可以没有以上符号。<br>
-但是第 3 个（.data）要有，因为重定位表可能会用。<br>
-我们继续看代码。</p>
-<img src="image-20260419194242094.png" srcset="/img/loading.gif" lazyload alt="image-20260419194242094" style="zoom:50%;" />
+<p><img src="image-20260419194054647.png" srcset="/img/loading.gif" lazyload alt="image-20260419194054647" style="zoom:50%;" /></p>
+<p>第 1 个参数是字符串，用于给 my_sym 的 name 字段赋值（第 312 行）；<br>第 2 到第 6 个参数，对应代码 307~311；<br>第 313 行，把 my_sym 加入链表；<br>代码中，有时候直接调用这个函数添加符号，有时候会调用 add_sym；<br>add_sym 是对 __add_sym 的封装。</p>
+<p><img src="image-20260419194119811.png" srcset="/img/loading.gif" lazyload alt="image-20260419194119811" style="zoom:50%;" /></p>
+<p>第一个参数是 ass_symbol_t 类型，这是汇编器做语法分析时用到的数据结构。<br>第二个是要加入的链表的头节点，应该传入 &amp;my_elf_g.sym_head；<br>第 353 行，如果传入的 sym 是 NULL，则说明要添加空的符号表项，第 355，添加空的符号表项。<br>第 359 行，不管是 nasm 还是 gcc 编译出来的 .o, 符号表中的 st_size 都是 0，看来链接器不关心这个字段，我们也填写 0；<br>第 360 行，这个字段很重要，对于可重定位文件， st_value 表示 该符号在其所属节（section）内的偏移量（offset）（符号的段内偏移）；它不是最终的虚拟地址，而是一个“节内相对地址”。<br>在汇编器的语法分析阶段，我们把当前段计数器的值赋值给 sym-&gt;addr，这就是符号的段内偏移。<br>第 362 行，默认符号类型是 STT_NOTYPE，代表该符号的类型未指定（No Type）；<br>查看 Nasm 生成的 .o，对于函数和变量，Type 这列都是 STT_NOTYPE；</p>
+<p><img src="image-20260419194203025.png" srcset="/img/loading.gif" lazyload alt="image-20260419194203025" style="zoom:50%;" /></p>
+<p><img src="image-20260419194208949.png" srcset="/img/loading.gif" lazyload alt="image-20260419194208949" style="zoom:50%;" /></p>
+<p>还有 3 个条目比较特别。<br>Num = 1 的条目，Type 是 FILE，Name 是文件名字。<br>Num = 2、3，Type 是 SECTION，Name 是 .text 和 .data；<br>其实符号表中可以没有以上符号。<br>但是第 3 个（.data）要有，因为重定位表可能会用。<br>我们继续看代码。</p>
+<p><img src="image-20260419194242094.png" srcset="/img/loading.gif" lazyload alt="image-20260419194242094" style="zoom:50%;" /></p>
 <p>汇编代码中，如果一个符号声明为 global, 那么汇编器就会把该符号的 is_global 字段设置为 true;特别注意，对于外部的符号，也属于 global；相关的代码是：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">ass_symbol_t</span> *<span class="hljs-title function_">new_ass_symbol</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *name, ass_symbol_type_e type,</span><br><span class="hljs-params">                             <span class="hljs-type">init_val_t</span> *init_val)</span><br>&#123;<br>    <span class="hljs-type">ass_symbol_t</span> *symbol = <span class="hljs-built_in">calloc</span>(<span class="hljs-number">1</span>, <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">ass_symbol_t</span>));<br>    ...<br>    symbol-&gt;type = type;<br>    <span class="hljs-built_in">strncpy</span>(symbol-&gt;name, name,<br>            ASS_MAX_ID_LEN);  <span class="hljs-comment">// 最多复制 ASS_MAX_ID_LEN 个</span><br>    symbol-&gt;addr = get_section_location_cnt();<br><br>    <span class="hljs-comment">// 这个段名对定义的符号有用</span><br>    <span class="hljs-comment">// 对于外部符号，段名表示引用该符号的段，没有意义</span><br>    <span class="hljs-built_in">strncpy</span>(symbol-&gt;sec_name, get_cur_section_name(), ASS_MAX_ID_LEN);<br>    <span class="hljs-keyword">if</span> (type == ASS_SYMBOL_TYPE_EXT) &#123;<br>        symbol-&gt;is_ext = <span class="hljs-literal">true</span>;<br>        symbol-&gt;addr = <span class="hljs-number">0</span>;<br>        symbol-&gt;is_global = <span class="hljs-literal">true</span>; <span class="hljs-comment">// 外部符号也是全局的，为生成 .o 的符号表服务</span><br>    &#125; <br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>第 17 行，外部符号的 is_global 也是 true；<br>
-再回到刚才的代码，第 366~369，把 bind 字段和类型拼接起来。st_info,占1字节，低4位表示符号类型，高4位表示绑定信息；<br>
-st_shndx 是符号被定义的段的索引。<br>
-对于外部符号，这个索引是 0（STN_UNDEF），指向段表项的第 0 个条目，也就是空表项。此时空表项的作用就体现出来了，有点类似C语言中的 NULL；<br>
-因为我们只有２个段，对于内部符号，不是代码段就是数据段，但是需要拿到段的索引。<br>
-get_shdr_idx 是一个辅助函数，根据段的名字（枚举类型），从定义的 shdr_order 数组里面查段的索引，代码就不贴了。<br>
-第 384 行，调用我们之前写的 __add_sym 函数，把符号加入链表。<br>
-添加符号的顶层函数是 add_symbols；</p>
-<img src="image-20260419194340545.png" srcset="/img/loading.gif" lazyload alt="image-20260419194340545" style="zoom:50%;" />
-<p>第 443 行，添加空的符号表项。<br>
-第 444~447，用 get_shdr_idx  函数获取代码段和数据段的段索引。<br>
-第 450~453，模仿 nasm 添加 2 个段符号（.text 和 .data）;<br>
-第 4 个参数是 STB_LOCAL 和 STT_SECTION 的组合。<br>
-第 2 和第 3 个参数都是 0，分别对应 st_value 和 st_size，因为 .text 和 .data这 2 个符号，代表  .text 和 .data 的开始位置，所以它的偏移量（st_value ）自然是 0；<br>
-st_size 填 0 就行，前文说过了。<br>
-第 455 行，遍历哈希表，添加局部符号;<br>
-第 460 行，遍历哈希表，添加全局符号;<br>
-可能读者会好奇，为什么要遍历两次，分开添加局部和全局符号？<br>
-因为在 ELF 规范中，符号表（Symbol Table）的排列顺序是有规定的，<br>
-根据 System V ABI 标准，符号表项必须遵循以下顺序：<br>
-<strong>所有具有 STB_LOCAL（局部）绑定属性的符号都必须排在所有具有 STB_GLOBAL（全局）或 STB_WEAK 属性的符号之前。</strong><br>
-<strong>我们不考虑 STB_WEAK 属性的符号，所以只有局部和全局两种符号。</strong></p>
-<p>段表项里面有一个字段叫 sh_info，对于符号表，记录符号表内最后一个局部符号的索引+1；对于重定位表，指向被修补的节的索引；<br>
-链接器（Linker）在处理重定位或符号解析时，通常只关心全局符号，所以只需要查看符号表的段表项，取出 sh_info，从它开始就是全局符号的索引；<br>
-如果排列顺序是随意的，那么链接器必须遍历整个符号表并检查每一个符号的 st_info 属性，效率会大大降低。</p>
-<p>符号表已经构造完成，下面可以构造和添加符号表的表项了。<br>
-注意，符号表和符号表表项是两回事。前者是所有符号构成的一张表，后者是段表里面的一个条目，这个条目记录了符号表的位置，大小等信息。</p>
-<img src="image-20260419194446587.png" srcset="/img/loading.gif" lazyload alt="image-20260419194446587" style="zoom:50%;" />
-<p>第 1 个参数应该传入 &amp;my_elf_g.shdr_head，此链表用来管理已经构造好的段表项。<br>
-第 2 个参数应该传入 &amp;my_elf_g.sym_head;<br>
-第 3 个参应该传入 shdr_order，此数组记录段表项的顺序；<br>
-第 4 个参数是 shdr_order 数组的元素个数；<br>
-第 139 行，求 sh_size， 等于符号的个数 * 每个符号条目的大小。<br>
-第 140 行，获得 .strtab 段的索引，赋值给 sh_link，这是因为对于符号表，sh_link 指向与之关联的字符串表 (.strtab) 的索引。因为符号表中每个符号的名字，要在字符串表中查询偏移。<br>
-第 142 行，利用 __get_first_global_symbol 函数遍历符号表，找到第一个全局符号的索引，赋值给 sh_info；<br>
-第 143，构造符号表对应的段表项，第 3 个参数是 SHT_SYMTAB，表示符号表。<br>
-至于参数中的三个 0，分别是 sh_flags(执行期间不需要分配内存，所以是 0)、sh_addr（对于 .o 都是 0）、sh_offset（现在写 0，后面会填上合适的值）。</p>
+<p>第 17 行，外部符号的 is_global 也是 true；<br>再回到刚才的代码，第 366~369，把 bind 字段和类型拼接起来。st_info,占1字节，低4位表示符号类型，高4位表示绑定信息；<br>st_shndx 是符号被定义的段的索引。<br>对于外部符号，这个索引是 0（STN_UNDEF），指向段表项的第 0 个条目，也就是空表项。此时空表项的作用就体现出来了，有点类似C语言中的 NULL；<br>因为我们只有２个段，对于内部符号，不是代码段就是数据段，但是需要拿到段的索引。<br>get_shdr_idx 是一个辅助函数，根据段的名字（枚举类型），从定义的 shdr_order 数组里面查段的索引，代码就不贴了。<br>第 384 行，调用我们之前写的 __add_sym 函数，把符号加入链表。<br>添加符号的顶层函数是 add_symbols；</p>
+<p><img src="image-20260419194340545.png" srcset="/img/loading.gif" lazyload alt="image-20260419194340545" style="zoom:50%;" /></p>
+<p>第 443 行，添加空的符号表项。<br>第 444~447，用 get_shdr_idx  函数获取代码段和数据段的段索引。<br>第 450~453，模仿 nasm 添加 2 个段符号（.text 和 .data）;<br>第 4 个参数是 STB_LOCAL 和 STT_SECTION 的组合。<br>第 2 和第 3 个参数都是 0，分别对应 st_value 和 st_size，因为 .text 和 .data这 2 个符号，代表  .text 和 .data 的开始位置，所以它的偏移量（st_value ）自然是 0；<br>st_size 填 0 就行，前文说过了。<br>第 455 行，遍历哈希表，添加局部符号;<br>第 460 行，遍历哈希表，添加全局符号;<br>可能读者会好奇，为什么要遍历两次，分开添加局部和全局符号？<br>因为在 ELF 规范中，符号表（Symbol Table）的排列顺序是有规定的，<br>根据 System V ABI 标准，符号表项必须遵循以下顺序：<br><strong>所有具有 STB_LOCAL（局部）绑定属性的符号都必须排在所有具有 STB_GLOBAL（全局）或 STB_WEAK 属性的符号之前。</strong><br><strong>我们不考虑 STB_WEAK 属性的符号，所以只有局部和全局两种符号。</strong></p>
+<p>段表项里面有一个字段叫 sh_info，对于符号表，记录符号表内最后一个局部符号的索引+1；对于重定位表，指向被修补的节的索引；<br>链接器（Linker）在处理重定位或符号解析时，通常只关心全局符号，所以只需要查看符号表的段表项，取出 sh_info，从它开始就是全局符号的索引；<br>如果排列顺序是随意的，那么链接器必须遍历整个符号表并检查每一个符号的 st_info 属性，效率会大大降低。</p>
+<p>符号表已经构造完成，下面可以构造和添加符号表的表项了。<br>注意，符号表和符号表表项是两回事。前者是所有符号构成的一张表，后者是段表里面的一个条目，这个条目记录了符号表的位置，大小等信息。</p>
+<p><img src="image-20260419194446587.png" srcset="/img/loading.gif" lazyload alt="image-20260419194446587" style="zoom:50%;" /></p>
+<p>第 1 个参数应该传入 &amp;my_elf_g.shdr_head，此链表用来管理已经构造好的段表项。<br>第 2 个参数应该传入 &amp;my_elf_g.sym_head;<br>第 3 个参应该传入 shdr_order，此数组记录段表项的顺序；<br>第 4 个参数是 shdr_order 数组的元素个数；<br>第 139 行，求 sh_size， 等于符号的个数 * 每个符号条目的大小。<br>第 140 行，获得 .strtab 段的索引，赋值给 sh_link，这是因为对于符号表，sh_link 指向与之关联的字符串表 (.strtab) 的索引。因为符号表中每个符号的名字，要在字符串表中查询偏移。<br>第 142 行，利用 __get_first_global_symbol 函数遍历符号表，找到第一个全局符号的索引，赋值给 sh_info；<br>第 143，构造符号表对应的段表项，第 3 个参数是 SHT_SYMTAB，表示符号表。<br>至于参数中的三个 0，分别是 sh_flags(执行期间不需要分配内存，所以是 0)、sh_addr（对于 .o 都是 0）、sh_offset（现在写 0，后面会填上合适的值）。</p>
 
                 
               </div>

@@ -402,10 +402,8 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第28天：汇编器的符号表">第28天：汇编器的符号表</h1>
-<p>编译器的语义分析离不开符号表，同理，汇编器也需要符号表。</p>
-<h2 id="符号的种类">符号的种类</h2>
-<p>针对 csub 生成的汇编代码，符号来源有三种。</p>
+                <h1 id="第28天：汇编器的符号表"><a href="#第28天：汇编器的符号表" class="headerlink" title="第28天：汇编器的符号表"></a>第28天：汇编器的符号表</h1><p>编译器的语义分析离不开符号表，同理，汇编器也需要符号表。</p>
+<h2 id="符号的种类"><a href="#符号的种类" class="headerlink" title="符号的种类"></a>符号的种类</h2><p>针对 csub 生成的汇编代码，符号来源有三种。</p>
 <p>1、数据。在 C 代码中是变量的名字，到了汇编代码，就代表一个地址，表示一段内存区域的起始位置。</p>
 <p>2、标签。用于表示内存地址，一般存在于代码段中。它一般来自 C 代码中函数的名字，也可能来自中间代码生成时产生的标号，表示跳转的目的地址。</p>
 <p>3、外部符号：当引用外部文件的数据或者函数时，就会产生外部符号。</p>
@@ -416,13 +414,11 @@
 <p>第 22 行的 list，就是数据</p>
 <p>第 3 行的 “test:” 和第 16 行的 “@L47_else:” 是标签</p>
 <p>第 5 行和第 7 行的 monkey 是外部符号；第 14 行的 foo 也是外部符号。</p>
-<h2 id="后置定义">后置定义</h2>
-<p>需要说明的是，汇编语言和 C 语言不同，前者允许符号的后置定义。</p>
+<h2 id="后置定义"><a href="#后置定义" class="headerlink" title="后置定义"></a>后置定义</h2><p>需要说明的是，汇编语言和 C 语言不同，前者允许符号的后置定义。</p>
 <p>例如上面第 13 行，“je @L47_else” 的意思是如果相等就跳转到 @L47_else，可是 @L47_else 在哪里呢？当语法分析器解析到第 16 行时，才知道“原来 @L47_else 在这里啊”！</p>
 <p>再比如第 14 行，“call foo” 里面 foo 符号是内部的还是外部的？到了第 18 行，才知道它是外部的符号。换做 C 代码，你要调用外部的 foo 函数，必须先声明，否则编译器不会让你过的。</p>
 <p>所以这种后置定义会给我们的语义分析带来麻烦，当解析到 “call foo” 的时候，还不知道 foo 在哪里，要不要报错呢？报吧，不合适，万一后面有 foo 的声明或定义呢？不报吧，也不合适，万一后面没有 foo 的声明和定义呢？</p>
-<h2 id="两遍扫描">两遍扫描</h2>
-<p>为了解决这个麻烦，我们可以采用一个笨办法——扫描两遍源代码。</p>
+<h2 id="两遍扫描"><a href="#两遍扫描" class="headerlink" title="两遍扫描"></a>两遍扫描</h2><p>为了解决这个麻烦，我们可以采用一个笨办法——扫描两遍源代码。</p>
 <p>第一遍扫描，遇到了数据和标签的定义，就加入符号表，例如第 3 行，加入标签 “test:”</p>
 <p>当扫描到第 5 行，monkey，这是一个对符号的引用，查表发现没有这个符号，我们也把它加入符号表，但是要标记这个符号“未定义”</p>
 <p>同理，第 6 行的 list，也加入符号表，并标记为“未定义”</p>
@@ -433,13 +429,12 @@
 <p>当解析到第 22 行，发现了 list 的定义，此时要把符号表中 list 的“未定义”替换成 “已经定义”,还要加入和 list 有关的信息，例如起始地址是多少，占多大内存，初始值是多少。</p>
 <p>当第一遍扫描结束，所有的符号都加入了符号表，并且符号的信息也收集完成了。</p>
 <p>不过别着急，还要再来一遍扫描。因为第一遍扫描生成的指令编码可能是错误的。</p>
-<p>例如第 6 行， “mov [list+396], eax”</p>
+<p>例如第 6 行， “mov [list+396], eax” </p>
 <p>第一遍扫描，把 list 当外部符号，因为那时候符号表里面没有 list</p>
 <p>第二遍扫描，list 就在符号表里面了，就可以知道 list 的有关信息，尤其是地址偏移，这时候生成的指令编码才是对的。</p>
 <p>也许读者不太明白我说的“地址偏移是什么意思”，马上就会讲。</p>
 <p>需要注意，第二遍只查询符号表，但是不会再添加新符号了。</p>
-<h2 id="符号地址">符号地址</h2>
-<p>在汇编代码中，符号（Symbols）本质上是内存地址的别名。</p>
+<h2 id="符号地址"><a href="#符号地址" class="headerlink" title="符号地址"></a>符号地址</h2><p>在汇编代码中，符号（Symbols）本质上是内存地址的别名。</p>
 <p>生成的汇编代码，最终要成为可执行的程序，程序被加载到内存，符号就获得了最终的地址。</p>
 <p>但是从 .s 到 .o 的时候，我们确实不知道每个符号将来在内存的哪个位置。怎么办呢？</p>
 <p>我们可以给每个符号赋予一个相对地址，相对的意思是看这个符号在段内的偏移是多少，它的地址就是多少。</p>
@@ -448,8 +443,7 @@
 <p>.data 段最开始的地址是 0，因为 list 是此段第一个符号，所以它的地址是 0；</p>
 <p>因为 list 占用了 <code>4*5 + 4*95 = 400</code> 个字节，所以 monkey 这个符号的偏移就是 400，所以 monkey 的符号地址是 400;</p>
 <p>不过像这样人工计算地址实在很麻烦，如何编程计算地址呢？</p>
-<h3 id="位置计数器">位置计数器</h3>
-<p>当汇编器遇到<strong>段声明</strong>时，它会判断这是不是一个新段（根据名字），如果是，它就为这个段创建一个<strong>位置计数器</strong>并将其初始值设为 <strong>0</strong>。</p>
+<h3 id="位置计数器"><a href="#位置计数器" class="headerlink" title="位置计数器"></a>位置计数器</h3><p>当汇编器遇到<strong>段声明</strong>时，它会判断这是不是一个新段（根据名字），如果是，它就为这个段创建一个<strong>位置计数器</strong>并将其初始值设为 <strong>0</strong>。</p>
 <p>如果该段之前已声明过，汇编器会查一下该段当时计数到哪里了，然后从那个位置继续计数。因为 csub 没有生成这样的汇编代码，所以这种情况不用考虑。</p>
 <p>我们可以用一个简单的结构体和一个全局变量把当前的段管理起来。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">section_info</span> &#123;</span><br>	<span class="hljs-type">int</span> location_cnt; <span class="hljs-comment">// 位置计数器</span><br>	<span class="hljs-type">char</span> name[ASS_MAX_ID_LEN+<span class="hljs-number">1</span>]; <span class="hljs-comment">// 段名</span><br>&#125;<span class="hljs-type">section_info_t</span>;<br><br><span class="hljs-type">section_info_t</span> *cur_parsing_section_g = <span class="hljs-literal">NULL</span>;<br></code></pre></td></tr></table></figure>
@@ -460,7 +454,7 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">switch_section</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *name)</span><br>&#123;<br>	<span class="hljs-keyword">if</span>(cur_parsing_section_g) &#123;<span class="hljs-comment">// 结束当前的段</span><br>		<span class="hljs-built_in">free</span>(cur_parsing_section_g);<br>		cur_parsing_section_g = <span class="hljs-literal">NULL</span>;<br>	&#125;<br>	<span class="hljs-comment">// 开一个新的段</span><br>	cur_parsing_section_g = create_one_section(name);<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>这个函数在哪里用呢？</p>
 <p>这个函数在下图第 123 行调用，也就是解析到 “section .yyy” 的时候。</p>
-<img src="image-20260126171844804.png" srcset="/img/loading.gif" lazyload alt="image-20260126171844804" style="zoom:50%;" />
+<p><img src="image-20260126171844804.png" srcset="/img/loading.gif" lazyload alt="image-20260126171844804" style="zoom:50%;" /></p>
 <p>不管是遇到数据还是指令，计数器的值都会增加。我封装了 2 个函数</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">increase_section_location_cnt</span><span class="hljs-params">(<span class="hljs-type">int</span> delta_len)</span><br>&#123;<br>    assert(cur_parsing_section_g);<br>    cur_parsing_section_g-&gt;location_cnt += delta_len;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">get_section_location_cnt</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    assert(cur_parsing_section_g);<br>    <span class="hljs-keyword">return</span> cur_parsing_section_g-&gt;location_cnt;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>当解析到一个符号定义的时候，我们就调用这个函数增加数据段计数器的值，参数 delta_len 应该是这个数据占用的所有内存大小；</p>
@@ -474,8 +468,7 @@
 <p>所以 <code>section_info-&gt;location_cnt = 400；</code></p>
 <p>遇到了 monkey，为了确定 monkey 的偏移地址，调用 <code>get_section_location_cnt();</code>，返回值是 400;</p>
 <p>当解析完第 6 行，知道 monkey 这段内存占 4 个字节后，要调用 <code>increase_section_location_cnt(4);</code>所以 <code>section_info-&gt;location_cnt = 404；</code></p>
-<h2 id="符号表">符号表</h2>
-<p>下面讲解符号表的代码。</p>
+<h2 id="符号表"><a href="#符号表" class="headerlink" title="符号表"></a>符号表</h2><p>下面讲解符号表的代码。</p>
 <p>符号表都包含哪些信息呢？</p>
 <p>1、符号的类型</p>
 <p>2、符号的名字；符号的名字具有唯一性，我们查找符号也是按照名字来查找。</p>
@@ -484,7 +477,7 @@
 <p>5、属性，例如是否是外部的，是否是全局的</p>
 <p>6、对于数据，要存储初始值下面的枚举定义了所有的符号类型。</p>
 <p>下面的枚举定义了所有的符号类型。</p>
-<img src="image-20260418192748944.png" srcset="/img/loading.gif" lazyload alt="image-20260418192748944" style="zoom:50%;" />
+<p><img src="image-20260418192748944.png" srcset="/img/loading.gif" lazyload alt="image-20260418192748944" style="zoom:50%;" /></p>
 <p>和符号有关的结构体是：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">ass_symbol</span></span><br><span class="hljs-class">&#123;</span><br>    ass_symbol_type_e type;<br>    <span class="hljs-type">char</span> sec_name[ASS_MAX_ID_LEN + <span class="hljs-number">1</span>];  <span class="hljs-comment">// 符号属于的段名，：空/.text/ .data /.bss</span><br>    <span class="hljs-type">char</span> name[ASS_MAX_ID_LEN + <span class="hljs-number">1</span>];  <span class="hljs-comment">// 符号名</span><br>    <span class="hljs-type">bool</span> is_ext;  <span class="hljs-comment">// 是否是外部符号，是 true</span><br>                  <span class="hljs-comment">// 的时候表示为外部的符号，此时 cur_addr 不累加</span><br>    <span class="hljs-type">bool</span> is_global;<br>    <span class="hljs-type">int</span> addr;  <span class="hljs-comment">// 符号的偏移地址</span><br>    <span class="hljs-type">init_val_t</span> *init_val_info;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">hlist_node</span> <span class="hljs-title">hnode</span>;</span>  <span class="hljs-comment">// 用于加入 ass_symbol_table_t 的哈希表</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">entry</span>;</span>   <span class="hljs-comment">// 用于加入 ass_symbol_table_t 链表</span><br>&#125; <span class="hljs-type">ass_symbol_t</span>;<br></code></pre></td></tr></table></figure>
 <p>第 3 行是类型，第 5 行是符号名，第 9 行是偏移，已经介绍了。</p>
@@ -499,9 +492,8 @@
 <p>之前已经讲过哈希表结构和用法，这里不赘述。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">ass_symbol_table_t</span> ass_sym_tab_g; <span class="hljs-comment">// 全局变量</span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">ass_symbol_table_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	<span class="hljs-built_in">memset</span>(&amp;ass_sym_tab_g, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">ass_symbol_table_t</span>));<br>	INIT_LIST_HEAD(&amp;ass_sym_tab_g.head);		<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>第 3 行，是符号表的初始化。</p>
-<h3 id="创建符号的函数">创建符号的函数</h3>
-<p>创建符号的代码如下：</p>
-<img src="image-20260126181038092.png" srcset="/img/loading.gif" lazyload alt="image-20260126181038092" style="zoom:50%;" />
+<h3 id="创建符号的函数"><a href="#创建符号的函数" class="headerlink" title="创建符号的函数"></a>创建符号的函数</h3><p>创建符号的代码如下：</p>
+<p><img src="image-20260126181038092.png" srcset="/img/loading.gif" lazyload alt="image-20260126181038092" style="zoom:50%;" /></p>
 <p>第一个参数是符号名字，第二个参数是符号类型，第三个参数是初始值（对数据定义有效，其他类型的传 NULL）</p>
 <p>第 19 行，为 ass_symbol_table_t 结构体分配内存。第 23、24 行，登记符号的类型和名字。</p>
 <p>第 26 行，填写符号的偏移。</p>
@@ -511,19 +503,18 @@
 <p>第 31 行，如果是数据的定义，那步骤就比较多，第 33 行，设置初始值，这个初始值是怎么来的，后面会讲。</p>
 <p>第 35 行，增加段计算器的值。</p>
 <p>第 37~39，仅在第一遍扫描的时候，把数据加入链表。</p>
-<h3 id="数据定义的解析">数据定义的解析</h3>
-<img src="image-20260126183124513.png" srcset="/img/loading.gif" lazyload alt="image-20260126183124513" style="zoom:50%;" />
+<h3 id="数据定义的解析"><a href="#数据定义的解析" class="headerlink" title="数据定义的解析"></a>数据定义的解析</h3><p><img src="image-20260126183124513.png" srcset="/img/loading.gif" lazyload alt="image-20260126183124513" style="zoom:50%;" /></p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> str_list<br>	str_list <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-number">0</span>                    <span class="hljs-comment">; 这是一个 item </span><br>	<span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, langlangshan, -<span class="hljs-number">24</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>    <span class="hljs-comment">; 这是一个 item </span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">2</span> <span class="hljs-built_in">db</span> <span class="hljs-number">0</span>                              <span class="hljs-comment">; 这是一个 item </span><br>	<span class="hljs-built_in">dd</span> test_str                               <span class="hljs-comment">; 这是一个 item </span><br></code></pre></td></tr></table></figure>
 <p>例如上面的汇编代码，当解析到 “world” 或者数字，就会匹配到上面的第 417 行或者 410 行。</p>
 <p>如果解析到 “langlangshan”，就会匹配到第 422 行。</p>
 <p>对于数字或者字符串，比较简单，就是把值加入链表。</p>
 <p>链表的头节点是作为参数传进来的。为了简单，我们都用 int 大小存储。</p>
-<img src="image-20260126184249670.png" srcset="/img/loading.gif" lazyload alt="image-20260126184249670" style="zoom:50%;" />
+<p><img src="image-20260126184249670.png" srcset="/img/loading.gif" lazyload alt="image-20260126184249670" style="zoom:50%;" /></p>
 <p>ASS_STRING,首先计算字符串的长度（不包括末尾的 0),然后为每个字符分配内存（int 类型的大小)。</p>
 <p>第 393，把字符转换成整型，存进去。</p>
 <p>第 394，加入链表。</p>
 <p>value 的父函数是</p>
-<img src="image-20260126184631531.png" srcset="/img/loading.gif" lazyload alt="image-20260126184631531" style="zoom:50%;" />
+<p><img src="image-20260126184631531.png" srcset="/img/loading.gif" lazyload alt="image-20260126184631531" style="zoom:50%;" /></p>
 <p>第 307 行，只要遇到逗号，就继续解析，把值都收集到链表。</p>
 <p>value_list 的父函数是 values</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">    &lt;values&gt;     -&gt; &lt;data_size&gt; &lt;value_list&gt;</span><br><span class="hljs-comment">    &lt;data_size&gt;  -&gt; KW_DB | KW_DW | KW_DD</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">values</span><span class="hljs-params">(<span class="hljs-type">scanner_t</span> *scanner,  <span class="hljs-type">int</span> times, <span class="hljs-type">init_val_t</span> *init_val)</span><br>&#123;<br>    <span class="hljs-type">int</span> size = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">switch</span> (scanner-&gt;token) &#123;<br>        <span class="hljs-keyword">case</span> KW_DB:<br>            size = <span class="hljs-number">1</span>;<br>            <span class="hljs-keyword">break</span>;<br>		<span class="hljs-comment">// ...</span><br>    &#125;<br>    <br>    next_token();<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> *<span class="hljs-title">val_head</span> =</span> create_list();<br>    value_list(scanner, size, val_head, init_val);<br>    new_item_add(size, times, val_head, init_val);<br>    <span class="hljs-built_in">free</span>(val_head);<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -531,13 +522,13 @@
 <p>当 value_list() 执行完，说明一个 item 的值都收集好了。</p>
 <p>第 18 行，把这个 item 加入 init_val 指向的结构中（这个函数后面会讲）。</p>
 <p>我们先看看 init_val 这个指针来自哪里。</p>
-<img src="image-20260126205244709.png" srcset="/img/loading.gif" lazyload alt="image-20260126205244709" style="zoom:50%;" />
+<p><img src="image-20260126205244709.png" srcset="/img/loading.gif" lazyload alt="image-20260126205244709" style="zoom:50%;" /></p>
 <p>init_val 的源头在第 217 行，它是函数 new_init_val 的返回值。</p>
 <p>new_init_val 函数的作用是分配 init_val_t 结构体并初始化，入参是数据符号的名字。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">init_val_t</span> *<span class="hljs-title function_">new_init_val</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *name)</span><br>&#123;<br>    <span class="hljs-type">init_val_t</span> *init_val = <span class="hljs-built_in">calloc</span>(<span class="hljs-number">1</span>, <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">init_val_t</span>));<br>    <span class="hljs-keyword">if</span> (!init_val) &#123;<br>        SYSTEM_FATAL_ERR(MEM_ALLOC_FAILED);<br>    &#125;   <br>    <span class="hljs-built_in">strncpy</span>(init_val-&gt;name, name, ASS_MAX_ID_LEN);<br>    INIT_LIST_HEAD(&amp;init_val-&gt;items_list);<br>    INIT_LIST_HEAD(&amp;init_val-&gt;relocation);<br>    <span class="hljs-keyword">return</span> init_val;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>第 8~9 行初始化 2 个链表。</p>
 <p>第 3 行分配内存，init_val_t 是什么结构体呢？</p>
-<img src="image-20260126185358648.png" srcset="/img/loading.gif" lazyload alt="image-20260126185358648" style="zoom:50%;" />
+<p><img src="image-20260126185358648.png" srcset="/img/loading.gif" lazyload alt="image-20260126185358648" style="zoom:50%;" /></p>
 <p>第 18 行，记录一共有多少个 item;比如前面的例子 str_list，它包含 4 个 item，</p>
 <p>注意，这个 init_val_t 和后面要说的 item_t 都是我为了解析数据符号而设计的数据结构，和汇编语言没有任何关系。</p>
 <p>第 19 行，后面会讲。</p>
@@ -545,14 +536,14 @@
 <p>第 21 行，用来存储数据符号的名字，比如 “str_list”</p>
 <p>第 22 行，和重定位有关，不用管。</p>
 <p>item 也是有结构的：</p>
-<img src="image-20260126190155454.png" srcset="/img/loading.gif" lazyload alt="image-20260126190155454" style="zoom:50%;" />
+<p><img src="image-20260126190155454.png" srcset="/img/loading.gif" lazyload alt="image-20260126190155454" style="zoom:50%;" /></p>
 <p>第 26 行，用来记录数据的 size（db=1,dw=2,dd=4）；</p>
 <p>第 27 行，重复的次数；</p>
 <p>第 28 行，前面的链表上收集了多少个数，这里就是多少；</p>
 <p>这些字段都会在 new_item_add 中被填充。</p>
 <p>我们看 new_item_add(size, times, val_head, init_val);</p>
 <p>意思是根据 val_head 链表收集到的值，创建一个 item，并把这个 item 加入到 init_val 指向的结构中。</p>
-<img src="image-20260126191025129.png" srcset="/img/loading.gif" lazyload alt="image-20260126191025129" style="zoom:50%;" />
+<p><img src="image-20260126191025129.png" srcset="/img/loading.gif" lazyload alt="image-20260126191025129" style="zoom:50%;" /></p>
 <p>158~161，分配 item 的内存；然后设置 def_size 和 times；</p>
 <p>第 164 行，初始化 item 的 values_list 链表为空；</p>
 <p>第 167~170，利用 list_move_tail 函数，把 head 上面的节点转移到 item 的 values_list 链表上。</p>
@@ -565,8 +556,7 @@
 <p>第 172 行， <code>def_size * times * item-&gt;values_cnt</code> 的结果是这个 item 所占内存的大小；</p>
 <p>累加到 init_val-&gt;cur_addr 上，表示这个 item 解析完成后，数据符号占用内存多大。</p>
 <p>为什么要统计这个值，在学习重定位的时候会用。</p>
-<h3 id="维护符号表">维护符号表</h3>
-<p>需要注意，定义符号和引用符号不是一回事。</p>
+<h3 id="维护符号表"><a href="#维护符号表" class="headerlink" title="维护符号表"></a>维护符号表</h3><p>需要注意，定义符号和引用符号不是一回事。</p>
 <p>例如</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> str_list<br>	str_list <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-number">0</span>                <br>	<span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, langlangshan, -<span class="hljs-number">24</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>    <br><span class="hljs-symbol">    </span><br><span class="hljs-symbol">test:</span><br>	<span class="hljs-comment">; ...</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [monkey]<br>	<span class="hljs-comment">;...</span><br>	<span class="hljs-keyword">je</span> @L47_else<br>	<span class="hljs-keyword">call</span> foo<br>	<span class="hljs-comment">; ...</span><br>@L47_else:<br>	<span class="hljs-comment">; ...    </span><br></code></pre></td></tr></table></figure>
 <p>第 2 行的 str_list，这是定义符号;</p>
@@ -577,6 +567,7 @@
 <p>第 12 行的@L47_else: 这是定义符号。</p>
 <p>如何维护符号表？</p>
 <p>下表总结了遇到数据定义、标号定义、extern 声明、global 声明、引用符号这 5 种情况，而且第一遍扫描和第二遍扫描处理方法不一样。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -613,13 +604,13 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>为了维护符号表，有 2 个核心函数。</p>
 <p>1、add_ass_symbol</p>
 <p>2、get_or_add_ass_symbol</p>
 <p>这 2 个函数互相配合，完成符号表的维护。</p>
-<h4 id="get-or-add-ass-symbol">get_or_add_ass_symbol</h4>
-<img src="image-20260127105641983.png" srcset="/img/loading.gif" lazyload alt="image-20260127105641983" style="zoom:50%;" />
-<p>在遇到引用符号的时候，就会调用 get_or_add_ass_symbol；</p>
+<h4 id="get-or-add-ass-symbol"><a href="#get-or-add-ass-symbol" class="headerlink" title="get_or_add_ass_symbol"></a>get_or_add_ass_symbol</h4><p><img src="image-20260127105641983.png" srcset="/img/loading.gif" lazyload alt="image-20260127105641983" style="zoom:50%;" /></p>
+<p>在遇到引用符号的时候，就会调用 get_or_add_ass_symbol； </p>
 <p>第 81 行，在符号表中查找这个符号，如果找不到，则创建一个 ASS_SYMBOL_TYPE_UNDEF 类型的符号，并加入符号表；</p>
 <p>第 83 行完成符号创建，第 87~88 把符号加入哈希表。</p>
 <p>折叠的部分不用管，是后面做实验用的。</p>
@@ -633,12 +624,11 @@
 <p>2、指令里面引用了符号</p>
 <p>例如上面第 7 行和第 8 行，地址包含符号或者操作数是符号；</p>
 <p>相关的代码如下：</p>
-<img src="image-20260418194229952.png" srcset="/img/loading.gif" lazyload alt="image-20260418194229952" style="zoom:50%;" />
+<p><img src="image-20260418194229952.png" srcset="/img/loading.gif" lazyload alt="image-20260418194229952" style="zoom:50%;" /></p>
 <p>上图第 563 行，操作数里面引用符号；</p>
-<img src="image-20260418194311830.png" srcset="/img/loading.gif" lazyload alt="image-20260418194311830" style="zoom:50%;" />
+<p><img src="image-20260418194311830.png" srcset="/img/loading.gif" lazyload alt="image-20260418194311830" style="zoom:50%;" /></p>
 <p>上图第 471 行，地址里面引用符号；</p>
-<h4 id="add-ass-symbol">add_ass_symbol</h4>
-<img src="image-20260127105136520.png" srcset="/img/loading.gif" lazyload alt="image-20260127105136520" style="zoom:50%;" />
+<h4 id="add-ass-symbol"><a href="#add-ass-symbol" class="headerlink" title="add_ass_symbol"></a>add_ass_symbol</h4><p><img src="image-20260127105136520.png" srcset="/img/loading.gif" lazyload alt="image-20260127105136520" style="zoom:50%;" /></p>
 <p>以上是 add_ass_symbol 的代码。</p>
 <p>这个函数虽然名字是 add, 但是里面也可能有 replace（替换） 的操作。</p>
 <p>在遇到符号定义的时候，会调用这个函数。</p>
@@ -648,57 +638,55 @@
 <p>1、遇到了标号的定义</p>
 <p>2、遇到了 extern 的声明</p>
 <p>3、遇到了数据的定义</p>
-<img src="image-20260127104945558.png" srcset="/img/loading.gif" lazyload alt="image-20260127104945558" style="zoom:50%;" />
+<p><img src="image-20260127104945558.png" srcset="/img/loading.gif" lazyload alt="image-20260127104945558" style="zoom:50%;" /></p>
 <p>第 187 行，这里是定义一个标号，所以类型是 ASS_SYMBOL_TYPE_LABEL；然后调用 add_ass_symbol</p>
-<img src="image-20260127111208941.png" srcset="/img/loading.gif" lazyload alt="image-20260127111208941" style="zoom:50%;" />
+<p><img src="image-20260127111208941.png" srcset="/img/loading.gif" lazyload alt="image-20260127111208941" style="zoom:50%;" /></p>
 <p>第 149 行，说明遇到了 extern 声明。</p>
 <p>第 156~159，创建 ASS_SYMBOL_TYPE_EXT 类型符号，然后调用 add_ass_symbol</p>
-<img src="image-20260127111736938.png" srcset="/img/loading.gif" lazyload alt="image-20260127111736938" style="zoom:50%;" />
+<p><img src="image-20260127111736938.png" srcset="/img/loading.gif" lazyload alt="image-20260127111736938" style="zoom:50%;" /></p>
 <p>第 234~237，遇到数据定义，创建 ASS_SYMBOL_TYPE_DATA 类型的符号；然后调用 add_ass_symbol</p>
 <p>相信读者已经发现了，这三个地方都有条件，就 <code>if (scan_loop_g == 1)</code></p>
 <p>这是因为我们只在第一遍扫描的时候创建和添加（或替换）符号。</p>
-<h3 id="更新数据的初始值">更新数据的初始值</h3>
-<p>再回到前面的例子：</p>
+<h3 id="更新数据的初始值"><a href="#更新数据的初始值" class="headerlink" title="更新数据的初始值"></a>更新数据的初始值</h3><p>再回到前面的例子：</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> str_list<br>	str_list <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-number">0</span>                <br>	<span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, langlangshan, -<span class="hljs-number">24</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>  <br><span class="hljs-meta">global</span> langlangshan<br>	langlangshan <span class="hljs-built_in">dd</span> <span class="hljs-number">80</span><br><span class="hljs-comment">; ...</span><br><span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [monkey]  <span class="hljs-comment">; 地址包含符号</span><br><span class="hljs-keyword">mov</span> <span class="hljs-built_in">ecx</span>, cat <span class="hljs-comment">;  操作数是符号</span><br></code></pre></td></tr></table></figure>
 <p>第 3 行 str_list 的定义引用了 langlangshan;</p>
 <p>在解析 str_list 的初始值的时候，当解析到 langlangshan，会调用 get_or_add_ass_symbol</p>
  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment">   &lt;value&gt;  ::= [&lt;sign&gt;] NUM | STR | ASS_ID </span><br><span class="hljs-comment">    &lt;sign&gt;  ::= SUB | ADD</span><br><span class="hljs-comment">*/</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">value</span><span class="hljs-params">(<span class="hljs-type">scanner_t</span> *scanner, <span class="hljs-type">int</span> size,</span><br><span class="hljs-params">                  <span class="hljs-keyword">struct</span> list_head *head, <span class="hljs-type">init_val_t</span> *init_val)</span><br>&#123;<br>    <span class="hljs-type">int</span> num = <span class="hljs-number">0</span>;<br><br>    <span class="hljs-keyword">switch</span> (scanner-&gt;token) &#123;<br>        <span class="hljs-comment">// ...</span><br><br>        <span class="hljs-keyword">case</span> ASS_ID:<br>            <span class="hljs-type">ass_symbol_t</span> *sym = get_or_add_ass_symbol(scanner);<br>            num = sym-&gt;addr; <br>            list_add_value(head, ASS_NUM, &amp;num);<br>            next_token();<br>            <span class="hljs-keyword">break</span>;<br>    <span class="hljs-comment">// ...</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>假设这是第一遍扫描，第 14 行，get_or_add_ass_symbol 函数会创建一个 ASS_SYMBOL_TYPE_UNDEF 类型，名字为 langlangshan 的符号;</p>
 <p>因为是 ASS_SYMBOL_TYPE_UNDEF 类型，所以第 15 行 sym-&gt;addr 等于 0，所以第 16 行加入链表的值就是 0;</p>
-<p>继续扫描，遇见了 langlangshan 的定义，发现这是一个本文件的符号，虽然用把符号表种旧的 langlangshan 替换了，但是 str_list 的初始值，还是 3, 5, 9, 0, -24, 7, 7, 9；</p>
+<p>继续扫描，遇见了 langlangshan 的定义，发现这是一个本文件的符号，虽然用把符号表种旧的 langlangshan 替换了，但是 str_list 的初始值，还是 3, 5, 9, 0, -24, 7, 7, 9；  </p>
 <p>在第二遍扫描的时候，会再次扫描 str_list 的定义；</p>
 <p>这时候，依然用 get_or_add_ass_symbol 函数查找 langlangshan，这次得到的 sym-&gt;addr 不是 0，而是 langlangshan 的偏移地址，加入链表的也是这个偏移地址，这才是我们要的。</p>
 <p>所以，当第二次解析 str_list 的初始值后，我们应该更新 str_list 的初始值。</p>
-<img src="image-20260127121958652.png" srcset="/img/loading.gif" lazyload alt="image-20260127121958652" style="zoom:50%;" />
+<p><img src="image-20260127121958652.png" srcset="/img/loading.gif" lazyload alt="image-20260127121958652" style="zoom:50%;" /></p>
 <p>第 229 行，当 while 循环结束，说明解析完毕。</p>
 <p>第 240 行，else 分支，说明是第二次扫描。在符号表种查找 name，肯定是有的。</p>
 <p>第 241 行，更新初始值。第一个参数是查到的符号，第二个参数是第二次解析的初始值。</p>
-<img src="image-20260127122129848.png" srcset="/img/loading.gif" lazyload alt="image-20260127122129848" style="zoom:50%;" />
+<p><img src="image-20260127122129848.png" srcset="/img/loading.gif" lazyload alt="image-20260127122129848" style="zoom:50%;" /></p>
 <p>第 249 行，销毁第一次的初始值。</p>
 <p>第 250 行，让 init_val_info 指向新的初始值。</p>
 <p>第 251，计算初始值占用的内存大小</p>
 <p>第 252，增加段计数器。</p>
-<h2 id="成果展示">成果展示</h2>
-<p>接下来为读者展示第一遍扫描和第二遍扫描的区别。</p>
-<img src="image-20260127161119553.png" srcset="/img/loading.gif" lazyload alt="image-20260127161119553" style="zoom:50%;" />
+<h2 id="成果展示"><a href="#成果展示" class="headerlink" title="成果展示"></a>成果展示</h2><p>接下来为读者展示第一遍扫描和第二遍扫描的区别。</p>
+<p><img src="image-20260127161119553.png" srcset="/img/loading.gif" lazyload alt="image-20260127161119553" style="zoom:50%;" /></p>
 <p>我们修改这个函数，第一遍扫描，第 84 行，如果遇到没有定义的符号，则标记为红色。</p>
 <p>第二遍扫描，第 91~98 行，根据符号的类型，标记为红色（未定义）、绿色（数据或者标号）和黄色（extern 声明的）；</p>
 <p>对于 fragment 函数，如果遇到 extern 声明、数据定义、标号都标记为蓝色。</p>
 <p>如果没有标记颜色，则打印出来是白色。</p>
 <p>代码如下：</p>
-<img src="image-20260418195102136.png" srcset="/img/loading.gif" lazyload alt="image-20260418195102136" style="zoom:50%;" />
+<p><img src="image-20260418195102136.png" srcset="/img/loading.gif" lazyload alt="image-20260418195102136" style="zoom:50%;" /></p>
 <hr>
-<img src="image-20260127161645737.png" srcset="/img/loading.gif" lazyload alt="image-20260127161645737" style="zoom:50%;" />
+<p><img src="image-20260127161645737.png" srcset="/img/loading.gif" lazyload alt="image-20260127161645737" style="zoom:50%;" /></p>
 <p>打印出来如上图。代码本身没有什么逻辑，是我拼凑的，我们关注的是颜色。</p>
 <p>上面是第一次扫描的结果，可以看到所有符号都加入了符号表，红色的是未定义符号（在引用它的地方是未定义的）。</p>
-<img src="image-20260127162030895.png" srcset="/img/loading.gif" lazyload alt="image-20260127162030895" style="zoom:50%;" />
+<p><img src="image-20260127162030895.png" srcset="/img/loading.gif" lazyload alt="image-20260127162030895" style="zoom:50%;" /></p>
 <p>这是第二次扫描的结果。因为查到了 my_list 和标号 @L101_return，所以它们变成绿色了。同理，黄色的是 extern 声明的符号，第二次在符号表里面查到了。</p>
-<img src="image-20260127164854790.png" srcset="/img/loading.gif" lazyload alt="image-20260127164854790" style="zoom:50%;" />
+<p><img src="image-20260127164854790.png" srcset="/img/loading.gif" lazyload alt="image-20260127164854790" style="zoom:50%;" /></p>
 <hr>
-<img src="image-20260127164925420.png" srcset="/img/loading.gif" lazyload alt="image-20260127164925420" style="zoom:50%;" />
+<p><img src="image-20260127164925420.png" srcset="/img/loading.gif" lazyload alt="image-20260127164925420" style="zoom:50%;" /></p>
 <p>上下两个个图分别是第一次扫描完毕和第二次扫描完毕后打印的符号表。</p>
 <p>区别有二，一个是 my_list，monkey，test 的 global 属性是第二次扫描的时候添加的，但是这个不是重点。</p>
-<p>二是 my_list 的初始值，第一次是 3，0，…… 第二次是 3，8，……</p>
+<p>二是 my_list 的初始值，第一次是 3，0，…… 第二次是 3，8，…… </p>
 <p>8 是 符号 monkey 的偏移（my_list 占用了 8 个字节）；这说明 “更新初始值” 的目的达到了。</p>
 <p>本文的内容到这里就结束了。</p>
 <p>按理说，接下来应该做语义分析，比如操作数匹配检查、寻址合法性校验、数值范围溢出检查等等。</p>

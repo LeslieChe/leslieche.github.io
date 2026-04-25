@@ -344,7 +344,7 @@
         
         
         
-          88 分钟
+          89 分钟
         
       </span>
     
@@ -388,17 +388,15 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第22天：生成代码段和数据段">第22天：生成代码段和数据段</h1>
-<p>上一节我们讲了如何把中间指令翻译成汇编代码，这一节我们解决以下问题：</p>
+                <h1 id="第22天：生成代码段和数据段"><a href="#第22天：生成代码段和数据段" class="headerlink" title="第22天：生成代码段和数据段"></a>第22天：生成代码段和数据段</h1><p>上一节我们讲了如何把中间指令翻译成汇编代码，这一节我们解决以下问题：</p>
 <p>1、如何生成数据段</p>
 <p>2、如何生成字符串表（包含在数据段中）</p>
 <p>3、如何生成代码段</p>
-<h2 id="什么是section">什么是section</h2>
-<p>简单说，section 是 NASM 汇编器中的段（section）声明指令，用于定义程序中不同类型的段，如代码段、数据段、未初始化数据段等。</p>
+<h2 id="什么是section"><a href="#什么是section" class="headerlink" title="什么是section"></a>什么是section</h2><p>简单说，section 是 NASM 汇编器中的段（section）声明指令，用于定义程序中不同类型的段，如代码段、数据段、未初始化数据段等。</p>
 <p>问题来了，程序为什么要分段，混成一疙瘩可以吗？</p>
 <p>混成一疙瘩也不是不行，但是会带来很多麻烦。</p>
 <p>根据局部性原理，CPU 倾向于将代码和数据分别存储在不同的指令缓存 (I-Cache) 和数据缓存 (D-Cache) 中。将它们分段存放，可以显著提高缓存的命中率，从而加快处理速度。如果混成一疙瘩，如何区分代码和数据呢？</p>
-<p>通过分段，操作系统可以为不同的内存区域设置不同的<strong>访问权限</strong>：</p>
+<p>通过分段，操作系统可以为不同的内存区域设置不同的<strong>访问权限</strong>： </p>
 <ul>
 <li><strong>代码段 (Code/Text Segment)</strong>：通常设为<strong>只读</strong>和<strong>可执行</strong>。这能防止程序在运行时意外或被恶意地修改自身的指令。</li>
 <li><strong>数据段 (Data Segment)</strong>：设为<strong>可读写</strong>但<strong>不可执行</strong>（NX/DEP 技术）。这可以防止缓冲区溢出攻击，避免黑客通过在变量（数据）中注入恶意代码并诱导 CPU 执行。</li>
@@ -411,6 +409,7 @@
 <li>加载时由操作系统分配并清零</li>
 </ul>
 <p>下表列出了一些典型的段</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -435,7 +434,7 @@
 <td><strong><code>.rodata</code></strong></td>
 <td>Read-Only Data</td>
 <td><strong>只读数据</strong>（字符串常量、<code>const</code> 全局变量）</td>
-<td><strong>R–</strong>（只读）</td>
+<td><strong>R—</strong>（只读）</td>
 <td>是</td>
 <td><code>&quot;Hello&quot;;</code> <code>const int x = 5;</code></td>
 </tr>
@@ -457,14 +456,14 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>按理说，字符串应该在 .rodata 段，未初始化或零初始化的全局变量应该在 .bss 段，但是我们为了降低难度，把这二者都放到 .data 段。</p>
 <p>带来的影响有2个</p>
 <p>1、字符串可以修改</p>
 <p>2、对磁盘的占用变大</p>
 <p>不过这两点不影响我们学习编译原理。</p>
 <p>所以，我们只生成 2 个段，.data 段和 .text 段；前者用来放全局变量和字符串表，后者用来放函数的代码。</p>
-<h2 id="生成-text-段">生成 .text 段</h2>
-<img src="image-20260109113254221.png" srcset="/img/loading.gif" lazyload alt="image-20260109113254221" style="zoom:50%;" />
+<h2 id="生成-text-段"><a href="#生成-text-段" class="headerlink" title="生成 .text 段"></a>生成 .text 段</h2><p><img src="image-20260109113254221.png" srcset="/img/loading.gif" lazyload alt="image-20260109113254221" style="zoom:50%;" /></p>
 <p>第一个参数是文件指针，第二个参数是否开启优化。优化指我们前面学习的常量传播、复习传播、活跃变量分析、懒惰代码移动这四种优化。</p>
 <p>第 854 行，输出 “section .text”，说明下面的内容是 .text 段；</p>
 <p>第 858~864 行，遍历哈希表中的所有节点，如果是 extern 声明的函数，不需要输出代码（也没有代码），输出 extern xxx 就可以了</p>
@@ -474,34 +473,29 @@
 <p>所以要用 global 声明，这样其他文件的代码就可以调用我们的函数了。</p>
 <p>底层原理（链接视角）</p>
 <ul>
-<li>
-<p>每个 <code>.o</code> 文件有一个 <strong>符号表（symbol table）</strong></p>
+<li><p>每个 <code>.o</code> 文件有一个 <strong>符号表（symbol table）</strong></p>
 </li>
-<li>
-<p>默认符号是 <strong>LOCAL</strong>（仅本文件可见）</p>
+<li><p>默认符号是 <strong>LOCAL</strong>（仅本文件可见）</p>
 </li>
-<li>
-<p><code>global</code> 将符号标记为 <strong>GLOBAL / EXTERN</strong>（外部可见）</p>
+<li><p><code>global</code> 将符号标记为 <strong>GLOBAL / EXTERN</strong>（外部可见）</p>
 </li>
-<li>
-<p>链接器在合并多个 <code>.o</code> 时，靠这个信息解析跨文件引用</p>
-<img src="image-20260109120001320.png" srcset="/img/loading.gif" lazyload alt="image-20260109120001320" style="zoom:50%;" />
+<li><p>链接器在合并多个 <code>.o</code> 时，靠这个信息解析跨文件引用</p>
+<p><img src="image-20260109120001320.png" srcset="/img/loading.gif" lazyload alt="image-20260109120001320" style="zoom:50%;" /></p>
 </li>
 </ul>
 <p>第 865~871 是从 fun-&gt;dfg-&gt;bbs_head 抽取中间代码，忽略不可达的块和标记为 dead 的指令。</p>
 <p>第 869 是从 fun-&gt;inter_code 中抽取中间代码，fun-&gt;inter_code 这个链表上的代码是没有经过优化的中间代码。</p>
-<img src="image-20260109115758311.png" srcset="/img/loading.gif" lazyload alt="image-20260109115758311" style="zoom:50%;" />
+<p><img src="image-20260109115758311.png" srcset="/img/loading.gif" lazyload alt="image-20260109115758311" style="zoom:50%;" /></p>
 <p>它们都是调用 to_intel_32_asm 完成翻译，翻译出来的汇编指令在 fun-&gt;asm_code 链表中。</p>
 <p>上面第 876 行，调用 gen_asm_inst 函数把fun-&gt;asm_code 链表中的汇编指令写入文件。</p>
-<img src="image-20260109120235541.png" srcset="/img/loading.gif" lazyload alt="image-20260109120235541" style="zoom:50%;" />
+<p><img src="image-20260109120235541.png" srcset="/img/loading.gif" lazyload alt="image-20260109120235541" style="zoom:50%;" /></p>
 <p>注意，fun-&gt;asm_code 这个链表上有两种数据类型，一个是汇编指令，一个是中间指令。</p>
 <p>第 904 行，把汇编指令写入文件。</p>
 <p>第 902~903  目的是跳过无效的汇编，这是窥孔优化的内容，后面会讲，现在不用管。</p>
 <p>第 907 行，写“;” 到文件，汇编代码注释用“;”，相当于 c 的 “//”</p>
 <p>第 908 行，把中间代码作为注释写入文件。</p>
-<h2 id="全局变量的初始化">全局变量的初始化</h2>
-<p>在讨论如何生成 .data 段之前，我们必须复习一下全局变量的初始化。</p>
-<img src="image-20260109191806219.png" srcset="/img/loading.gif" lazyload alt="image-20260109191806219" style="zoom:50%;" />
+<h2 id="全局变量的初始化"><a href="#全局变量的初始化" class="headerlink" title="全局变量的初始化"></a>全局变量的初始化</h2><p>在讨论如何生成 .data 段之前，我们必须复习一下全局变量的初始化。</p>
+<p><img src="image-20260109191806219.png" srcset="/img/loading.gif" lazyload alt="image-20260109191806219" style="zoom:50%;" /></p>
 <p>在语法分析的时候，对于定义的变量，都已经加入了符号表。在加入符号表之后，还会调用 gen_var_init 函数。</p>
 <p>第 988 行，如果是常量，就返回。</p>
 <p>第 991 行，如果是局部变量，添加形如 “decl xxx” 的中间指令。</p>
@@ -510,7 +504,7 @@
 <p>第 1030 行，对于局部变量，生成赋值语句。</p>
 <p>有人问为啥全局变量没有赋值语句，这是因为全局变量的初始化不是靠指令，而是靠汇编文件中的 .data 段。</p>
 <p>对于全局变量，要分情况讨论。</p>
-<img src="image-20260109192544956.png" srcset="/img/loading.gif" lazyload alt="image-20260109192544956" style="zoom:50%;" />
+<p><img src="image-20260109192544956.png" srcset="/img/loading.gif" lazyload alt="image-20260109192544956" style="zoom:50%;" /></p>
 <p>第 998~1001 已经写了注释，初始化值分为几类：</p>
 <p>1、常量；例如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_CONST     0x01</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_VAR_ADDR  0x02</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_STR_ADDR  0x04</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_EXPR      0x08 <span class="hljs-comment">// 没有用到</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_LIST      0x10</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_STR       0x20</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_BY_ARR_NAME  0x40</span><br><br><br><span class="hljs-type">int</span> monkey = <span class="hljs-number">1</span>; <span class="hljs-comment">// 整型</span><br><span class="hljs-type">char</span> cat = <span class="hljs-string">&#x27;A&#x27;</span>; <span class="hljs-comment">// 字符型</span><br><span class="hljs-type">char</span> *name = <span class="hljs-string">&quot;Chezi&quot;</span>; <span class="hljs-comment">// 字符串</span><br></code></pre></td></tr></table></figure>
@@ -530,15 +524,14 @@
 <p>第 1018 行设置 var-&gt;init_by = INIT_BY_VAR_ADDR; 意思是用变量的地址初始化</p>
 <p>第 1019 行，针对 “int *dog = arr;” 这种情况，设置 var-&gt;arr_name 为数组的名字，并且设置 var-&gt;init_by = INIT_BY_ARR_NAME;</p>
 <p>对于全局数组的初始化，在 gen_arr_init 函数中</p>
-<img src="image-20260109195011624.png" srcset="/img/loading.gif" lazyload alt="image-20260109195011624" style="zoom:50%;" />
+<p><img src="image-20260109195011624.png" srcset="/img/loading.gif" lazyload alt="image-20260109195011624" style="zoom:50%;" /></p>
 <p>此函数和 gen_var_init 类似，在把数组加入符号表后，就会调用它。</p>
 <p>第 1088 行，添加形如 “decl xxx” 的中间指令。</p>
 <p>第 1089 行，判断数组有没有初始化，如果没有初始化，就返回。</p>
 <p>我们要关注的是第 1093 到 1096 行。用列表初始化和用字符串初始化有什么区别呢？举个简单的例子你就明白了：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> arr[] = &#123;<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>&#125;;  <span class="hljs-comment">// INIT_BY_LIST  用列表初始化</span><br><span class="hljs-type">int</span> arr[] = <span class="hljs-string">&quot;hello&quot;</span>;  <span class="hljs-comment">// INIT_BY_STR 用字符串初始化</span><br></code></pre></td></tr></table></figure>
 <p>当 gen_var_init 和 gen_arr_init 函数中为全局变量设置好初始化类型后，再看数据段的生成，就会简单很多。</p>
-<h2 id="生成-data-段">生成 .data 段</h2>
-<p>数据段里面有字符串表和全局变量。全局变量分为数组和普通变量。</p>
+<h2 id="生成-data-段"><a href="#生成-data-段" class="headerlink" title="生成 .data 段"></a>生成 .data 段</h2><p>数据段里面有字符串表和全局变量。全局变量分为数组和普通变量。</p>
 <p>先来一个直观的认识。请看下面的代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">char</span> str_list[<span class="hljs-number">20</span>] = &#123;<span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, <span class="hljs-number">1000</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>&#125;; <span class="hljs-comment">// 数组</span><br><span class="hljs-type">int</span> monkey = <span class="hljs-number">3</span>; <span class="hljs-comment">// 普通变量</span><br><span class="hljs-type">int</span> *p_monkey = &amp;monkey; <span class="hljs-comment">// 带初始化的指针</span><br></code></pre></td></tr></table></figure>
 <p>上面的代码对应的汇编代码不唯一，我们的编译器会生成这样的代码：</p>
@@ -562,11 +555,11 @@
 <blockquote>
 <p>连续分配 12 个字节（bytes），每个字节的初始值都为 0。</p>
 </blockquote>
-<p>另外，在 <strong>NASM（Netwide Assembler）</strong> 中，<code>db</code> 后面跟一个字符串（用单引号 <code>'...'</code> 或双引号 <code>&quot;...&quot;</code> 包裹）表示：<strong>将该字符串的每个字符按其 ASCII 码值依次存入内存，每个字符占 1 个字节</strong>。</p>
+<p>另外，在 <strong>NASM（Netwide Assembler）</strong> 中，<code>db</code> 后面跟一个字符串（用单引号 <code>&#39;...&#39;</code> 或双引号 <code>&quot;...&quot;</code> 包裹）表示：<strong>将该字符串的每个字符按其 ASCII 码值依次存入内存，每个字符占 1 个字节</strong>。</p>
 <p>例如：</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">msg <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;Hello&quot;</span> <br>msg <span class="hljs-built_in">db</span> <span class="hljs-string">&#x27;World&#x27;</span><br></code></pre></td></tr></table></figure>
 <ul>
-<li><code>&quot;Hello&quot;</code> → 存储为 5 个字节：<code>48 65 6C 6C 6F</code>（即 <code>'H' 'e' 'l' 'l' 'o'</code> 的 ASCII 码）</li>
+<li><code>&quot;Hello&quot;</code> → 存储为 5 个字节：<code>48 65 6C 6C 6F</code>（即 <code>&#39;H&#39; &#39;e&#39; &#39;l&#39; &#39;l&#39; &#39;o&#39;</code> 的 ASCII 码）</li>
 <li>需要注意，末尾没有 <code>\0</code>（空字符）（这与 C 语言不同，C 字符串会自动加 <code>\0</code>）</li>
 </ul>
 <p>如果我们要和 C 风格字符串兼容（例如调用 <code>printf</code>），<strong>必须显式加 0</strong>：</p>
@@ -576,7 +569,7 @@
 <p>如果翻译成</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">global arr<br>	arr db  <span class="hljs-string">&quot;hello\nworld&quot;</span>, <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
 <p>这样是不行的，因为 nasm 会把 “\n” 当成 2 个字符 “\” 和 “n”</p>
-<p>那如何在汇编文件里面表示换行呢？就用 ASCII 码，<code> 0xA</code> 或 10</p>
+<p>那如何在汇编文件里面表示换行呢？就用 ASCII 码，<code>0xA</code> 或 10</p>
 <p>所以要这样写：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">arr db  <span class="hljs-string">&quot;hello&quot;</span>, <span class="hljs-number">10</span>, <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
 <p>为了解决这个问题，我设计了函数 cstr_to_nasm_str</p>
@@ -595,7 +588,7 @@
 <p>再处理 o, 因为是 CHAR_MODE 且它是普通字符，输出‘o’</p>
 <p>现在处理 ‘\n’，因为是特殊字符，且是 CHAR_MODE，执行第 7~9，输出 <code>”,</code></p>
 <p>再输出 10;  设置 mode = ASCII_MODE;</p>
-<p>现在处理‘n’，因为是普通字符且是 ASCII_MODE，输出<code> ,“</code></p>
+<p>现在处理‘n’，因为是普通字符且是 ASCII_MODE，输出<code>,“</code></p>
 <p>再输出‘n’；设置mode = CHAR_MODE;</p>
 <p>…</p>
 <p>现在处理‘d’,因为普通字符且是 CHAR_MODE，输出‘d’；且它是最后一个字符，输出<code>”</code></p>
@@ -612,7 +605,7 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">show_char_in_nasm</span><span class="hljs-params">(<span class="hljs-type">char</span> ch, FILE *file)</span><br>&#123;<br>    <span class="hljs-keyword">if</span> (ch == <span class="hljs-string">&#x27;\&#x27;&#x27;</span> || !<span class="hljs-built_in">isprint</span>(ch))<br>        <span class="hljs-built_in">fprintf</span>(file, <span class="hljs-string">&quot;%d&quot;</span>, ch);<br>    <span class="hljs-keyword">else</span><br>        <span class="hljs-built_in">fprintf</span>(file, <span class="hljs-string">&quot;\&#x27;%c\&#x27;&quot;</span>, ch);<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>当需要逐个输出字符，如果是单引号或者是不可打印字符就输出 ASCII 码，否则输出用一对单引号包裹的字符。</p>
 <p>以上都是铺垫，现在可以看代码了。</p>
-<img src="image-20260109195654697.png" srcset="/img/loading.gif" lazyload alt="image-20260109195654697" style="zoom:50%;" />
+<p><img src="image-20260109195654697.png" srcset="/img/loading.gif" lazyload alt="image-20260109195654697" style="zoom:50%;" /></p>
 <p>第 714 行，输出 “section .data”；声明这是数据段。</p>
 <p>第 717 行，统计所有全局变量，把全局变量收集到 glb_vars_head 链表。</p>
 <p>第 718 行，遍历链表，如果是 extern，那就输出 extern xxx;如果是本文件定义的，就输出 global xxx</p>
@@ -622,7 +615,7 @@
 <p>然后是字符串的名字，再然后是 db, 再然后就是 cstr_to_nasm_str 函数。cstr_to_nasm_str 函数的伪代码已经讲了，这里跳过。</p>
 <p>现在我们集中精力看折叠的部分。折叠的部分用 if-else 分成两种情况，数组和非数组。</p>
 <p>数组又分成三种情况。</p>
-<img src="image-20260110124141374.png" srcset="/img/loading.gif" lazyload alt="image-20260110124141374" style="zoom:50%;" />
+<p><img src="image-20260110124141374.png" srcset="/img/loading.gif" lazyload alt="image-20260110124141374" style="zoom:50%;" /></p>
 <p>用字符串初始化、用列表初始化、没有初始化。</p>
 <p>如果用字符串初始化，那就先调用 cstr_to_nasm_str 函数输出字符串。这还没有完，因为我们允许数组元素个数大于字符串的长度，此时需要补齐后面的零。</p>
 <p>int zero_cnt = var-&gt;ele_num - strlen(var-&gt;init_val-&gt;string_val) - 1;</p>
@@ -630,25 +623,24 @@
 <p>剩下就好办了，第735~736，输出 times xx 0</p>
 <p>第 738 行，删除字符串，是因为已经生成了数组初始化的代码，这个字符串就没有用了。</p>
 <p>第 767~768 是针对没有初始化的情况，我们强制赋值为 0</p>
-<img src="image-20260110125226533.png" srcset="/img/loading.gif" lazyload alt="image-20260110125226533" style="zoom:50%;" />
+<p><img src="image-20260110125226533.png" srcset="/img/loading.gif" lazyload alt="image-20260110125226533" style="zoom:50%;" /></p>
 <p>第 739~765 是用列表初始化的情况。列表的每个值已经保存到了 arr_init_val 这个链表中。</p>
 <p>第 741 行遍历链表，取出每个值，根据值的类型，分为整型和字符型，如果是前者，则以 ASCII 码的形式输出（第 746 行）</p>
 <p>如果是字符型，调用 show_char_in_nasm 输出。</p>
 <p>如果不是最后一个节点，还需要输出一个逗号（第 749 行）</p>
 <p>第 759 行，同样要补齐后面的零。</p>
 <p>数组说完了，下面说非数组的初始化。</p>
-<img src="image-20260110151927041.png" srcset="/img/loading.gif" lazyload alt="image-20260110151927041" style="zoom:50%;" />
+<p><img src="image-20260110151927041.png" srcset="/img/loading.gif" lazyload alt="image-20260110151927041" style="zoom:50%;" /></p>
 <p>继续举例子。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> monkey = <span class="hljs-number">3</span>; <span class="hljs-comment">// INIT_BY_CONST</span><br><span class="hljs-type">int</span> *p_monkey = &amp;monkey; <span class="hljs-comment">// INIT_BY_VAR_ADDR</span><br><span class="hljs-type">char</span> *pstr = <span class="hljs-string">&quot;Hello&quot;</span>; <span class="hljs-comment">// INIT_BY_STR_ADDR</span><br><span class="hljs-type">int</span> <span class="hljs-built_in">list</span>[<span class="hljs-number">20</span>] = &#123;<span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, <span class="hljs-number">1000</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>&#125;; <br><span class="hljs-type">int</span> *plist = <span class="hljs-built_in">list</span>; <span class="hljs-comment">// INIT_BY_ARR_NAME</span><br></code></pre></td></tr></table></figure>
 <p>这段代码生成的汇编如下</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">section</span> .data<br><span class="hljs-meta">global</span> monkey<br>	monkey <span class="hljs-built_in">dd</span> <span class="hljs-number">3</span><br><span class="hljs-meta">global</span> p_monkey<br>	p_monkey <span class="hljs-built_in">dd</span> monkey<br><span class="hljs-meta">global</span> pstr<br>	pstr <span class="hljs-built_in">dd</span> @str99	<br><span class="hljs-meta">global</span> plist<br>	plist <span class="hljs-built_in">dd</span> list<br><span class="hljs-meta">global</span> list<br>	list <span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, <span class="hljs-number">1000</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">12</span> <span class="hljs-built_in">dd</span> <span class="hljs-number">0</span><br><br><span class="hljs-comment">; 字符串表</span><br>@str99 <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;Hello&quot;</span>, <span class="hljs-number">0</span><br><br></code></pre></td></tr></table></figure>
 <p>最简单的情况如 “int monkey = 3;” 直接输出初始化值，汇编代码第 3 行。</p>
-<p>如果是指向变量的指针，如 int *p_monkey = &amp;monkey; 那应该输出所指向变量的名字，如汇编代码第 5 行。</p>
+<p>如果是指向变量的指针，如 int *p_monkey = &monkey; 那应该输出所指向变量的名字，如汇编代码第 5 行。</p>
 <p>如果是指向字符串的指针，如 char *pstr = “Hello”;  应该输出字符串的名字，如汇编代码第 7 行，</p>
 <p>如果是用数组名初始化的指针，如 int *plist = list; 应该输出数组名，如汇编代码第 9 行。</p>
 <p>如果不带有初始化，输出 0 就可以。</p>
-<h2 id="如何测试">如何测试</h2>
-<p>到目前为止，我们的编译器仅实现了把 .c 翻译为.asm,如何验证汇编代码的正确性呢？</p>
+<h2 id="如何测试"><a href="#如何测试" class="headerlink" title="如何测试"></a>如何测试</h2><p>到目前为止，我们的编译器仅实现了把 .c 翻译为.asm,如何验证汇编代码的正确性呢？</p>
 <p>我们可以借助汇编器 nasm 和 gcc;</p>
 <p>首先，我们要准备好要测试的代码，例如</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*  test.c  */</span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">print_int_arr</span><span class="hljs-params">(<span class="hljs-type">int</span> *arr, <span class="hljs-type">int</span> len)</span>; <span class="hljs-comment">// 声明，在别的文件中定义</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">swap</span><span class="hljs-params">(<span class="hljs-type">int</span> *a, <span class="hljs-type">int</span> *b)</span> <span class="hljs-comment">// 交换两个整数</span><br>&#123;<br>    <span class="hljs-type">int</span> tmp = *a;<br>    *a = *b;<br>    *b = tmp;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">bubble_sort</span><span class="hljs-params">(<span class="hljs-type">int</span> *arr, <span class="hljs-type">int</span> n)</span> <span class="hljs-comment">// 冒泡排序</span><br>&#123;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; n - <span class="hljs-number">1</span>; i++) &#123;<br>        <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> j = <span class="hljs-number">0</span>; j &lt; n - <span class="hljs-number">1</span> - i; j++) &#123;<br>            <span class="hljs-keyword">if</span> (arr[j] &gt; arr[j + <span class="hljs-number">1</span>]) &#123;<br>                <span class="hljs-comment">// 交换元素</span><br>                swap(arr + j, arr + j + <span class="hljs-number">1</span>);<br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-built_in">list</span>[<span class="hljs-number">20</span>] = &#123;<span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, <span class="hljs-number">1000</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>&#125;; <span class="hljs-comment">// 待排序的数组</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">test</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> arr_len = <span class="hljs-keyword">sizeof</span>(<span class="hljs-built_in">list</span>) / <span class="hljs-keyword">sizeof</span>(<span class="hljs-built_in">list</span>[<span class="hljs-number">0</span>]); <span class="hljs-comment">// 求元素个数</span><br>    bubble_sort(<span class="hljs-built_in">list</span>, arr_len); <span class="hljs-comment">// 排序</span><br>    print_int_arr(<span class="hljs-built_in">list</span>, arr_len); <span class="hljs-comment">// 打印结果</span><br>&#125;<br></code></pre></td></tr></table></figure>

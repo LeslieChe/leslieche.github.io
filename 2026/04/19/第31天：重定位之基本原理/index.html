@@ -396,10 +396,8 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第31天：重定位之基本原理">第31天：重定位之基本原理</h1>
-<p>前面的学习中，多次提到重定位。现在，可以解开重定位的神秘面纱了。</p>
-<h2 id="引用符号的四种情况">引用符号的四种情况</h2>
-<p>在管理符号表的时候，我们把符号分为下面几类：</p>
+                <h1 id="第31天：重定位之基本原理"><a href="#第31天：重定位之基本原理" class="headerlink" title="第31天：重定位之基本原理"></a>第31天：重定位之基本原理</h1><p>前面的学习中，多次提到重定位。现在，可以解开重定位的神秘面纱了。</p>
+<h2 id="引用符号的四种情况"><a href="#引用符号的四种情况" class="headerlink" title="引用符号的四种情况"></a>引用符号的四种情况</h2><p>在管理符号表的时候，我们把符号分为下面几类：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">ass_symbol_type</span> &#123;</span><br>    ASS_SYMBOL_TYPE_LABEL,<br>    ASS_SYMBOL_TYPE_DATA,<br>    ASS_SYMBOL_TYPE_EXT,<br>    ASS_SYMBOL_TYPE_UNDEF, <span class="hljs-comment">// 第二遍扫描后不存在</span><br>&#125;ass_symbol_type_e;<br></code></pre></td></tr></table></figure>
 <p>其实，从本质上讲，符号就两类，一类是数据的地址，一类是标签。</p>
 <p>根据符号的类型和引用场景可以分为 4 类:</p>
@@ -408,29 +406,20 @@
 <p>3、引用本地的标签符号，例如下面第 7 行，引用了 @L101_return</p>
 <p>4、引用外部的标签符号，例如下面第 8 行，引用了 print</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">section</span> .text<br><span class="hljs-meta">global</span> <span class="hljs-keyword">test</span><br><span class="hljs-symbol"></span><br><span class="hljs-symbol">test:</span>      <br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ecx</span>, my_list   <span class="hljs-comment">; 引用本地的数据符号</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, ext_arr   <span class="hljs-comment">; 引用外部的数据符号</span><br>    <span class="hljs-keyword">je</span> @L101_return    <span class="hljs-comment">; 引用本地的标签符号</span><br>    <span class="hljs-keyword">call</span> print         <span class="hljs-comment">; 引用外部的标签符号</span><br>    <span class="hljs-comment">; ...</span><br>@L101_return：<br>	<span class="hljs-comment">; ..</span><br>	<br><span class="hljs-meta">section</span> .data<br><span class="hljs-meta">global</span> my_list<br><span class="hljs-comment">;  monkey  引用本地的数据符号</span><br><span class="hljs-comment">;  langlangshan  引用外部的数据符号</span><br>	my_list <span class="hljs-built_in">db</span> <span class="hljs-number">3</span>, monkey, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, langlangshan, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>  <br><span class="hljs-meta">global</span> monkey<br>    monkey <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;Sun&quot;</span>, <span class="hljs-number">0</span>    <br><br><span class="hljs-meta">extern</span> ext_arr<br><span class="hljs-meta">extern</span> print<br><span class="hljs-meta">extern</span> langlangshan<br></code></pre></td></tr></table></figure>
-<h2 id="合并同类项">合并同类项</h2>
-<p>符号重定位发生在链接阶段。所以，有必要了解链接器的行为。如下图所示，当把 3 个 .o 交给链接器链接时，链接器会把同名的 section 合并在一起，如下图所示。</p>
-<img src="18104333-2a9fb85d57b44882bd7e52a3583aa393.png" srcset="/img/loading.gif" lazyload alt="img" style="zoom: 67%;" />
+<h2 id="合并同类项"><a href="#合并同类项" class="headerlink" title="合并同类项"></a>合并同类项</h2><p>符号重定位发生在链接阶段。所以，有必要了解链接器的行为。如下图所示，当把 3 个 .o 交给链接器链接时，链接器会把同名的 section 合并在一起，如下图所示。</p>
+<p><img src="18104333-2a9fb85d57b44882bd7e52a3583aa393.png" srcset="/img/loading.gif" lazyload alt="img" style="zoom: 67%;" /></p>
 <p>这里有必要介绍一下 .o 是什么文件</p>
 <p>简单来说，Linux 中的 <code>.o</code> 文件是 <strong>可重定位目标文件</strong> <strong>(Relocatable Object File)</strong>。</p>
 <p>它是源代码经过<strong>编译器</strong>处理后、交给<strong>链接器</strong>之前的“半成品”状态，遵循 <strong>ELF (Executable and Linkable Format)</strong> 文件格式标准。</p>
 <p>如果你用 readelf 命令查看，你会发现它主要包含：</p>
 <ul>
-<li>
-<p><strong><code>.text</code> 段：</strong> 编译后的机器指令（代码）。</p>
+<li><strong><code>.text</code> 段：</strong> 编译后的机器指令（代码）。</li>
+<li><strong><code>.data</code> 段：</strong> 在函数外部定义，且赋予了非零初值的全局变量、在函数内部使用 static 修饰，且赋予了非零初值的变量。</li>
+<li><p><strong><code>.bss</code> 段：</strong> 包含未初始化（或初始化为 0）的全局变量、在函数内部使用 static 修饰且未初始化（或初始化为 0）的变量。（.bss 在文件中不占实际空间，仅记录大小；我们没有生成这个段。）</p>
 </li>
-<li>
-<p><strong><code>.data</code> 段：</strong> 在函数外部定义，且赋予了非零初值的全局变量、在函数内部使用 static 修饰，且赋予了非零初值的变量。</p>
+<li><p><strong>符号表 (Symbol Table)：</strong> 记录了本文件定义的符号（如函数名）和引用的外部符号。注意，这个符号表和我们前面生成的符号表不是一回事。</p>
 </li>
-<li>
-<p><strong><code>.bss</code> 段：</strong> 包含未初始化（或初始化为 0）的全局变量、在函数内部使用 static 修饰且未初始化（或初始化为 0）的变量。（.bss 在文件中不占实际空间，仅记录大小；我们没有生成这个段。）</p>
-</li>
-<li>
-<p><strong>符号表 (Symbol Table)：</strong> 记录了本文件定义的符号（如函数名）和引用的外部符号。注意，这个符号表和我们前面生成的符号表不是一回事。</p>
-</li>
-<li>
-<p><strong>重定位表 (Relocation Section)</strong> 这个后面会讲。</p>
-</li>
+<li><strong>重定位表 (Relocation Section)</strong> 这个后面会讲。</li>
 </ul>
 <p>读者不要觉得头疼，我会为你逐步揭开谜底。</p>
 <p>需要说明的是，真正的 .o 文件如果不借助工具查看，读起来和天书一样。</p>
@@ -451,10 +440,9 @@
 <p>再考虑到可执行文件前面还有文件头等结构，我们就假定链接器给文件 c 的代码段分配的内存起始地址是 0x08048080（实际情况不是这样，这里就是打个比方）；</p>
 <p>所以文件 c 的内存地址要在之前的偏移地址上增加一个基址：0x08048080</p>
 <p>如下图所示：</p>
-<img src="image-20260129180306054.png" srcset="/img/loading.gif" lazyload alt="image-20260129180306054" style="zoom:50%;" />
+<p><img src="image-20260129180306054.png" srcset="/img/loading.gif" lazyload alt="image-20260129180306054" style="zoom:50%;" /></p>
 <p>所以，经过链接器的安排，不管是数据段还是代码段，起始地址都发生了变化。</p>
-<h2 id="需要修正地址的情况">需要修正地址的情况</h2>
-<p>请问读者，针对本文开头介绍的引用符号的四种情况，哪些要修正地址？哪些不需要？</p>
+<h2 id="需要修正地址的情况"><a href="#需要修正地址的情况" class="headerlink" title="需要修正地址的情况"></a>需要修正地址的情况</h2><p>请问读者，针对本文开头介绍的引用符号的四种情况，哪些要修正地址？哪些不需要？</p>
 <p>1、引用本地的数据符号</p>
 <p>2、引用外部的数据符号</p>
 <p>3、引用本地的标签符号</p>
@@ -467,17 +455,15 @@
 <p>前面说经过链接器的安排，不管是数据段还是代码段，起始地址都会发生变化；</p>
 <p>那么 @L101_return 这个标号的地址也会变化，需要在原来的地址上增加一个基址。</p>
 <p>这种情况不需要修正吗？</p>
-<h2 id="相对寻址">相对寻址</h2>
-<p>jmp, je, call 等指令在编码的时候，它们的操作数不是一个绝对地址，而是一个相对偏移量。</p>
+<h2 id="相对寻址"><a href="#相对寻址" class="headerlink" title="相对寻址"></a>相对寻址</h2><p>jmp, je, call 等指令在编码的时候，它们的操作数不是一个绝对地址，而是一个相对偏移量。</p>
 <p>假设我们有一段 32 位汇编代码，链接后的虚拟内存（读者不用纠结什么是虚拟内存，忽略“虚拟”二字就行）分配如下：</p>
-<img src="image-20260419154220073.png" srcset="/img/loading.gif" lazyload alt="image-20260419154220073" style="zoom:50%;" />
+<p><img src="image-20260419154220073.png" srcset="/img/loading.gif" lazyload alt="image-20260419154220073" style="zoom:50%;" /></p>
 <p>在编码 jmp target 这条指令的时候，不是把绝对地址 0x0804800A 硬编码到指令里面，而是求一个相对偏移。</p>
 <ul>
 <li>目标地址 (Target): 0x0804800A</li>
 <li>下一条指令地址 (Next PC): 0x08048002</li>
 <li>计算： 0x0804800A - 0x08048002 = 0x08</li>
-<li>最终编码
-<ul>
+<li>最终编码<ul>
 <li>由于是短跳转（Short JMP），操作码为 EB：</li>
 <li>机器码： EB 08</li>
 </ul>
@@ -485,46 +471,35 @@
 </ul>
 <p>这里插讲一下什么是短跳转和近跳转。</p>
 <ul>
-<li>
-<p>短跳转 (Short Jump)</p>
+<li><p>短跳转 (Short Jump)</p>
 <ul>
-<li>
-<p>指令编码：通常以 EB 开头。</p>
+<li><p>指令编码：通常以 EB 开头。</p>
 </li>
-<li>
-<p>位移范围：使用 8 位（1 字节） 有符号偏移量。</p>
+<li><p>位移范围：使用 8 位（1 字节） 有符号偏移量。</p>
 </li>
-<li>
-<p>跳转距离：只能跳转到当前指令前后 -128 到 +127 字节 的范围内。</p>
+<li><p>跳转距离：只能跳转到当前指令前后 -128 到 +127 字节 的范围内。</p>
 </li>
-<li>
-<p>特点：指令非常短（仅 2 字节），执行效率最高。</p>
+<li><p>特点：指令非常短（仅 2 字节），执行效率最高。</p>
 </li>
-<li>
-<p>场景：主要用于 if/else 分支或短小的 loop 循环。</p>
+<li><p>场景：主要用于 if/else 分支或短小的 loop 循环。</p>
 </li>
 </ul>
 </li>
-<li>
-<p>近跳转 (Near Jump)</p>
+<li><p>近跳转 (Near Jump)</p>
 <ul>
-<li>
-<p>指令编码：通常以 E9 开头。</p>
+<li><p>指令编码：通常以 E9 开头。</p>
 </li>
-<li>
-<p>位移范围：使用 32 位（4 字节） 有符号偏移量。</p>
+<li><p>位移范围：使用 32 位（4 字节） 有符号偏移量。</p>
 </li>
-<li>
-<p>跳转距离：可以在当前代码段内跳转约 ±2GB 的范围。</p>
+<li><p>跳转距离：可以在当前代码段内跳转约 ±2GB 的范围。</p>
 </li>
-<li>
-<p>特点：指令长度为 5 字节（E9 + 4 字节偏移），是编译器最常用的跳转方式。</p>
+<li><p>特点：指令长度为 5 字节（E9 + 4 字节偏移），是编译器最常用的跳转方式。</p>
 </li>
 </ul>
 </li>
 </ul>
 <p>我们的汇编器使用的是近跳转，因为针对 jmp 指令添加指令模板的代码是：</p>
-<img src="image-20260419154437725.png" srcset="/img/loading.gif" lazyload alt="image-20260419154437725" style="zoom:50%;" />
+<p><img src="image-20260419154437725.png" srcset="/img/loading.gif" lazyload alt="image-20260419154437725" style="zoom:50%;" /></p>
 <p>有的读者会问，为啥不是把绝对地址硬编码到指令里面，而是弄一个相对偏移呢？</p>
 <p>原因很多，但是我认为最重要的是实现位置无关代码 (Position Independent Code, PIC)；</p>
 <p>如果指令里存的是“向前/向后跳 100 字节”，无论这段代码被加载到内存的 0x1000 还是 0x5000 位置，这个“100 字节”的间距是不变的。链接器虽然会安排各个.o 中每个段的位置，但通常不会打乱单个段内部的代码顺序。</p>
@@ -545,14 +520,13 @@
 <p>于是就跳转到目标地址了。</p>
 <p>综上，为什么是“跳转指令的下一条指令地址”？</p>
 <p>这是为了方便 CPU 第二次修改 EIP，因为 EIP 已经指向下一条指令了，所以<strong>偏移量要用 “目标地址” 减去 “下一条指令地址”。</strong></p>
-<h2 id="代码中如何计算相对地址">代码中如何计算相对地址</h2>
-<p>再回到给单操作数指令编码的函数。</p>
-<img src="image-20260419154723053.png" srcset="/img/loading.gif" lazyload alt="image-20260419154723053" style="zoom:50%;" />
+<h2 id="代码中如何计算相对地址"><a href="#代码中如何计算相对地址" class="headerlink" title="代码中如何计算相对地址"></a>代码中如何计算相对地址</h2><p>再回到给单操作数指令编码的函数。</p>
+<p><img src="image-20260419154723053.png" srcset="/img/loading.gif" lazyload alt="image-20260419154723053" style="zoom:50%;" /></p>
 <p>第 7 行，operand_info_t 中有个字段，related_sym，这是为重定位准备的。</p>
 <p>如果操作数里面包含符号，就让 related_sym 指向这个符号。</p>
 <p>目前 csub 生成的汇编代码，一个操作数最多包括一个符号，还没有遇到过包含两个符号的情况。</p>
 <p>再看看 encoding_1_op_inst 函数的代码：</p>
-<img src="image-20260419154750016.png" srcset="/img/loading.gif" lazyload alt="image-20260419154750016" style="zoom:50%;" />
+<p><img src="image-20260419154750016.png" srcset="/img/loading.gif" lazyload alt="image-20260419154750016" style="zoom:50%;" /></p>
 <p>第 234 行表示指令编码规则是“cd”，也就是一个 32 位的偏移量。</p>
 <p>第 235 行，查看是否有关联的符号。</p>
 <p>第 237 行，如果有且是外部符号，那要交给链接器重定位，这个后面再讲。</p>
@@ -561,18 +535,15 @@
 <p>get_section_location_cnt() 是位置计数器，因为这条指令还在编码中，所以返回值是上一条指令结束的地址，或者说本指令的起始地址。</p>
 <p>inst_code.total_len 的值是主操作码的长度，如果这是近跳转指令，主操作码的长度是 1，最后加上 4（因为偏移占 4 字节），就得到了下一条指令的地址；所以 rel32 的值就是 “目标地址” 减去 “当前指令的下一条指令地址”；</p>
 <p>第 248 行，把 rel32 写入指令编码。</p>
-<h2 id="手工修正地址">手工修正地址</h2>
-<p>请读者思考：a.o 中哪些符号需要修正地址？</p>
+<h2 id="手工修正地址"><a href="#手工修正地址" class="headerlink" title="手工修正地址"></a>手工修正地址</h2><p>请读者思考：a.o 中哪些符号需要修正地址？</p>
 <p>这个问题不难回答。首先找到 a.o 中所有引用符号的指令</p>
-<img src="image-20260419154843914.png" srcset="/img/loading.gif" lazyload alt="image-20260419154843914" style="zoom:50%;" />
-<p>再看看是 4 种情况中的哪一种，只要不是引用本地的标签符号，就需要修正地址。<br>
-如上面的表格，非常不走运，一共有 4 处引用符号，这 4 处都需要修正地址。<br>
-到了这里，终于可以揭开重定位的面纱了。所谓“重定位”，说白了就是修正符号的地址。</p>
+<p><img src="image-20260419154843914.png" srcset="/img/loading.gif" lazyload alt="image-20260419154843914" style="zoom:50%;" /></p>
+<p>再看看是 4 种情况中的哪一种，只要不是引用本地的标签符号，就需要修正地址。<br>如上面的表格，非常不走运，一共有 4 处引用符号，这 4 处都需要修正地址。<br>到了这里，终于可以揭开重定位的面纱了。所谓“重定位”，说白了就是修正符号的地址。</p>
 <p>下面，我带着读者来一遍“手工重定位”。</p>
-<img src="image-20260129183821625.png" srcset="/img/loading.gif" lazyload alt="image-20260129183821625" style="zoom: 67%;" />
+<p><img src="image-20260129183821625.png" srcset="/img/loading.gif" lazyload alt="image-20260129183821625" style="zoom: 67%;" /></p>
 <p>假设我们就是链接器，已经为文件 c 安排好了内存地址，如上图；</p>
 <p>另外，通过观察我们知道了 a.o 中哪些地方要重定位，用下面的表格表示：</p>
-<img src="image-20260419155009149.png" srcset="/img/loading.gif" lazyload alt="image-20260419155009149" style="zoom:50%;" />
+<p><img src="image-20260419155009149.png" srcset="/img/loading.gif" lazyload alt="image-20260419155009149" style="zoom:50%;" /></p>
 <p>我们一条一条看</p>
 <p>1、 <code>mov ecx, [my_list]</code></p>
 <p>因为在 a.o 中，my_list 的地址是 0x04，所以汇编器对指令的编码是 8b 0d <strong>04 00 00 00</strong>，后四个字节就是 my_list 的段内偏移;</p>
@@ -594,24 +565,23 @@
 <p>同理，monkey 是一个外部符号，汇编器不知道它的偏移，所以用 4 字节的 0 占位（序号 4 的第三列）。</p>
 <p>文件 c 中，monkey 的地址是 0x0804810c,所以要<strong>把 00 00 00 00 改为 0c 81 04 08</strong></p>
 <p>这 4 个例子，只有第 3 个用的是相对重定位，其他都是绝对重定位。</p>
-<h2 id="重定位表">重定位表</h2>
-<p>为了让链接器能够正确修补地址，每个目标文件（.o）都会维护一张重定位表（在 ELF 格式中通常称为 .rel.text 或 .rel.data）。</p>
+<h2 id="重定位表"><a href="#重定位表" class="headerlink" title="重定位表"></a>重定位表</h2><p>为了让链接器能够正确修补地址，每个目标文件（.o）都会维护一张重定位表（在 ELF 格式中通常称为 .rel.text 或 .rel.data）。</p>
 <p>下图是 a.o 的重定位表（由 nasm 生成）</p>
-<img src="image-20260419155300259.png" srcset="/img/loading.gif" lazyload alt="image-20260419155300259" style="zoom:50%;" />
+<p><img src="image-20260419155300259.png" srcset="/img/loading.gif" lazyload alt="image-20260419155300259" style="zoom:50%;" /></p>
 <p>.rel.text 是一个重定位段，专门为代码段（.text）提供 “补丁说明书”。</p>
 <p>.rel.data 也是一个重定位段，专门为数据段（.data）提供 “补丁说明书”。</p>
-<p>这个重定位表，最重要的字段是 Offset、Type、<a target="_blank" rel="noopener" href="http://Sym.Name">Sym.Name</a></p>
+<p>这个重定位表，最重要的字段是 Offset、Type、Sym.Name</p>
 <p>对于 Type,</p>
 <ul>
 <li>R_386_32 表示绝对重定位</li>
 <li>R_386_PC32 表示相对重定位</li>
 </ul>
 <p>仅保留值得我们关注的地方，列成下面的表格</p>
-<img src="image-20260419155405112.png" srcset="/img/loading.gif" lazyload alt="image-20260419155405112" style="zoom:50%;" />
+<p><img src="image-20260419155405112.png" srcset="/img/loading.gif" lazyload alt="image-20260419155405112" style="zoom:50%;" /></p>
 <p>每个重定位条目（Relocation Entry）至少需要提供以下 4 个核心信息</p>
 <p>1、偏移量 (Offset)</p>
 <p>含义： 需要被修改的代码或数据在当前段（Section）内的具体位置。</p>
-<img src="image-20260419155436097.png" srcset="/img/loading.gif" lazyload alt="image-20260419155436097" style="zoom:50%;" />
+<p><img src="image-20260419155436097.png" srcset="/img/loading.gif" lazyload alt="image-20260419155436097" style="zoom:50%;" /></p>
 <p>如图，<code>.text</code>段有 3 个地方要重定位，</p>
 <ol>
 <li>符号 my_list 需要重定位的偏移量是 0x12</li>
@@ -630,28 +600,24 @@
 <p>例如，对于<code>.text</code>段，在 0x12、 0x18、0x1d 的位置，我们要引用的符号名字分别是 my_list，monkey，foo</p>
 <p>对于<code>.data</code>段，在 0x10 的位置，我们要引用的符号名字是 monkey；</p>
 <p>4、加数 (Addend)：本质上是一个常数，这个加数通常由汇编器存储在需要被重定位的地方</p>
-<img src="image-20260419155658361.png" srcset="/img/loading.gif" lazyload alt="image-20260419155658361" style="zoom:50%;" />
+<p><img src="image-20260419155658361.png" srcset="/img/loading.gif" lazyload alt="image-20260419155658361" style="zoom:50%;" /></p>
 <p>​                                      ⬆加数示意图</p>
 <p>我用红框把加数都框起来了，从上到下分别是 4，0，-4，0;</p>
 <p>再回头看重定位表，信息，偏移，类型，符号名都给了；</p>
 <p>但是加数呢？加数就在要被修正的指令编码中。</p>
 <p>也就是说，加数就在 .o 文件里，需要链接器从 .o 文件中“读”出来。</p>
 <p>现在，重定位的材料是凑齐了，不过还缺一个方法，就是如何根据这些材料把最终地址算出来。</p>
-<h2 id="重定位公式">重定位公式</h2>
-<p>我们先定义三个关键变量：</p>
+<h2 id="重定位公式"><a href="#重定位公式" class="headerlink" title="重定位公式"></a>重定位公式</h2><p>我们先定义三个关键变量：</p>
 <ul>
-<li>
-<p>S (Symbol)：符号的最终虚拟地址（就是把程序加载到内存后，符号所在的地址）</p>
+<li><p>S (Symbol)：符号的最终虚拟地址（就是把程序加载到内存后，符号所在的地址）</p>
 </li>
-<li>
-<p>A (Addend)：加数（预先存在于 .o 文件待修改位置的值）</p>
+<li><p>A (Addend)：加数（预先存在于 .o 文件待修改位置的值）</p>
 </li>
-<li>
-<p>P (Place)：重定位位置。链接器在合并所有 .o 文件并安排好内存后，需要打补丁的那个位置的虚拟地址</p>
+<li><p>P (Place)：重定位位置。链接器在合并所有 .o 文件并安排好内存后，需要打补丁的那个位置的虚拟地址</p>
 </li>
 </ul>
 <p>不同的类型，公式不一样：</p>
-<img src="image-20260419160043565.png" srcset="/img/loading.gif" lazyload alt="image-20260419160043565" style="zoom:50%;" />
+<p><img src="image-20260419160043565.png" srcset="/img/loading.gif" lazyload alt="image-20260419160043565" style="zoom:50%;" /></p>
 <p>现在，我们再次把自己当成链接器，从它的视角再来一遍重定位。</p>
 <p>序号 1：</p>
 <p><code>.text  00000012  R_386_32  .data</code></p>
@@ -660,29 +626,14 @@
 <p>从链接示意图上可以看出是 0x080480f0</p>
 <p>步骤 2， A = ？</p>
 <p>用命令 “objdump a.o -d” 查看 a.o</p>
-<img src="image-20260419160157570.png" srcset="/img/loading.gif" lazyload alt="image-20260419160157570" style="zoom:50%;" />
-<p>0x12 偏移处，4 个字节是 04，00，00，00<br>
-所以 A = 4<br>
-步骤 3，S + A = ？<br>
-0x080480f0 + 4 = 0x080480f4<br>
-这和我们之前得出的结论完全一致;</p>
-<p>序号 2:<br>
-<code>.text  00000018  R_386_32  monkey</code><br>
-步骤 1，S = ？<br>
-monkey 这个符号的最终地址是多少？<br>
-从图中可以看出是 0x0804810c</p>
-<p>步骤 2， A = ？<br>
-0x18 偏移处，4 个字节是 00 00 00 00<br>
-所以 A = 0</p>
+<p><img src="image-20260419160157570.png" srcset="/img/loading.gif" lazyload alt="image-20260419160157570" style="zoom:50%;" /></p>
+<p>0x12 偏移处，4 个字节是 04，00，00，00<br>所以 A = 4<br>步骤 3，S + A = ？<br>0x080480f0 + 4 = 0x080480f4<br>这和我们之前得出的结论完全一致;</p>
+<p>序号 2:<br><code>.text  00000018  R_386_32  monkey</code><br>步骤 1，S = ？<br>monkey 这个符号的最终地址是多少？<br>从图中可以看出是 0x0804810c</p>
+<p>步骤 2， A = ？<br>0x18 偏移处，4 个字节是 00 00 00 00<br>所以 A = 0</p>
 <p>步骤 3，S + A = 0x0804810c</p>
-<p>序号 4:<br>
-<code>.data  00000010  R_386_32  monkey</code><br>
-步骤 1，S = ？<br>
-S 是  0x0804810c</p>
-<p>步骤 2，A 的值是多少<br>
-.data 段偏移 0x10 处是什么呢？<br>
-用命令 “objdump -s -j .data a.o” 查看</p>
-<img src="image-20260419160326824.png" srcset="/img/loading.gif" lazyload alt="image-20260419160326824" style="zoom:50%;" />
+<p>序号 4:<br><code>.data  00000010  R_386_32  monkey</code><br>步骤 1，S = ？<br>S 是  0x0804810c</p>
+<p>步骤 2，A 的值是多少<br>.data 段偏移 0x10 处是什么呢？<br>用命令 “objdump -s -j .data a.o” 查看</p>
+<p><img src="image-20260419160326824.png" srcset="/img/loading.gif" lazyload alt="image-20260419160326824" style="zoom:50%;" /></p>
 <p>.data 段偏移 0x10 处是 00 00 00 00</p>
 <p>所以  A = 0</p>
 <p>步骤 3，S + A =  0x0804810c</p>
@@ -705,11 +656,11 @@ S 是  0x0804810c</p>
 <p>S + A - P = 0x080480c4 -4 - 0x0804809d = 0x23</p>
 <p>所以修正后的地址是 23 00 00 00;</p>
 <p>再回到 nasm 生成的重定位表</p>
-<img src="image-20260419160437115.png" srcset="/img/loading.gif" lazyload alt="image-20260419160437115" style="zoom:50%;" />
+<p><img src="image-20260419160437115.png" srcset="/img/loading.gif" lazyload alt="image-20260419160437115" style="zoom:50%;" /></p>
 <p>序号 2~4 我们已经搞清楚了。</p>
 <p>序号 1 和我们的认知有偏差，应该是对符号 my_list 重定位，为什么是 .data 呢？</p>
 <p>我们也动手验证了，.data 确实没有错。</p>
-<img src="image-20260419160510221.png" srcset="/img/loading.gif" lazyload alt="image-20260419160510221" style="zoom:50%;" />
+<p><img src="image-20260419160510221.png" srcset="/img/loading.gif" lazyload alt="image-20260419160510221" style="zoom:50%;" /></p>
 <p>mov ecx, [my_list] 的编码是 “8b 0d 04 00 00 00”， 注意最后 4 个字节，其中第 1 个字节是 04，它来自 my_list 符号在 a.o 中的偏移。</p>
 <p>在前面的计算中（重定位公式这节），我们把 4 当成加数；</p>
 <p>修正值 = S + A = .data 的虚拟地址 + 4；</p>

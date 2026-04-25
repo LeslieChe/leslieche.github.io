@@ -383,9 +383,7 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第20天：为局部变量分配栈偏移">第20天：为局部变量分配栈偏移</h1>
-<h2 id="函数调用时栈的变化">函数调用时栈的变化</h2>
-<p>在生成汇编代码的时候，全局变量的内存靠数据段定义（以后会讲）。但是，局部变量的内存地址是如何确定的呢？</p>
+                <h1 id="第20天：为局部变量分配栈偏移"><a href="#第20天：为局部变量分配栈偏移" class="headerlink" title="第20天：为局部变量分配栈偏移"></a>第20天：为局部变量分配栈偏移</h1><h2 id="函数调用时栈的变化"><a href="#函数调用时栈的变化" class="headerlink" title="函数调用时栈的变化"></a>函数调用时栈的变化</h2><p>在生成汇编代码的时候，全局变量的内存靠数据段定义（以后会讲）。但是，局部变量的内存地址是如何确定的呢？</p>
 <p>请看下面的代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">add</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b)</span> &#123;<br>    <span class="hljs-type">int</span> c = a + b;<br>    <span class="hljs-keyword">return</span> c;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">int</span> x = add(<span class="hljs-number">10</span>, <span class="hljs-number">20</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>在调用 add 函数之前，栈是这样的（每一行表示4个字节）：</p>
@@ -395,26 +393,25 @@
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs xml">高地址<br>+-------------+<br>| ...         |<br>| 20          |  (b)<br>| 10          |  (a)  ← ESP<br><br><br>低地址<br></code></pre></td></tr></table></figure>
 <p>压栈用的汇编代码是</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs assembly">push 20        ; 参数 b<br>push 10        ; 参数 a<br></code></pre></td></tr></table></figure>
-<p>2、call</p>
+<p>2、call </p>
 <p>汇编代码是<code>call add</code></p>
 <p>利用 call 指令发起函数调用</p>
 <p>call 指令会把返回地址压栈；返回地址就是 “call add” 这句指令的下一条指令的地址</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs xml">高地址<br>+-------------+<br>| ...         |<br>| 20          | (b)<br>| 10          | (a)<br>| 返回地址     |  ← ESP   <br><br>低地址<br></code></pre></td></tr></table></figure>
 <p>然后，就跳转到了被调用的函数。</p>
-<p>3、被调用函数开头的代码一般是这样的：</p>
+<p> 3、被调用函数开头的代码一般是这样的：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs assembly">push ebp        ; 保存 caller 的 EBP<br>mov  ebp, esp   ; 设置当前栈帧的基址<br>sub  esp, 4     ; 为局部变量 c 分配 4 字节 <br></code></pre></td></tr></table></figure>
-<p>这三行代码我们一行一行看，首先是 push ebp</p>
+<p>这三行代码我们一行一行看，首先是 push ebp </p>
 <p>栈变化为这样：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs xml">高地址<br>+-------------+<br>| ...         |<br>| 20          | (b)<br>| 10          | (a)<br>| 返回地址     | ←  call 指令自动压入<br>| EBP         | ← ESP  <br>低地址<br><br><br></code></pre></td></tr></table></figure>
 <p>push epb 是为了把 caller 的 epb 存起来(为了将来恢复它的值)，因为被调用函数会设置自己的 ebp，并用它来寻址；</p>
-<p><code>mov  ebp, esp</code></p>
+<p><code>mov  ebp, esp</code>   </p>
 <p>这句执行完后，EBP 和 ESP 指向同一个位置</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs xml">高地址<br>+-------------+<br>| ...         |<br>| 20          | (b)<br>| 10          | (a)<br>| 返回地址     | ←  call 指令自动压入<br>| EBP         | ← ESP,  ← EBP  <br>低地址<br></code></pre></td></tr></table></figure>
 <p>再然后，被调用函数会根据局部变量对内存的消耗情况调整 esp 的值。假设用了 2 个整型变量，那么栈布局如下：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs xml">高地址<br>+-------------+<br>| ...         |<br>| 20          | (b)<br>| 10          | (a)<br>| 返回地址     | ←  call 指令自动压入  <br>| EBP         | ← EBP  <br>| 局部变量 1   |            <br>| 局部变量 2   | ← ESP   <br>    <br>低地址<br></code></pre></td></tr></table></figure>
 <p>所以，根据这个图，要访问传入的参数 a 和 b，应该用 ebp+8, ebp+12 寻址。</p>
-<h2 id="基本原理">基本原理</h2>
-<p>在创建函数对象(new_fun 函数)的时候，就有代码</p>
+<h2 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h2><p>在创建函数对象(new_fun 函数)的时候，就有代码</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> arg_offset = <span class="hljs-number">8</span>;<br>fun-&gt;para_list_head = para_list_head;<br>   <span class="hljs-keyword">if</span>(!para_list_head)<br>       fun-&gt;para_len = <span class="hljs-number">0</span>;<br>   <span class="hljs-keyword">else</span> &#123;<br>	<span class="hljs-type">gp_node_t</span> *node;<br>	list_for_each_entry(node, para_list_head, entry)&#123;<br>		<span class="hljs-type">var_t</span> *para = node-&gt;addr;<br>		para-&gt;offset = arg_offset;<br>		arg_offset += <span class="hljs-number">4</span>; <span class="hljs-comment">// 指定在栈中的偏移</span><br>		fun-&gt;para_len++; <span class="hljs-comment">// 顺便统计参数个数</span><br>		para-&gt;fun = fun; <span class="hljs-comment">// 参数所属的函数</span><br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>第1行就指定了偏移 8，第 9 行设置参数的偏移，第 10 行加 4，后面翻译成汇编的时候，参数就会有偏移 ebp+8, ebp+12 等</p>
 <p>要访问局部变量 1 和 2，应该用 ebp-4, ebp-8 寻址。这里的 ebp-4, ebp-8 就是编译器为局部变量 1 和 2 分配的内存地址。</p>
@@ -434,27 +431,26 @@
 <p>4、取出作用域匹配结束时的最末尾的节点，把变量的大小加到节点的偏移上，并把新的偏移作为变量的栈偏移</p>
 <p>5、跳转到 2，直到处理完所有的 decl 指令。</p>
 <p>下面为读者演示一下。</p>
-<img src="image-20260110183255800.png" srcset="/img/loading.gif" lazyload alt="image-20260110183255800" style="zoom:50%;" />
-<p>取出变量 c 的作用域 0/8/9</p>
+<p><img src="image-20260110183255800.png" srcset="/img/loading.gif" lazyload alt="image-20260110183255800" style="zoom:50%;" /></p>
+<p>取出变量 c 的作用域 0/8/9   </p>
 <p>先匹配树根，然后尝试匹配 8，没有 8，所以在根的下面创建节点 8，它的偏移继承父节点 0，偏移为 0（标注在节点右边）</p>
 <p>再尝试匹配 9，没有 9，在 8 的下面创建节点 9，它的偏移继承父节点 8，偏移为 0</p>
 <p>0/8/9  匹配完毕，最后一个节点是 9，变量 c 占 4 个字节，把 4 加到节点 9 的偏移值 0 上，得到 4，所以变量 c 的偏移就是 4；</p>
-<p>取出变量 e, 它的作用域是 e: /0/8/10</p>
+<p>取出变量 e, 它的作用域是 e: /0/8/10  </p>
 <p>节点 0 和 8 已经有了，不用创建；但是 10 没有，在 8 的下面创建节点 10，节点 10 的偏移继承父节点 8，偏移为 0（图3）</p>
-<img src="image-20260110183955176.png" srcset="/img/loading.gif" lazyload alt="image-20260110183955176" style="zoom:50%;" />
+<p><img src="image-20260110183955176.png" srcset="/img/loading.gif" lazyload alt="image-20260110183955176" style="zoom:50%;" /></p>
 <p>变量 e 占 4 个字节，把 4 加到节点 10 的偏移值 0 上，得到 4，所以变量 e 的偏移就是 4；(图 4)</p>
-<p>取出变量 f,它的作用域是 /0/8/10/11</p>
+<p>取出变量 f,它的作用域是 /0/8/10/11   </p>
 <p>节点0，8，10 都有，需要创建节点 11，在 10 的下面创建节点 11，节点 11 的偏移继承父节点 10，偏移为 4（图5）</p>
-<img src="image-20260110184301188.png" srcset="/img/loading.gif" lazyload alt="image-20260110184301188" style="zoom:50%;" />
+<p><img src="image-20260110184301188.png" srcset="/img/loading.gif" lazyload alt="image-20260110184301188" style="zoom:50%;" /></p>
 <p>变量 f 占 4 个字节，把 4 加到节点 11 的偏移值 4 上，得到 8，所以变量 e 的偏移就是 8；(图 6)</p>
-<p>取出变量 arr，它的作用域是 /0/8</p>
+<p>取出变量 arr，它的作用域是 /0/8   </p>
 <p>arr 是数组，有 7 个元素，它的大小是 28 字节。</p>
 <p>节点 0 和 8 已经有了，最后一个节点是 8，把 28 加到0 上，得 28，所以 arr 的偏移是 28 (图 7)</p>
-<img src="image-20260110184616989.png" srcset="/img/loading.gif" lazyload alt="image-20260110184616989" style="zoom:50%;" />
+<p><img src="image-20260110184616989.png" srcset="/img/loading.gif" lazyload alt="image-20260110184616989" style="zoom:50%;" /></p>
 <p>至此，此函数局部变量的偏移就计算完成了。</p>
 <p>在生成汇编代码的时候，用 ebp-offset 寻址对应的变量。</p>
-<h2 id="代码讲解">代码讲解</h2>
-<p>回忆一下，我们之前用到的数据结构有链表，哈希表，不过这两种数据结构都不合适，所以，我们要造出新的轮子——树结构。</p>
+<h2 id="代码讲解"><a href="#代码讲解" class="headerlink" title="代码讲解"></a>代码讲解</h2><p>回忆一下，我们之前用到的数据结构有链表，哈希表，不过这两种数据结构都不合适，所以，我们要造出新的轮子——树结构。</p>
 <p><img src="image-20260418122836915.png" srcset="/img/loading.gif" lazyload alt="image-20260418122836915"></p>
 <p>如何表示一棵树呢？可以用“孩子链表表示法”。</p>
 <p>这种表示方法和我们熟悉的“目录树”很像。</p>
@@ -495,7 +491,7 @@
 <p>第 9 行，调用 find_node_by_id，把 id 和父节点传进去，得到 child，这个 child 要么是本来就有的节点，要么是新创建的节点，不过无所谓，把 child 赋值给 parent，作为新的父节点，在它下面继续查找下一个 id</p>
 <p>第 13 行，此时 child 就是匹配完成的最后一个节点，因为要使用它的 sp，且要修改 sp,所以返回 &amp;child-&gt;sp</p>
 <p>经过上面的铺垫，终于来到给变量分配栈偏移的函数了。</p>
-<img src="image-20260110195633524.png" srcset="/img/loading.gif" lazyload alt="image-20260110195633524" style="zoom:50%;" />
+<p><img src="image-20260110195633524.png" srcset="/img/loading.gif" lazyload alt="image-20260110195633524" style="zoom:50%;" /></p>
 <p>第 75 行，构造树根。</p>
 <p>第 76 行，让 fun-&gt;max_depth 归零，我们会在计算的过程中跟踪 max_depth 的最大值。</p>
 <p>第 77 行，遍历所有的中间指令，跳过不可达的块</p>

@@ -348,7 +348,7 @@
         
         
         
-          36 分钟
+          35 分钟
         
       </span>
     
@@ -392,10 +392,8 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第27天：汇编器的语法分析之代码实现">第27天：汇编器的语法分析之代码实现</h1>
-<p>上一节我们构造了汇编器的文法，这一节我们就根据产生式来写代码。</p>
-<h2 id="如何获得下一个token">如何获得下一个token</h2>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">ass_token_e <span class="hljs-title function_">ass_next_token</span><span class="hljs-params">(<span class="hljs-type">scanner_t</span> *scanner)</span><br>&#123;<br>    __ass_next_token(scanner);<br>    <span class="hljs-keyword">while</span> (scanner-&gt;token == ASS_COMMENT ||<br>           scanner-&gt;token == ASS_INVALID) &#123;<br>        __ass_next_token(scanner);<br>    &#125;<br>    ass_token_inqueue(scanner);<br>    <span class="hljs-keyword">return</span> scanner-&gt;token;<br>&#125;<br></code></pre></td></tr></table></figure>
+                <h1 id="第27天：汇编器的语法分析之代码实现"><a href="#第27天：汇编器的语法分析之代码实现" class="headerlink" title="第27天：汇编器的语法分析之代码实现"></a>第27天：汇编器的语法分析之代码实现</h1><p>上一节我们构造了汇编器的文法，这一节我们就根据产生式来写代码。</p>
+<h2 id="如何获得下一个token"><a href="#如何获得下一个token" class="headerlink" title="如何获得下一个token"></a>如何获得下一个token</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">ass_token_e <span class="hljs-title function_">ass_next_token</span><span class="hljs-params">(<span class="hljs-type">scanner_t</span> *scanner)</span><br>&#123;<br>    __ass_next_token(scanner);<br>    <span class="hljs-keyword">while</span> (scanner-&gt;token == ASS_COMMENT ||<br>           scanner-&gt;token == ASS_INVALID) &#123;<br>        __ass_next_token(scanner);<br>    &#125;<br>    ass_token_inqueue(scanner);<br>    <span class="hljs-keyword">return</span> scanner-&gt;token;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>__ass_next_token 这个函数实现词法分析，每调用它一次就会得到一个词法记号。</p>
 <p>第 3 行，先得到一个词法记号。</p>
 <p>第 4~7 行，如果是注释或者是无效符号，就忽略，继续得到下一个词法记号。</p>
@@ -408,18 +406,16 @@
 <p>第 3 行，需要解释一下 ass_match 函数；</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title function_">ass_match</span><span class="hljs-params">(ass_token_e need, <span class="hljs-type">scanner_t</span> *scanner)</span><br>&#123;<br>	<span class="hljs-keyword">if</span>(ASS_TEST(need)) &#123;<br>		ass_next_token(scanner);<br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>	&#125; <span class="hljs-keyword">else</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;	<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>这个函数的作用是：判断参数 need 和当前的词法记号（scanner-&gt;token）是不是一致，一致则取下一个词法记号并返回 true，否则什么也不做，返回 false；</p>
-<h2 id="对换行的处理"><strong>对换行的处理</strong></h2>
-<p>前面我们说过，汇编中的换行有结束当前指令的功能。</p>
+<h2 id="对换行的处理"><a href="#对换行的处理" class="headerlink" title="对换行的处理"></a><strong>对换行的处理</strong></h2><p>前面我们说过，汇编中的换行有结束当前指令的功能。</p>
 <p>下面的函数完成一个换行符或者连续多个换行符的匹配。</p>
-<img src="image-20260125165606577.png" srcset="/img/loading.gif" lazyload alt="image-20260125165606577" style="zoom:50%;" />
+<p><img src="image-20260125165606577.png" srcset="/img/loading.gif" lazyload alt="image-20260125165606577" style="zoom:50%;" /></p>
 <p>第 92 行，如果当前词法记号是换行，则继续取下一个词法记号，直到遇到的不是换行为止。</p>
 <p>第 97 行，如果一个换行都没有，则根据参数 report_error 的值选择报错或者沉默。</p>
-<p>把这个函数包装一下，又有 2 个宏</p>
+<p>把这个函数包装一下，又有 2 个宏 </p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> MATCH_NEWLINE()  match_newline(scanner, 1)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EAT_NEWLINE()    match_newline(scanner, 0)</span><br></code></pre></td></tr></table></figure>
 <p>第 1 行的意思必须匹配到至少一个的换行，否则就报错；</p>
 <p>第 2 行的意思是能否匹配换行不重要，重要的是把换行（如果有的话）都“吃掉”；</p>
-<h2 id="入口函数">入口函数</h2>
-<img src="image-20260125171022627.png" srcset="/img/loading.gif" lazyload alt="image-20260125171022627" style="zoom:50%;" />
+<h2 id="入口函数"><a href="#入口函数" class="headerlink" title="入口函数"></a>入口函数</h2><p><img src="image-20260125171022627.png" srcset="/img/loading.gif" lazyload alt="image-20260125171022627" style="zoom:50%;" /></p>
 <p>第 596 行就是语法分析的入口函数了；</p>
 <p>第 598，读入第一个词法记号（后文中叫 token）；</p>
 <p>第 599 行，吃掉一个或多个换行（如果有的话）；</p>
@@ -427,8 +423,7 @@
 <p>我们看看 ass_program 函数，这是一个递归。</p>
 <p>第 588 行，如果遇到文件结束就返回，这是递归的出口。</p>
 <p>第 591~592，根据 584 行的产生式，先调用 fragment，解析一条声明或者指令， 然后调用 ass_program（递归）</p>
-<h2 id="fragment">fragment</h2>
-<img src="image-20260125171455390.png" srcset="/img/loading.gif" lazyload alt="image-20260125171455390" style="zoom:50%;" />
+<h2 id="fragment"><a href="#fragment" class="headerlink" title="fragment"></a>fragment</h2><p><img src="image-20260125171455390.png" srcset="/img/loading.gif" lazyload alt="image-20260125171455390" style="zoom:50%;" /></p>
 <p>fragment 函数的产生式已经写在注释里了，方便读者对照。</p>
 <p>根据产生式，当前的 token 逃不过下面几种</p>
 <p>1、section</p>
@@ -450,64 +445,61 @@
 <p>第 135 取下一个 token，应该是换行。</p>
 <p>第 136 检查到底是不是换行。</p>
 <p>继续看代码。</p>
-<img src="image-20260125182405881.png" srcset="/img/loading.gif" lazyload alt="image-20260125182405881" style="zoom:50%;" />
+<p><img src="image-20260125182405881.png" srcset="/img/loading.gif" lazyload alt="image-20260125182405881" style="zoom:50%;" /></p>
 <p>139 和 149 是对 global xxx 和 extern xxx 的处理，它们的后面都需要一个标识符，如果不是就报错;</p>
-<p>第 159 行，解析产生式 ASS_ID &lt;decl_tail&gt;</p>
+<p>第 159 行，解析产生式 ASS_ID <decl_tail></p>
 <p>第 160 行，拷贝标识符的字符串到 id</p>
 <p><code>strdup</code> 是 <strong>POSIX 标准</strong> 而非 C 标准库（ANSI C）中的函数;</p>
 <p>函数原型是 <code>char *strdup(const char *s);</code></p>
 <p>先为参数字符串<code>s</code>分配一块新的内存空间，然后将<code>s</code>的内容复制到新分配的内存中，最后返回指向新字符串的指针;</p>
 <p>第 162，调用 decl_tail，马上会讲。</p>
-<p>如果不属于</p>
+<p>如果不属于 </p>
 <p>1、section</p>
 <p>2、global</p>
 <p>3、extern</p>
 <p>4、标识符</p>
 <p>那应该是指令助记符，执行第 165 行，调用 ass_inst 解析指令;</p>
-<h2 id="decl-tail函数">decl_tail函数</h2>
-<img src="image-20260125183052489.png" srcset="/img/loading.gif" lazyload alt="image-20260125183052489" style="zoom:50%;" />
-<p>根据第 172 行的产生式，要么是冒号，要么是 &lt;init_value&gt;;</p>
+<h2 id="decl-tail函数"><a href="#decl-tail函数" class="headerlink" title="decl_tail函数"></a>decl_tail函数</h2><p><img src="image-20260125183052489.png" srcset="/img/loading.gif" lazyload alt="image-20260125183052489" style="zoom:50%;" /></p>
+<p>根据第 172 行的产生式，要么是冒号，要么是 <init_value>;</p>
 <p>因为冒号后面可以没有换行，所以第 180 行用的是 EAT_NEWLINE;</p>
 <p>需要说明的是，对于数据的定义，标识符后面也可以加个冒号。</p>
 <p>例如</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> list<br>	list : <span class="hljs-built_in">dd</span> <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>  <span class="hljs-comment">; 注意冒号</span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">995</span> <span class="hljs-built_in">dd</span> <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
 <p>不过 csub 生成汇编代码的时候，没有加这个冒号。</p>
 <p>所以，遇到带冒号的标签，肯定是代码段的标签。</p>
-<h2 id="init-value函数">init_value函数</h2>
-<img src="image-20260125184116058.png" srcset="/img/loading.gif" lazyload alt="image-20260125184116058" style="zoom:50%;" />
+<h2 id="init-value函数"><a href="#init-value函数" class="headerlink" title="init_value函数"></a>init_value函数</h2><p><img src="image-20260125184116058.png" srcset="/img/loading.gif" lazyload alt="image-20260125184116058" style="zoom:50%;" /></p>
 <p><code>&lt;init_value&gt;</code> 由一个或多个 <code>&lt;item&gt;</code> 组成。</p>
 <p><code>&lt;item&gt;</code> 的 first 集合很好求，就是第 195 行我写的注释。</p>
 <p>第 202 行，判断当前 token 是不是在 <code>&lt;item&gt;</code> 的 first 集中，如果是，就调用 205 行的函数 item()</p>
 <p>第 200 行的 flag 是一个标记，标识 while 循环有没有进去过，如果压根就没有进去，那说明缺少数据定义，第 210 行会报错。</p>
 <p><strong>需要说明的是，这不是最终的代码，为了突出语法分析，我删了很多代码。</strong></p>
 <p>第 201 行，分配了一片内存（分配 100 字节仅仅是举例子），item 解析到的 value 都拷贝到这片内存中。</p>
-<img src="image-20260125184628738.png" srcset="/img/loading.gif" lazyload alt="image-20260125184628738" style="zoom:50%;" />
+<p><img src="image-20260125184628738.png" srcset="/img/loading.gif" lazyload alt="image-20260125184628738" style="zoom:50%;" /></p>
 <p>第 224 行，判断是不是 times 关键字，如果是说明有 times xxx;</p>
 <p>第 232 行，解析非终结符 <code>&lt;values&gt;</code></p>
-<img src="image-20260125184847033.png" srcset="/img/loading.gif" lazyload alt="image-20260125184847033" style="zoom:50%;" />
-<p>第 243 ~ 252 解析 &lt;data_size&gt;</p>
+<p><img src="image-20260125184847033.png" srcset="/img/loading.gif" lazyload alt="image-20260125184847033" style="zoom:50%;" /></p>
+<p>第 243 ~ 252 解析 <data_size></p>
 <p>第 259 行，创建一个空的链表</p>
-<p>第 260 行，解析 &lt;value_list&gt;, 并且把 size、链表的头节点 val_head 和 init_value 作为参数，传给 value_list 函数</p>
-<img src="image-20260125191256182.png" srcset="/img/loading.gif" lazyload alt="image-20260125191256182" style="zoom:50%;" />
+<p>第 260 行，解析 <value_list>, 并且把 size、链表的头节点 val_head 和 init_value 作为参数，传给 value_list 函数</p>
+<p><img src="image-20260125191256182.png" srcset="/img/loading.gif" lazyload alt="image-20260125191256182" style="zoom:50%;" /></p>
 <p>value_list 至少有一个 <code>&lt;value&gt;</code></p>
-<p>后面可能有 0 个或者多个  “COMMA <code>&lt;value&gt;</code>”</p>
+<p>后面可能有 0 个或者多个  “COMMA <code>&lt;value&gt;</code>” </p>
 <p>所以第 275 行用 while 循环匹配逗号;</p>
 <p>这里可以给读者展示一下用 “教科书式 CFG 写法” 和 “EBNF” 写法在编码的时候有何不同。</p>
 <p>如果用教科书式 CFG 写法，产生式和代码是下面这样</p>
-<img src="image-20260125191630655.png" srcset="/img/loading.gif" lazyload alt="image-20260125191630655" style="zoom:50%;" />
-<p>可以看到，针对这个例子（解析 &lt;value_list&gt;），“EBNF” 写法在编码的时候用 while 循环取代了递归，而且一个函数就搞定。这也算是 “EBNF” 写法的一个优点。</p>
+<p><img src="image-20260125191630655.png" srcset="/img/loading.gif" lazyload alt="image-20260125191630655" style="zoom:50%;" /></p>
+<p>可以看到，针对这个例子（解析 <value_list>），“EBNF” 写法在编码的时候用 while 循环取代了递归，而且一个函数就搞定。这也算是 “EBNF” 写法的一个优点。</p>
 <p>下面看 value 函数:</p>
-<img src="image-20260125192451965.png" srcset="/img/loading.gif" lazyload alt="image-20260125192451965" style="zoom:50%;" />
+<p><img src="image-20260125192451965.png" srcset="/img/loading.gif" lazyload alt="image-20260125192451965" style="zoom:50%;" /></p>
 <p>第 380、383、383 的 list_add_value 函数里会申请内存，保存每个值，再把值作为节点挂在链表上。</p>
 <p>但是我都注释掉了，因为 list_add_value 函数里面要申请内存，所以还要有对应的释放内存的代码，这又会牵扯到符号表等一大堆和本文主旨无关的代码，所以先注释掉；</p>
 <p>只要读者明白解析出的每个值要保存起来就行。</p>
 <p>parse_signed_num 的作用是解析数字（前面可以有正号、负号），这个函数很简单，按下不表。到了这里，对数据定义的解析就完成了。</p>
-<h2 id="解析汇编指令">解析汇编指令</h2>
-<img src="image-20260125194102744.png" srcset="/img/loading.gif" lazyload alt="image-20260125194102744" style="zoom:50%;" />
+<h2 id="解析汇编指令"><a href="#解析汇编指令" class="headerlink" title="解析汇编指令"></a>解析汇编指令</h2><p><img src="image-20260125194102744.png" srcset="/img/loading.gif" lazyload alt="image-20260125194102744" style="zoom:50%;" /></p>
 <p>第 552 行，判断 token 是不是双操作数指令，如果是，第 554 行和 556 行，调用 oprand 函数解析操作数。</p>
 <p>同理，其他 2 个 else if 分支是解析单操作数指令和无操作数指令。</p>
 <p>oprand()函数用来解析操作数。</p>
-<img src="image-20260125194705741.png" srcset="/img/loading.gif" lazyload alt="image-20260125194705741" style="zoom:50%;" />
+<p><img src="image-20260125194705741.png" srcset="/img/loading.gif" lazyload alt="image-20260125194705741" style="zoom:50%;" /></p>
 <p>第 480 行的 reg() 很简单，不赘述。</p>
 <p>我们重点看第 486 的 mem()，用来处理内存操作数。</p>
 <p>因为有下面的产生式</p>
@@ -515,12 +507,12 @@
 <p>所以 <code>&lt;mem&gt;</code> 的 first 集合是 KW_BYTE | KW_WORD | KW_DWORD | ASS_LBRACKET</p>
 <p>这就是代码 482~485 行的意思，罗列出所有可能的 token；</p>
 <p>我们看看 mem 函数</p>
-<img src="image-20260125195058427.png" srcset="/img/loading.gif" lazyload alt="image-20260125195058427" style="zoom:50%;" />
+<p><img src="image-20260125195058427.png" srcset="/img/loading.gif" lazyload alt="image-20260125195058427" style="zoom:50%;" /></p>
 <p>注意，产生式里面的 [] 表示 0 个或 1 个，不要和指令中内存操作数的方括号混淆。</p>
 <p>指令中内存操作数的方括号用 ASS_LBRACKET 和 ASS_RBRACKET 表示。</p>
 <p>op_size 很简单，就不贴代码了。</p>
 <p>我们看 addr</p>
-<img src="image-20260125195951566.png" srcset="/img/loading.gif" lazyload alt="image-20260125195951566" style="zoom:50%;" />
+<p><img src="image-20260125195951566.png" srcset="/img/loading.gif" lazyload alt="image-20260125195951566" style="zoom:50%;" /></p>
 <p>第 414 行，地址可以是一个数字，这是绝对地址寻址，也有叫直接寻址的。</p>
 <p>第 417，地址可以是标识符，标识符后面可以有偏移，也可以没有。</p>
 <p>注意，第 426 的 disp() 在本质上和第 420 行的 parse_signed_num() 一样。</p>
