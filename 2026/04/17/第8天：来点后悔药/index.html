@@ -23,7 +23,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="第8天：来点后悔药">
 <meta property="og:url" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC8%E5%A4%A9%EF%BC%9A%E6%9D%A5%E7%82%B9%E5%90%8E%E6%82%94%E8%8D%AF/index.html">
-<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:site_name" content="自制编译器">
 <meta property="og:description" content="已经读出来的 token 能不能再放回去？">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC8%E5%A4%A9%EF%BC%9A%E6%9D%A5%E7%82%B9%E5%90%8E%E6%82%94%E8%8D%AF/image-20251012100834972.png">
@@ -44,7 +44,7 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>第8天：来点后悔药 - 49天自制编译器</title>
+  <title>第8天：来点后悔药 - 自制编译器</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -128,7 +128,7 @@
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>49 天自制编译器</strong>
+      <strong>四十天自制编译器</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -385,8 +385,10 @@
             
               <div class="markdown-body">
                 
-                <h1 id="来点后悔药"><a href="#来点后悔药" class="headerlink" title="来点后悔药"></a>来点后悔药</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在语法分析的时候的，我写了一个函数</p>
-<p><img src="image-20251012100834972.png" srcset="/img/loading.gif" lazyload alt="image-20251012100834972" style="zoom:50%;" /></p>
+                <h1 id="来点后悔药">来点后悔药</h1>
+<h2 id="背景">背景</h2>
+<p>在语法分析的时候的，我写了一个函数</p>
+<img src="image-20251012100834972.png" srcset="/img/loading.gif" lazyload alt="image-20251012100834972" style="zoom:50%;" />
 <p>这个函数的作用是解析函数的参数，例如</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b)</span><br></code></pre></td></tr></table></figure>
 <p>当匹配到“(” 的时候，就会调用这个函数。</p>
@@ -400,10 +402,11 @@
 <p>都是同一个类型的错误，怎么处理的代码还不一样？所以别扭。</p>
 <p>还有，如果后面要支持  void *p  这种参数，428 这行也是有问题的。</p>
 <p>为了把 int foo(void a, int b) 中第 1 个参数放到 para_item 函数中处理，我有一个想法：当 425 行不成立的时候，把 void 和另外一个 token 放回去。</p>
-<h2 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h2><p><img src="image-20251012103600258.png" srcset="/img/loading.gif" lazyload alt="image-20251012103600258" style="zoom:50%;" /></p>
+<h2 id="解决思路">解决思路</h2>
+<img src="image-20251012103600258.png" srcset="/img/loading.gif" lazyload alt="image-20251012103600258" style="zoom:50%;" />
 <p>回顾一下，每一次调用 next_token() 都会更新全局变量 token_g，我们直接读取 token_g 就会得到一个新的符号。</p>
 <p>现在，next_token 改成这样：</p>
-<p><img src="image-20251012104016008.png" srcset="/img/loading.gif" lazyload alt="image-20251012104016008" style="zoom:50%;" /></p>
+<img src="image-20251012104016008.png" srcset="/img/loading.gif" lazyload alt="image-20251012104016008" style="zoom:50%;" />
 <p>先定义 2 个空的链表（都是全局变量）</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">LIST_HEAD(tk_buffer_g);<br>LIST_HEAD(tk_uesd_g);<br></code></pre></td></tr></table></figure>
 <p>第 1 行，tk_buffer_g 这个链表，是一个缓冲区，退回的 token 都放在里面。</p>
@@ -431,7 +434,9 @@
 <p>从 tk_uesd_g 链表找到最后一个节点 A1，删除它，然后把它插入到 tk_buffer_g 链表的头部。</p>
 <p>这时候，tk_buffer_g 的链表中从头到尾有 A1，A2，…，A10</p>
 <p>反复调用 next_token 函数， 就可以重新读取  A1，A2，…，A10  了！</p>
-<h2 id="代码讲解"><a href="#代码讲解" class="headerlink" title="代码讲解"></a>代码讲解</h2><h3 id="move-token-to-buffer"><a href="#move-token-to-buffer" class="headerlink" title="move_token_to_buffer"></a>move_token_to_buffer</h3><p><img src="image-20251012112605540.png" srcset="/img/loading.gif" lazyload alt="image-20251012112605540" style="zoom:50%;" /></p>
+<h2 id="代码讲解">代码讲解</h2>
+<h3 id="move-token-to-buffer">move_token_to_buffer</h3>
+<img src="image-20251012112605540.png" srcset="/img/loading.gif" lazyload alt="image-20251012112605540" style="zoom:50%;" />
 <p>这个结构体用来保存 token 的信息。</p>
 <p>第 9 行，就是以前 token_g 的值。</p>
 <p>第 10 行，当 token_g 的值是 ID、STRING、NUM、CHARA 的时候， pval 指针不为空，它会指向一个内存，里面存储标识符、字符串、数字、字符。</p>
@@ -443,17 +448,19 @@
 <p>如果 token 的类型是整形常量，则第 24 行成立，为整数分配内存并存储 token_num_g 到<code>*(int *)new-&gt;pval</code>。</p>
 <p>第 36 行，把节点加入到 tk_buffer_g 链表的尾部。</p>
 <p>其他代码很简单，就不解释了。</p>
-<h3 id="token-dequeue"><a href="#token-dequeue" class="headerlink" title="token_dequeue"></a>token_dequeue</h3><p><img src="image-20251012113545676.png" srcset="/img/loading.gif" lazyload alt="image-20251012113545676" style="zoom:50%;" /></p>
+<h3 id="token-dequeue">token_dequeue</h3>
+<img src="image-20251012113545676.png" srcset="/img/loading.gif" lazyload alt="image-20251012113545676" style="zoom:50%;" />
 <p>如果把链表看成队列，且链表的头对应队列的头，这个函数的作用是从队列的头部出队。</p>
 <p>第 74 行，得到第一个节点。</p>
 <p>第 75 行，删除之。</p>
 <p>第 76 行，返回被删除节点的地址。</p>
-<h3 id="put-token-back"><a href="#put-token-back" class="headerlink" title="put_token_back"></a>put_token_back</h3><p><img src="image-20251012113917927.png" srcset="/img/loading.gif" lazyload alt="image-20251012113917927" style="zoom:50%;" /></p>
+<h3 id="put-token-back">put_token_back</h3>
+<img src="image-20251012113917927.png" srcset="/img/loading.gif" lazyload alt="image-20251012113917927" style="zoom:50%;" />
 <p>这个就是后悔药的代码。</p>
 <p>第 81 行，先求 tk_uesd_g 链表里面有多少个节点。如果只有 10 个节点，你想回退 11 个节点是不可能的。</p>
 <p>第 86 行，得到 tk_uesd_g 链表中最后那个节点；</p>
 <p>第 87 行，list_move 是文件 list.h 中的一个函数。源码如下：</p>
-<p><img src="image-20251012114310623.png" srcset="/img/loading.gif" lazyload alt="image-20251012114310623" style="zoom:50%;" /></p>
+<img src="image-20251012114310623.png" srcset="/img/loading.gif" lazyload alt="image-20251012114310623" style="zoom:50%;" />
 <p>这个函数有 2 个参数，作用是把某个节点移动到另一个链表的头部，所谓移动，就是先删除，再插入。</p>
 <p>参数 1：要删除的那个节点的链表节点；</p>
 <p>参数 2：另外一个链表的头节点；</p>
@@ -462,7 +469,7 @@
 <p>这篇文章到这里就结束了。</p>
 <p>另外，代码中一定有很多 malloc、calloc 等分配内存的代码，别忘了写释放内存的代码。</p>
 <p>例如：</p>
-<p><img src="image-20251012120653644.png" srcset="/img/loading.gif" lazyload alt="image-20251012120653644" style="zoom:50%;" /></p>
+<img src="image-20251012120653644.png" srcset="/img/loading.gif" lazyload alt="image-20251012120653644" style="zoom:50%;" />
 <p>本节的代码和后面要讲的符号表合并在一起了。等符号表讲完了，读者可以下载代码实践。</p>
 
                 

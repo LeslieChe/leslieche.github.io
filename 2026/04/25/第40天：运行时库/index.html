@@ -23,7 +23,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="第40天：运行时库">
 <meta property="og:url" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/index.html">
-<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:site_name" content="自制编译器">
 <meta property="og:description" content="什么是运行时库，什么是 Linux 系统调用？">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://leslieche.github.io/2026/04/25/%E7%AC%AC40%E5%A4%A9%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BA%93/image-20260307171346534.png">
@@ -51,7 +51,7 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>第40天：运行时库 - 49天自制编译器</title>
+  <title>第40天：运行时库 - 自制编译器</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -135,7 +135,7 @@
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>49 天自制编译器</strong>
+      <strong>四十天自制编译器</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -392,7 +392,8 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第40天：运行时库"><a href="#第40天：运行时库" class="headerlink" title="第40天：运行时库"></a>第40天：运行时库</h1><p>链接器写完了，但是有一个问题。</p>
+                <h1 id="第40天：运行时库">第40天：运行时库</h1>
+<p>链接器写完了，但是有一个问题。</p>
 <p>虽然我们生成了可执行文件 b.out，但它如此沉默，跑起来什么效果都没有。就算它的功能是生成 1000 个随机整数然后对它们排序，可是结果呢？</p>
 <p>所以，我们要做点什么，让可执行程序和我们交互起来。</p>
 <p>前面提到过“CRT”。<strong>CRT（C Runtime Library，C 运行时库）</strong>是 C 语言程序运行时所依赖的基础库的统称。打个比方，离开了 CRT，C 语言就好比是个没有门窗、不通水电的毛坯房，根本没有办法居住。</p>
@@ -419,14 +420,15 @@
 <p>本文，我们就实现一个迷你 CRT。</p>
 <p>我们已经有了一个启动文件—— start.asm</p>
 <p>虽然它只有几行代码：</p>
-<p><img src="image-20260307171346534.png" srcset="/img/loading.gif" lazyload alt="image-20260307171346534" style="zoom:50%;" /></p>
+<img src="image-20260307171346534.png" srcset="/img/loading.gif" lazyload alt="image-20260307171346534" style="zoom:50%;" />
 <p>我们要扩充它的代码，增加几个小功能。</p>
 <p>1、模仿 printf，实现一个简单的 my_printf，支持 10 进制整数、16 进制整数、字符串的输出，还要支持可变参数</p>
 <p>2、提供一个返回 32 位随机整数的函数</p>
 <p>3、实现 getchar()，从标准输入（键盘）读取一个字符</p>
 <p>4、实现 putchar()，向标准输出（屏幕）发送一个字符</p>
 <p>下面，为大家讲解代码。</p>
-<h2 id="get-trng"><a href="#get-trng" class="headerlink" title="get_trng"></a>get_trng</h2><p><img src="image-20260307172805078.png" srcset="/img/loading.gif" lazyload alt="image-20260307172805078" style="zoom:50%;" /></p>
+<h2 id="get-trng">get_trng</h2>
+<img src="image-20260307172805078.png" srcset="/img/loading.gif" lazyload alt="image-20260307172805078" style="zoom:50%;" />
 <p>rdrand 这个指令的作用是从硬件获取 32 位随机数，并存入指定的寄存器</p>
 <p>如果标志位 CF == 1，说明成功，否则跳转到第 260 行，继续尝试。</p>
 <p>有读者说，你这里增加了 rdrand 指令，是不是编译器的代码也要增加对 rdrand 指令支持。</p>
@@ -434,20 +436,20 @@
 <p>这里讲一下如何给我们的 csub 添加新的汇编指令支持。</p>
 <p>一共三个步骤：</p>
 <p>1、要修改指令模板初始化函数</p>
-<p>找到 void add_all_inst_description(void) </p>
+<p>找到 void add_all_inst_description(void)</p>
 <p>在里面增加一行：</p>
-<p><img src="image-20260307173537336.png" srcset="/img/loading.gif" lazyload alt="image-20260307173537336" style="zoom:100%;" /></p>
+<img src="image-20260307173537336.png" srcset="/img/loading.gif" lazyload alt="image-20260307173537336" style="zoom:100%;" />
 <p>2、修改 ass_token_e、ass_token_names、ass_keywords_names；</p>
 <p>1）ass_token_e 增加枚举成员 I_RDRAND</p>
 <p>2）ass_token_names、ass_keywords_names 数组增加字符串 “rdrand”</p>
 <p>3、如果有需要的话，修改对应的编码函数，或函数里面的子函数。</p>
 <p>rdrand 只需要前 2 个步骤。</p>
-<h2 id="Linux-系统调用"><a href="#Linux-系统调用" class="headerlink" title="Linux 系统调用"></a>Linux 系统调用</h2><p>Linux 系统调用（System Call）是<strong>用户程序向 Linux 内核请求服务的唯一合法接口</strong>。简单说，内核是操作系统的 “核心管家”，掌管着 CPU、内存、文件等所有关键资源，普通程序（用户态）不能直接触碰这些资源，只能通过 “系统调用” 这个 “窗口”，让内核帮忙完成操作。</p>
+<h2 id="Linux-系统调用">Linux 系统调用</h2>
+<p>Linux 系统调用（System Call）是<strong>用户程序向 Linux 内核请求服务的唯一合法接口</strong>。简单说，内核是操作系统的 “核心管家”，掌管着 CPU、内存、文件等所有关键资源，普通程序（用户态）不能直接触碰这些资源，只能通过 “系统调用” 这个 “窗口”，让内核帮忙完成操作。</p>
 <p>前文说了，CRT 的高级功能，最终都会调用操作系统的系统调用。</p>
 <p>如何调用呢？</p>
 <p>Linux 为所有系统调用分配了唯一的编号（Syscall Number），内核通过编号识别要执行的操作，而非函数名（函数名是 CRT 封装的）。</p>
 <p>常见系统调用编号（x86_32 架构）：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -494,7 +496,6 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>我们的 _start 函数，就在调用完 main 之后，发起了编号为 1 的系统调用，意思是终止进程。</p>
 <p>普通函数的调用一般使用 call xxx，但是系统调用不同，</p>
 <p>普通函数调用是 “直接跳转”，系统调用需要触发 “特权切换”。</p>
@@ -515,7 +516,8 @@
 </ul>
 <p>所以，前 32 个肯定不行。在 IBM PC 时代，很多中断号被分配给了<strong>硬件设备</strong>：例如时钟中断、键盘、串口、磁盘驱动器等。为了保证兼容性，Linux 需要找一个“离它们远点”的、没人用的空位。与其给 <code>read</code> 分配一个中断号、给 <code>write</code> 分配一个中断号（那样会很快耗尽有限的 256 个中断名额），不如<strong>只开一扇门</strong>。Linux 创始人林纳斯·托瓦兹（Linus Torvalds）选择了 <strong><code>0x80</code></strong> 作为这扇门的编号。进入这扇门后，内核再去看 <code>EAX</code> 寄存器里的数字（系统调用号），决定具体去执行哪个功能。</p>
 <p>下面可以看代码了。</p>
-<h2 id="getchar"><a href="#getchar" class="headerlink" title="getchar"></a>getchar</h2><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> getchar<br><span class="hljs-symbol">getchar:</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">ebp</span>            <span class="hljs-comment">; 建立栈帧</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebp</span>, <span class="hljs-built_in">esp</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">ebx</span>            <span class="hljs-comment">; 关键：保护 EBX，因为后面 sys_read 会占用它 </span><br>    <span class="hljs-keyword">sub</span> <span class="hljs-built_in">esp</span>, <span class="hljs-number">4</span>          <span class="hljs-comment">; 为单字节缓冲区分配 4 字节（保持对齐）</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">3</span>          <span class="hljs-comment">; 系统调用号: sys_read</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebx</span>, <span class="hljs-number">0</span>          <span class="hljs-comment">; 参数1: 文件描述符 stdin (0)</span><br>    <span class="hljs-keyword">lea</span> <span class="hljs-built_in">ecx</span>, [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">8</span>]    <span class="hljs-comment">; 参数2: 缓冲区地址 (注意：ebp-4 是 ebx 的值, ebp-8 才是空位)</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">edx</span>, <span class="hljs-number">1</span>          <span class="hljs-comment">; 参数3: 读取字节数 (1)</span><br>    <span class="hljs-keyword">int</span> <span class="hljs-number">128</span>             <span class="hljs-comment">; 触发软中断</span><br></code></pre></td></tr></table></figure>
+<h2 id="getchar">getchar</h2>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> getchar<br><span class="hljs-symbol">getchar:</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">ebp</span>            <span class="hljs-comment">; 建立栈帧</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebp</span>, <span class="hljs-built_in">esp</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">ebx</span>            <span class="hljs-comment">; 关键：保护 EBX，因为后面 sys_read 会占用它 </span><br>    <span class="hljs-keyword">sub</span> <span class="hljs-built_in">esp</span>, <span class="hljs-number">4</span>          <span class="hljs-comment">; 为单字节缓冲区分配 4 字节（保持对齐）</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">3</span>          <span class="hljs-comment">; 系统调用号: sys_read</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebx</span>, <span class="hljs-number">0</span>          <span class="hljs-comment">; 参数1: 文件描述符 stdin (0)</span><br>    <span class="hljs-keyword">lea</span> <span class="hljs-built_in">ecx</span>, [<span class="hljs-built_in">ebp</span>-<span class="hljs-number">8</span>]    <span class="hljs-comment">; 参数2: 缓冲区地址 (注意：ebp-4 是 ebx 的值, ebp-8 才是空位)</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">edx</span>, <span class="hljs-number">1</span>          <span class="hljs-comment">; 参数3: 读取字节数 (1)</span><br>    <span class="hljs-keyword">int</span> <span class="hljs-number">128</span>             <span class="hljs-comment">; 触发软中断</span><br></code></pre></td></tr></table></figure>
 <p>对于 3，4，6 行，相信读者不陌生，我们翻译函数入口（也有地方叫序言，prologue）和出口（也有地方叫尾声，Epilogue）的时候，反复用到。</p>
 <p>但是第 5 行，push ebx 是为什么？为什么要把 ebx 的值入栈呢？</p>
 <p>根据 cdecl 调用约定：</p>
@@ -546,7 +548,7 @@
 <p>int getchar(void);</p>
 <p>然后就可以用了。</p>
 <p>例如下面的代码：</p>
-<p><img src="image-20260308110415466.png" srcset="/img/loading.gif" lazyload alt="image-20260308110415466" style="zoom:50%;" /></p>
+<img src="image-20260308110415466.png" srcset="/img/loading.gif" lazyload alt="image-20260308110415466" style="zoom:50%;" />
 <p>这里有 4 个关键点。</p>
 <p>1、<code>getchar</code> <strong>默认是阻塞的</strong>，当程序执行到 284 行的时候，如果你什么都没有输入，程序就会停下来；准确讲是 getchar() 会发起一个 <code>read</code> 系统调用，但是此时内核没有收到数据（内核维护的“终端输入缓冲区”是空的），<code>read</code> 就会让当前的进程进入“休眠”状态</p>
 <p>2、当我们敲下一个按键，例如‘A’，会发生什么呢？</p>
@@ -563,21 +565,22 @@
 <p>因为 getchar 函数只要求读 1 个字节，所以内核从它的内部缓冲区里取出第一个字符 <strong>‘A’</strong>，拷贝到你的 <code>ecx</code> 指向的地址，将系统调用的返回值 <code>eax</code> 设为 <strong>1</strong>（表示实际只给了你 1 字节）</p>
 <p><strong>关键点</strong>：剩下的 <strong>‘B’, ‘C’, ‘\n’ 依然留在内核的缓冲区里</strong>，并没有消失。</p>
 <p>第 284 行，getchar 返回值就是 ‘A’</p>
-<p>4、因为在 while(1) 中，所以又会执行到第 284 行，此时 <code>read</code> <strong>不会阻塞</strong>！因为内核缓冲区里还躺着 <code>b</code>, <code>c</code>, <code>\n</code>。系统调用立即返回，<code>getchar()</code> 瞬间拿到 <strong><code>&#39;b&#39;</code></strong>。</p>
+<p>4、因为在 while(1) 中，所以又会执行到第 284 行，此时 <code>read</code> <strong>不会阻塞</strong>！因为内核缓冲区里还躺着 <code>b</code>, <code>c</code>, <code>\n</code>。系统调用立即返回，<code>getchar()</code> 瞬间拿到 <strong><code>'b'</code></strong>。</p>
 <p>putchar 的函数原型是 int putchar(int c);</p>
 <p>它的代码和 my_printf 中的 raw_print 非常类似，所以不赘述。</p>
-<h2 id="my-printf"><a href="#my-printf" class="headerlink" title="my_printf"></a>my_printf</h2><p>这个函数代码有点多，我们分段看。</p>
-<p><img src="image-20260307184852166.png" srcset="/img/loading.gif" lazyload alt="image-20260307184852166" style="zoom:50%;" /></p>
+<h2 id="my-printf">my_printf</h2>
+<p>这个函数代码有点多，我们分段看。</p>
+<img src="image-20260307184852166.png" srcset="/img/loading.gif" lazyload alt="image-20260307184852166" style="zoom:50%;" />
 <p>第 25~27，保存要修改的寄存器，和前面的 getchar 不同，这里是在<strong>函数序言（Function Prologue）</strong>的后面保存，我只是想说明这也是一种写法。</p>
 <p>假设我们有代码</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> num = <span class="hljs-number">100</span>;<br><span class="hljs-type">char</span> *name = <span class="hljs-string">&quot;Bob&quot;</span>;<br>my_printf(<span class="hljs-string">&quot;hello! %d , %s\n&quot;</span>, num, name);<br></code></pre></td></tr></table></figure>
 <p>因为参数从右往左入栈，所以</p>
-<p>ebp + 8 指向 “hello! %d , %s\n” 这个字符串的地址（栈上的内容不是字符串，是它的地址）  </p>
+<p>ebp + 8 指向 “hello! %d , %s\n” 这个字符串的地址（栈上的内容不是字符串，是它的地址）</p>
 <p>ebp + 12 指向 num （的值）</p>
 <p>第 29 行，让 esi 等于 “hello! %d , %s\n” 这个字符串的地址</p>
 <p>第 30 行，让 ebx 等于 ebp + 12</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs xml">            高地址<br>             ────────────────────────────────────────<br>            │              ...                       |<br>            ├────────────────────────────────────────┤<br>ebp+16      │  name 的值 (指向 &quot;Bob&quot;)                ← 第3个参数<br>            ├────────────────────────────────────────┤<br>ebp+12      │  num 的值                              ← 第2个参数<br>            ├────────────────────────────────────────┤<br>ebp+8       │  fmt 的值 (指向格式字符串)              ← 第1个参数<br>            ├────────────────────────────────────────┤<br>ebp+4       │  返回地址                              <br>            ├────────────────────────────────────────┤<br>ebp →       │  old ebp                               |<br>            ├────────────────────────────────────────┤<br>ebp-4       │  ebx                                   |<br>            ├────────────────────────────────────────┤<br>ebp-8       │  esi                                   |<br>            ├────────────────────────────────────────┤<br>ebp-12      │  edi                                   |                   <br>            ├────────────────────────────────────────┤<br>ebp-16      │  ...                                   |                  <br>            ├────────────────────────────────────────┤<br>                 <br>            低地址<br><br><br></code></pre></td></tr></table></figure>
-<p><img src="image-20260307192020958.png" srcset="/img/loading.gif" lazyload alt="image-20260307192020958" style="zoom:50%;" /></p>
+<img src="image-20260307192020958.png" srcset="/img/loading.gif" lazyload alt="image-20260307192020958" style="zoom:50%;" />
 <p>我们继续看代码。</p>
 <p>第 33 行，取出 esi 指向的字符，和 0 比较，如果是 0，说明字符串结束了，跳转到 @done</p>
 <p>否则，和 ‘%’ 比较，如果相等，说明是格式控制字符，跳到第 44 行，增加 esi，这样 esi 就指向 % 后面的第一个字符；第 46 行取出这个字符，第 47~54，根据不同的字符，跳转到不同的标号；</p>
@@ -585,7 +588,7 @@
 <p>第 41 行，调用了 raw_print</p>
 <p>这个函数的函数原型是  void raw_print(char *buf, int len);</p>
 <p>它的代码很简单，连函数序言和结尾都不需要。</p>
-<p><img src="image-20260307193153030.png" srcset="/img/loading.gif" lazyload alt="image-20260307193153030" style="zoom:50%;" /></p>
+<img src="image-20260307193153030.png" srcset="/img/loading.gif" lazyload alt="image-20260307193153030" style="zoom:50%;" />
 <p>使用 4 号系统调用（sys_write）</p>
 <p>参数 1，ebx = 1,表示标准输出，</p>
 <p>参数 2: ecx, 来自 buf，缓冲区地址</p>
@@ -595,11 +598,11 @@
 <p>push esi，把参数 buf 压栈，esi 指向的是 “hello! …” 中的某个字符</p>
 <p>所以，每次调用 raw_print，都会输出 esi 指向的那一个字符</p>
 <p>第 43 行，跳转到 @next_char，让 esi 增加 1，处理下一个字符</p>
-<p><img src="image-20260307194036025.png" srcset="/img/loading.gif" lazyload alt="image-20260307194036025" style="zoom:50%;" /></p>
+<img src="image-20260307194036025.png" srcset="/img/loading.gif" lazyload alt="image-20260307194036025" style="zoom:50%;" />
 <p>下面我们看对 10 进制整数的处理</p>
-<p><img src="image-20260307194212873.png" srcset="/img/loading.gif" lazyload alt="image-20260307194212873" style="zoom:50%;" /></p>
+<img src="image-20260307194212873.png" srcset="/img/loading.gif" lazyload alt="image-20260307194212873" style="zoom:50%;" />
 <p>不管是 %s,还是 %d,还是 %p（代码我没有贴）,代码都是类似的，只不过第 59 行，第 66 行，调用不同的函数</p>
-<p><img src="image-20260307194426006.png" srcset="/img/loading.gif" lazyload alt="image-20260307194426006" style="zoom:50%;" /></p>
+<img src="image-20260307194426006.png" srcset="/img/loading.gif" lazyload alt="image-20260307194426006" style="zoom:50%;" />
 <p>第 106 行，在栈上开辟一段 16 字节的缓冲区，这是为了存放转换后的字符串。例如把整数 123456 转换成字符串，至少占用 6 字节；</p>
 <p>注意，因为 103 ~ 105 入栈了 3 个寄存器（的值），分别对应地址 ebp - 4, ebp - 8, ebp - 12;</p>
 <p>然后又有 16 字节的缓冲区，所以缓冲区对应的地址（如果以字节为单位）是 ebp - 13, ebp -14, … ebp - 28,</p>
@@ -614,7 +617,7 @@
 <p>第 109 ， ecx = 10, 这是为除法做准备，例如把 1234 转换成字符串，需要反复除以 10，再把每次的余数转换成单个的字符</p>
 <p>第 110 行，让 esi = epb - 13，指向缓冲区的末尾（缓冲区的最高地址处）</p>
 <p>第 112 行，比较 eax 和 0，如果等于 0，那就不用费事了，直接输出 “0”，也就是 114 行</p>
-<p><img src="image-20260307200910094.png" srcset="/img/loading.gif" lazyload alt="image-20260307200910094" style="zoom:50%;" /></p>
+<img src="image-20260307200910094.png" srcset="/img/loading.gif" lazyload alt="image-20260307200910094" style="zoom:50%;" />
 <p>141~142，连起来，就是 eax = ebp -12</p>
 <p>第 143 行，求字符串的长度</p>
 <p>因为 eax 指向缓冲区的末端的下一个位置</p>
@@ -624,13 +627,13 @@
 <p>145，压入 buf = esi ，就是缓冲区的起始地址</p>
 <p>第 146 ，调用 raw_print，输出 “0”</p>
 <p>第 113 行，如果不是 0，那么</p>
-<p><img src="image-20260307202547716.png" srcset="/img/loading.gif" lazyload alt="image-20260307202547716" style="zoom:50%;" /></p>
+<img src="image-20260307202547716.png" srcset="/img/loading.gif" lazyload alt="image-20260307202547716" style="zoom:50%;" />
 <p>第 118 行，让 edi = 0,表示默认是整数</p>
 <p>第 119 行，比较 eax(就是要打印的数)和 0，要是大于等于0，跳转到 124</p>
 <p>否则，让 edi = 1,表示负数</p>
 <p>第 122 行，对 eax 取负，那么负数就变为正数了。</p>
 <p>第 124 行，处理 eax(肯定大于 0)</p>
-<p>第 125 行，把 edx 清零，因为要做除法  edx:eax / ecx </p>
+<p>第 125 行，把 edx 清零，因为要做除法  edx:eax / ecx</p>
 <ul>
 <li><strong>商</strong> 存放在 <strong><code>EAX</code></strong> 中。</li>
 <li><strong>余数</strong> 存放在 <strong><code>EDX</code></strong> 中。</li>
@@ -641,12 +644,12 @@
 <p>假设不为 0，那就是 esi 自减，往缓冲区低地址移动一个字节，为了存放下一个字符</p>
 <p>再跳到 124 行，继续做除法</p>
 <p>如果为 0，跳转到 134</p>
-<p><img src="image-20260307203359920.png" srcset="/img/loading.gif" lazyload alt="image-20260307203359920" style="zoom: 50%;" /></p>
+<img src="image-20260307203359920.png" srcset="/img/loading.gif" lazyload alt="image-20260307203359920" style="zoom: 50%;" />
 <p>第135行，比较 edi 和 1，等于 1 说明是负数</p>
 <p>要存一个“-”</p>
 <p>第 137~138 是存储负号</p>
 <p>然后该执行</p>
-<p><img src="image-20260307200910094.png" srcset="/img/loading.gif" lazyload alt="image-20260307200910094" style="zoom:50%;" /></p>
+<img src="image-20260307200910094.png" srcset="/img/loading.gif" lazyload alt="image-20260307200910094" style="zoom:50%;" />
 <p>这段代码已经分析了，我们再分析一下。</p>
 <p>141~142，连起来，就是 eax = ebp -12，让 eax 指向缓冲区的末端的下一个位置</p>
 <p>前面存储字符的时候，esi 初始位置是缓冲区末端，先填写字符，</p>
@@ -663,7 +666,7 @@
 <p>第 30 行，让 ebx 等于 ebp + 12</p>
 <p>它就指向了第一个可选参数，当然，如果代码是 my_printf(“hello”);</p>
 <p>就没有可选参数，所以说 ebx 是时刻准备着，当发现控制字符的时候，它已经指向参数了。</p>
-<p><img src="image-20260307194212873.png" srcset="/img/loading.gif" lazyload alt="image-20260307194212873" style="zoom:50%;" /></p>
+<img src="image-20260307194212873.png" srcset="/img/loading.gif" lazyload alt="image-20260307194212873" style="zoom:50%;" />
 <p>当把参数处理完后，也就是第 59 行执行完，第 61 行，ebx 会加 4，指向下一个可选参数。</p>
 <p>总结一下就是，ebx 先指向第一个可选参数，只要遇到控制字符，我就打印这个参数，然后指向下一个可选参数。</p>
 <p>本文到这里就结束了。</p>

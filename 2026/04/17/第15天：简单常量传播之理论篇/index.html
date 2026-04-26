@@ -23,7 +23,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="第15天：简单常量传播之理论篇">
 <meta property="og:url" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/index.html">
-<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:site_name" content="自制编译器">
 <meta property="og:description" content="数据流分析框架、简单常量传播">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC15%E5%A4%A9%EF%BC%9A%E7%AE%80%E5%8D%95%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%E4%B9%8B%E7%90%86%E8%AE%BA%E7%AF%87/image-20251111114518960.png">
@@ -53,7 +53,7 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>第15天：简单常量传播之理论篇 - 49天自制编译器</title>
+  <title>第15天：简单常量传播之理论篇 - 自制编译器</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -137,7 +137,7 @@
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>49 天自制编译器</strong>
+      <strong>四十天自制编译器</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -394,28 +394,37 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第15天：简单常量传播之理论篇"><a href="#第15天：简单常量传播之理论篇" class="headerlink" title="第15天：简单常量传播之理论篇"></a>第15天：简单常量传播之理论篇</h1><p>上节课我们学习了流图，先复习一下关键知识点。</p>
+                <h1 id="第15天：简单常量传播之理论篇">第15天：简单常量传播之理论篇</h1>
+<p>上节课我们学习了流图，先复习一下关键知识点。</p>
 <p>流图（Flow Graph）是编译原理中用于表示程序控制流的一种有向图，也称为控制流图（Control Flow Graph, CFG）。它将程序的基本块作为节点，控制流转移作为边，为程序分析和优化提供了重要的数据结构基础。</p>
 <p>基于控制流图，我们可以分析程序内部数据是怎么流动的，进而优化代码。不过仅有流图还不够，还需要掌握数据流分析框架。</p>
-<h2 id="数据流分析框架"><a href="#数据流分析框架" class="headerlink" title="数据流分析框架"></a>数据流分析框架</h2><p>编译原理中的数据流分析框架是一个用于静态推导程序中数据如何随执行而流动的通用模型。它既是迭代求解算法的理论基础，也是众多全局优化（如死码删除、常量传播、活跃变量分析）的共同“骨架”。数据流分析的典型框架可抽象为四元组 (D, V, ∧, F)。</p>
+<h2 id="数据流分析框架">数据流分析框架</h2>
+<p>编译原理中的数据流分析框架是一个用于静态推导程序中数据如何随执行而流动的通用模型。它既是迭代求解算法的理论基础，也是众多全局优化（如死码删除、常量传播、活跃变量分析）的共同“骨架”。数据流分析的典型框架可抽象为四元组 (D, V, ∧, F)。</p>
 <ol>
-<li><p>D（方向）<br>指定信息传播方向。</p>
+<li>
+<p>D（方向）<br>
+指定信息传播方向。</p>
 <ul>
 <li>正向（forward）：也叫前向，从程序入口开始，沿控制流前进，例如马上要讲的常量传播。</li>
 <li>逆向（backward）：从程序出口反向传播，如后面要讲的“活跃变量”。</li>
 </ul>
 </li>
-<li><p>V （值集）</p>
+<li>
+<p>V （值集）</p>
 <p>包含初值和数据流分析中使用的值。对于正向分析，初值为 Entry 块的 out 值和其他基本块的 out 值；对于逆向分析，初值为 Exit 块的 in 值和其他基本块的 in 值。Entry 块的 out 值或者 Exit 块的 in 值也叫做边界集合，其他基本块的 out 值或者 in 值也叫做初值集合。</p>
 </li>
-<li><p>交汇函数</p>
+<li>
+<p>交汇函数</p>
 <p>对于正向数据流，在计算基本块的 in 值时，如果基本块有多个前驱，则需要提供一种计算方法将前驱的 out 合并；对于反向数据流，在计算基本块的 out 值时，如果基本块有多个后继，则需要提供一种计算方法将后继的 in 合并。</p>
 </li>
-<li><p>传递函数<br>对于正向数据流，需要提供一种计算方法将基本块的 in 值转化为基本块的 out 值；对于逆向数据流，需要提供一种计算方法将基本块的 out 值转化为基本块的 in 值。</p>
+<li>
+<p>传递函数<br>
+对于正向数据流，需要提供一种计算方法将基本块的 in 值转化为基本块的 out 值；对于逆向数据流，需要提供一种计算方法将基本块的 out 值转化为基本块的 in 值。</p>
 </li>
 </ol>
 <p>以上文字可能太抽象了，让读者云里雾里。没有关系，后文会结合“常量传播”为读者讲明白到底什么是数据流分析框架，以及如何做数据流分析。</p>
-<h2 id="什么是常量传播"><a href="#什么是常量传播" class="headerlink" title="什么是常量传播"></a>什么是常量传播</h2><p>常量传播是一种在编译时（即程序运行前）进行的静态程序分析优化技术。其核心思想非常简单：如果一个变量在某个程序点拥有一个已知的常量值，那么就可以在后续的代码中，直接用这个常量值替换所有对该变量的引用。如此一来，就可以减少不必要的变量访问和运行时计算，并可能触发进一步的优化（如死代码消除）。</p>
+<h2 id="什么是常量传播">什么是常量传播</h2>
+<p>常量传播是一种在编译时（即程序运行前）进行的静态程序分析优化技术。其核心思想非常简单：如果一个变量在某个程序点拥有一个已知的常量值，那么就可以在后续的代码中，直接用这个常量值替换所有对该变量的引用。如此一来，就可以减少不必要的变量访问和运行时计算，并可能触发进一步的优化（如死代码消除）。</p>
 <p>常量传播的基本目标是：</p>
 <ol>
 <li><strong>确定常量值：</strong> 在程序的每一个点上，分析并确定哪些变量具有恒定的值。</li>
@@ -435,7 +444,8 @@
 <p>然而，现实中的程序可能有分支和循环，使分析变得复杂。例如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span> (some_condition) &#123;<br>    x = <span class="hljs-number">5</span>;<br>&#125; <span class="hljs-keyword">else</span> &#123;<br>    x = <span class="hljs-number">10</span>;<br>&#125;<br>y = x + <span class="hljs-number">1</span>; <span class="hljs-comment">// x 在这里是常量吗？</span><br></code></pre></td></tr></table></figure>
 <p>第 6 行，<code>x</code>的值可能是 5 也可能是 10。所以<code>x</code>在此处<strong>不是</strong>常量。编译器必须能够保守地处理这种情况。</p>
-<h2 id="理论模型：格（Lattice）"><a href="#理论模型：格（Lattice）" class="headerlink" title="理论模型：格（Lattice）"></a>理论模型：格（Lattice）</h2><p>为了可以正确处理这种“可能为常量”、“肯定是常量”或“肯定不是常量”的不确定性，常量传播算法基于<strong>格理论</strong>进行建模。</p>
+<h2 id="理论模型：格（Lattice）">理论模型：格（Lattice）</h2>
+<p>为了可以正确处理这种“可能为常量”、“肯定是常量”或“肯定不是常量”的不确定性，常量传播算法基于<strong>格理论</strong>进行建模。</p>
 <p>题外话，格理论最自然、最基础的归属是序理论，而序理论本身是集合论与离散数学的一部分。在这里，格被定义为一种特殊的<strong>偏序集</strong>（poset），其中任意两个元素都有最小上界（join）和最大下界（meet）。</p>
 <p>关于格理论，可以先放在一边，只要知道对于常量传播来说，程序中的每一个变量，都可以映射到三种值中的一个。</p>
 <p>常量传播格包含三种基本值：</p>
@@ -444,28 +454,29 @@
 <li><strong>c（Constant，常量）</strong>：表示该变量具有一个确定的常量值。</li>
 <li><strong>⊥（Bottom，底）</strong>：表示“非常量”。该变量在不同执行路径上可能具有不同的值。后文用 NAC 表示</li>
 </ul>
-<p><img src="image-20251111114518960.png" srcset="/img/loading.gif" lazyload alt="image-20251111114518960" style="zoom:50%;" /></p>
+<img src="image-20251111114518960.png" srcset="/img/loading.gif" lazyload alt="image-20251111114518960" style="zoom:50%;" />
 <p>上图是常量传播格的哈斯图。</p>
 <p><strong>哈斯图</strong>（Hasse diagram）是<strong>偏序集</strong>（Partially Ordered Set, 简称 poset）的一种<strong>简洁、直观的图形表示方法</strong>，由德国数学家 <strong>Helmut Hasse</strong> 在20世纪推广而得名。</p>
 <p>从哈斯图可以直观看到这三种值的层次关系：最上面是 UNDEF，表示不确定性最大；中间是所有的整数，因为它们之间不可比较，所以没有连线；最下面是 NAC，表示已确定无法优化。</p>
-<h2 id="举例分析"><a href="#举例分析" class="headerlink" title="举例分析"></a>举例分析</h2><p>接下来，我们结合数据流分析框架和常量传播格，手动分析一下常量是如何传播的。</p>
+<h2 id="举例分析">举例分析</h2>
+<p>接下来，我们结合数据流分析框架和常量传播格，手动分析一下常量是如何传播的。</p>
 <p>首先，我们把代码转换成数据流图，这一步骤我们的编译器就能完成。下图是我根据编译器的输出结果绘制的流图。</p>
-<p><img src="image-20251111150723713.png" srcset="/img/loading.gif" lazyload alt="image-20251111150723713" style="zoom:50%;" /></p>
+<img src="image-20251111150723713.png" srcset="/img/loading.gif" lazyload alt="image-20251111150723713" style="zoom:50%;" />
 <p>前文说了，数据流分析框架可抽象为四元组 (D, V, ∧, F)，分别是方向、值集、交汇函数和传递函数。</p>
 <p>先说方向，对于常量传播分析，方向是正向（也叫前向），即按照代码执行的顺序来分析。</p>
 <p>再看值集，我们要研究的是变量在程序的某点有没有确定的常量值，那么首先要统计都有哪些变量。</p>
 <p>代码中没有全局变量，此函数也没有参数，仅有局部变量。为了简化分析，如果是非基本类型，初始值为 NAC；如果是基本类型且带初始化的，初值就为初始化值。因为代码仅对 x 做的初始化，所以变量的初始值如下表。</p>
-<p><img src="image-20251111153208118.png" srcset="/img/loading.gif" lazyload alt="image-20251111153208118" style="zoom:50%;" /></p>
+<img src="image-20251111153208118.png" srcset="/img/loading.gif" lazyload alt="image-20251111153208118" style="zoom:50%;" />
 <p>因为是正向传播，所以从 Entry 的 out 开始，out 的初始值就是上面的表格。</p>
 <p>此 out 集合会传播给下一个基本块，成为下一个基本块的 in。</p>
-<p><img src="image-20251111153711159.png" srcset="/img/loading.gif" lazyload alt="image-20251111153711159" style="zoom:50%;" /></p>
+<img src="image-20251111153711159.png" srcset="/img/loading.gif" lazyload alt="image-20251111153711159" style="zoom:50%;" />
 <p>此基本块有 3 条指令，这些指令对值有什么影响呢？这就要用到传递函数了。</p>
 <p>前文说了，对于正向数据流，需要提供一种计算方法将基本块的 in 值转化为基本块的 out 值，这种方法就在传递函数中。</p>
 <p>常量传播的传递函数（或者说传递规则）如下：</p>
 <p>1、如果指令不是赋值语句，例如是标号，跳转等，这时候变量的值不变</p>
 <p>2、如果是赋值语句，形如 z = x ⊕ y</p>
 <p>则采取下面的规则</p>
-<p><img src="image-20251111165020452.png" srcset="/img/loading.gif" lazyload alt="image-20251111165020452" style="zoom:50%;" /></p>
+<img src="image-20251111165020452.png" srcset="/img/loading.gif" lazyload alt="image-20251111165020452" style="zoom:50%;" />
 <p>（1）如果 y 和 z 都能映射到常量，则结果就是两个常量计算后的值</p>
 <p>（2）如果 y 和 z 有任何一个映射到了 NAC，那结果就是 NAC</p>
 <p>（3）如果不是上面的情况，则结果是 undef</p>
@@ -473,11 +484,11 @@
 <p>经过指令 t2 = x - 1；t2 的值变成 0；</p>
 <p>经过指令 y = t2; y 的值变成 0；</p>
 <p>接下来继续传播，分别传给左边和右边的基本块。</p>
-<p><img src="image-20251111154530402.png" srcset="/img/loading.gif" lazyload alt="image-20251111154530402" style="zoom:50%;" /></p>
+<img src="image-20251111154530402.png" srcset="/img/loading.gif" lazyload alt="image-20251111154530402" style="zoom:50%;" />
 <p>左边，经过 t4 = x;t4 变成 1；经过 x = x + 1; x 变成 2；</p>
 <p>右边，经过 t6 = x; t6 变成 1；经过 x = x - 1; x 变成 0；</p>
 <p>继续往下，似乎遇到了麻烦。</p>
-<p><img src="image-20251111155206062.png" srcset="/img/loading.gif" lazyload alt="image-20251111155206062" style="zoom:50%;" /></p>
+<img src="image-20251111155206062.png" srcset="/img/loading.gif" lazyload alt="image-20251111155206062" style="zoom:50%;" />
 <p>此基本块的输入有 2 个，也就是说它有 2 个前驱。</p>
 <p>标记为红色的变量似乎有点麻烦，对于 x，左边的输入是 2，右边的输入是 0；对于 t4,左边的输入是 1，右边的输入是 undef,</p>
 <p>对于 t6, 左边的输入是 undef，右边的输入是 1；</p>
@@ -492,22 +503,23 @@
 </ul>
 <p>所以，  合并后 x 的值为 NAC， t4 和 t6 的值都为 1；</p>
 <p>合并后经过上面的基本块传播，值不会改变，因为标号和条件跳转指令不会改变任何一个变量的值（常量传播的传递函数的规则 1）。</p>
-<p><img src="image-20251111160421801.png" srcset="/img/loading.gif" lazyload alt="image-20251111160421801" style="zoom:50%;" /></p>
+<img src="image-20251111160421801.png" srcset="/img/loading.gif" lazyload alt="image-20251111160421801" style="zoom:50%;" />
 <p>继续传播，经过上图左右两个基本块，变量值的变化已经用红色标出。</p>
 <p>接下来又遇到了交汇。根据常量传播的交汇函数，左边和右边的交汇结果是：</p>
-<p><img src="image-20251111162237043.png" srcset="/img/loading.gif" lazyload alt="image-20251111162237043" style="zoom:50%;" /></p>
+<img src="image-20251111162237043.png" srcset="/img/loading.gif" lazyload alt="image-20251111162237043" style="zoom:50%;" />
 <p>然后，再继续传播</p>
-<p><img src="image-20251112185642625.png" srcset="/img/loading.gif" lazyload alt="image-20251112185642625" style="zoom:50%;" /></p>
+<img src="image-20251112185642625.png" srcset="/img/loading.gif" lazyload alt="image-20251112185642625" style="zoom:50%;" />
 <p>直到传播到 Exit 的 out,这就是一轮迭代。</p>
 <p>讲到这里，相信读者对数据流分析框架的四个要素：方向、值集、交汇函数和传递函数有了基本的了解。</p>
 <p>这个例子先分析到这里，下面我们要介绍另外一个概念：不动点。</p>
-<h2 id="不动点"><a href="#不动点" class="headerlink" title="不动点"></a>不动点</h2><p>刚才的例子，我们勉强算是做了一轮迭代（因为偷懒，后面三个基本块没有走完）。</p>
+<h2 id="不动点">不动点</h2>
+<p>刚才的例子，我们勉强算是做了一轮迭代（因为偷懒，后面三个基本块没有走完）。</p>
 <p>在若干轮迭代后，<strong>每个基本块的 IN 值和 OUT 值都不再改变</strong>，说明到达了不动点。</p>
 <p>为什么要追求不动点呢？不动点是数据流方程组“全部同时成立”的唯一可计算、可判定、且保证安全的最小解；不达到它，分析结果就必然缺失某些路径信息，从而可能让后续优化产生错误的代码。</p>
 <p>请看下面的代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">test</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    <span class="hljs-type">int</span> x = <span class="hljs-number">3</span>;<br>    <span class="hljs-type">int</span> a = x;<br>    <span class="hljs-type">int</span> y = <span class="hljs-number">8</span>;<br>    <span class="hljs-keyword">while</span>(a == <span class="hljs-number">3</span>) &#123;<br>        y = y + <span class="hljs-number">2</span>;<br>    &#125;<br>    x = x * y;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>此函数的流图和第一轮迭代的结果如下图：</p>
-<p><img src="image-20251112194738193.png" srcset="/img/loading.gif" lazyload alt="image-20251112194738193" style="zoom: 67%;" /></p>
+<img src="image-20251112194738193.png" srcset="/img/loading.gif" lazyload alt="image-20251112194738193" style="zoom: 67%;" />
 <p>从Entry 的 out 开始看，因为变量 x 和 y 被常量初始化，所以开始的时候，它们俩的值是 3 和 8，其他的变量值为 undef;</p>
 <p>经过 block-1, a 的值变成 3;</p>
 <p>现在我们看 block-2 的输入，注意，它有 2 个输入，因为它的前驱是 1 和 3，1 对 2 的输入已经求出来了；但是 3 对 2 的输入是多少？</p>
@@ -519,25 +531,26 @@
 <p>再看 3，2 的输出经过 3，得到的是左边第 2 张表格，我用粉色标注的。</p>
 <p>到了这里，我们发现 3 的输出会变成 2 的输入，也就是说第一次迭代后，2 的输入不再是全 undef，而是粉色虚线指示的那张表格。看来没有到达不动点，需要继续迭代。</p>
 <p>下图就是第二次迭代，我把上图 3 的输出移动到下图 2 的输入（左边），右边第 1 第 2 张表没有变化。</p>
-<p><img src="image-20251112201340449.png" srcset="/img/loading.gif" lazyload alt="image-20251112201340449" style="zoom: 50%;" /></p>
+<img src="image-20251112201340449.png" srcset="/img/loading.gif" lazyload alt="image-20251112201340449" style="zoom: 50%;" />
 <p>我们要再次求解 2 的输入，也就是合并 2 个 out，合并的结果在数值上等同第 3 张表，合并结果经过 block-2 后，每个变量的值都没有变，结果是右边第 3 张表；</p>
 <p>然后我们需要求解 3 和 4 的输出；4 的输出结果是右边第 4 张表；3 的输出结果是左边粉色虚线指示的表格。</p>
 <p>对比 3 的输出和 2 的输入（左边两个表格），还是不一样，说明还是没有到达不动点，所以继续迭代。</p>
 <p>下图就是第三次迭代，我把上图 3 的输出移动到下图 2 的输入（左边），右边第 1 第 2 张表没有变化。</p>
-<p><img src="image-20251112203216607.png" srcset="/img/loading.gif" lazyload alt="image-20251112203216607" style="zoom: 50%;" /></p>
+<img src="image-20251112203216607.png" srcset="/img/loading.gif" lazyload alt="image-20251112203216607" style="zoom: 50%;" />
 <p>我们要再次求解 2 的输入，也就是合并 2 个 out，合并的结果在数值上等同第 3 张表，合并结果经过 block-2 后，每个变量的值都没有变，结果是右边第 3 张表；</p>
 <p>然后我们需要求解 3 和 4 的输出；4 的输出结果是右边第 4 张表；3 的输出结果是左边粉色虚线指示的表格。</p>
 <p>对比 3 的输出和 2 的输入，完全一样，说明到达不动点了。迭代可以结束了。</p>
 <p>肯定有读者问，到达不动点了，然后呢？</p>
-<h2 id="优化方法"><a href="#优化方法" class="headerlink" title="优化方法"></a>优化方法</h2><p>请看下面的代码。</p>
+<h2 id="优化方法">优化方法</h2>
+<p>请看下面的代码。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">test</span><span class="hljs-params">(<span class="hljs-type">int</span> m)</span><br>&#123;<br>    <span class="hljs-type">int</span> x = <span class="hljs-number">1</span>;<br>    <span class="hljs-type">int</span> y = m + x;  <br>   <br>    <span class="hljs-keyword">switch</span>(x) &#123;<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:<br>            y = y &amp;&amp; x;<br>            <span class="hljs-keyword">break</span>;<br>        <span class="hljs-keyword">case</span> <span class="hljs-number">2</span>:<br>            y--;<br>            <span class="hljs-keyword">break</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>首先，画出此函数的流图</p>
-<p><img src="image-20251114142720764.png" srcset="/img/loading.gif" lazyload alt="image-20251114142720764" style="zoom:50%;" /></p>
+<img src="image-20251114142720764.png" srcset="/img/loading.gif" lazyload alt="image-20251114142720764" style="zoom:50%;" />
 <p>因为这个流图没有环路，所以经过一轮迭代后就能到不动点。到达不动点后，每个基本块的 in 和 out 不再改变，这是宏观上的不变。</p>
 <p>如果再往细看，因为值集在基本块内部是逐指令传递的，所以每条指令的 in 和 out 不再改变。</p>
 <p>我们把每个基本块的每条指令拿出来，根据指令的 in 和 out，就可以做优化了。</p>
 <p>例如基本块 1，一共有 3 条指令，到达不动点后，三条指令的 in 和 out 如下：</p>
-<p><img src="image-20251114143059680.png" srcset="/img/loading.gif" lazyload alt="image-20251114143059680" style="zoom:50%;" /></p>
+<img src="image-20251114143059680.png" srcset="/img/loading.gif" lazyload alt="image-20251114143059680" style="zoom:50%;" />
 <p>红色背景这行，我标注了每个变量的名字。</p>
 <p>① 这行是 t2 = m + x 这条指令的 in</p>
 <p>② 这行是它的 out，同时是指令 y = t2 的 in</p>
@@ -549,7 +562,7 @@
 <p>不管是从 in 还是从 out 来看，t2 和 y 都不是常量，没有优化的余地。</p>
 <p>对于第三条指令  if(x == 1) goto @L4;</p>
 <p>因为 x 的值是 1，所以 x == 1 成立，所以一定执行 goto @L4;这样看来基本块 2 都是多余的。</p>
-<p> <img src="image-20251114144842980.png" srcset="/img/loading.gif" lazyload alt="image-20251114144842980" style="zoom:50%;" /></p>
+ <img src="image-20251114144842980.png" srcset="/img/loading.gif" lazyload alt="image-20251114144842980" style="zoom:50%;" />
 <p>既然基本块 2 是多余的，那就可以删除它；其实基本块 3 和 5 也是多余的，因为 3 和 5 都是作为 2 的后继存在，2 都不存在了，他俩也是不可达的，可以删除。</p>
 <p>还有，基本块 4 的指令 t5 = y &amp;&amp; x; 还可以优化，因为 x 的值是 1，所以 t5 的结果就看 y 是否为 0，当 y !=0 成立,t5 的值是 1；当 y == 0 成立, t5 的值是 0；所以指令 t5 = y &amp;&amp; x 可以替换为 t5 = （y != 0）；</p>
 <p>所以，对于常量传播分析，首先建立数据流分析框架，然后确定边界值和初始值，经过若干此迭代，会到达不动点。这时候我们考察每条指令的 in 和 out，看看有没有优化的空间，如果某个变量的 out 是常量，则用 result = c 代替这条指令。</p>
@@ -557,7 +570,7 @@
 <p>另外，还可以做代数化简，例如上面的指令 t5 = y &amp;&amp; x 可以替换为 t5 = （y != 0）；</p>
 <p>最后，对于条件跳转，如果确定条件肯定为真或者假，就可以把不可达的 block 删掉。</p>
 <p>本节开始的代码经过常量传播及相关优化后，确实变简洁了，对比图如下：</p>
-<p><img src="image-20251114150146458.png" srcset="/img/loading.gif" lazyload alt="image-20251114150146458" style="zoom:50%;" /></p>
+<img src="image-20251114150146458.png" srcset="/img/loading.gif" lazyload alt="image-20251114150146458" style="zoom:50%;" />
 <p>本节的内容到这里就结束了，我们学习了数据流分析框架、不动点等必须要掌握的概念，下节我们用代码实现常量传播优化。</p>
 
                 

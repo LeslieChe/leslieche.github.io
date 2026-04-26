@@ -23,7 +23,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="第26天：汇编器的语法分析之产生式">
 <meta property="og:url" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC26%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BA%A7%E7%94%9F%E5%BC%8F/index.html">
-<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:site_name" content="自制编译器">
 <meta property="og:description" content="本节带你从零开始构造产生式">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC26%E5%A4%A9%EF%BC%9A%E6%B1%87%E7%BC%96%E5%99%A8%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E4%BA%A7%E7%94%9F%E5%BC%8F/image-20260112150355252.png">
@@ -37,7 +37,7 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>第26天：汇编器的语法分析之产生式 - 49天自制编译器</title>
+  <title>第26天：汇编器的语法分析之产生式 - 自制编译器</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -121,7 +121,7 @@
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>49 天自制编译器</strong>
+      <strong>四十天自制编译器</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -323,7 +323,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.5k 字
+          6.7k 字
         
       </span>
     
@@ -334,7 +334,7 @@
         
         
         
-          54 分钟
+          57 分钟
         
       </span>
     
@@ -378,9 +378,11 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第26天：汇编器的语法分析之产生式"><a href="#第26天：汇编器的语法分析之产生式" class="headerlink" title="第26天：汇编器的语法分析之产生式"></a>第26天：汇编器的语法分析之产生式</h1><p>回顾 csub 的语法分析，最重要的工作是构造产生式。</p>
+                <h1 id="第26天：汇编器的语法分析之产生式">第26天：汇编器的语法分析之产生式</h1>
+<p>回顾 csub 的语法分析，最重要的工作是构造产生式。</p>
 <p>本文就带着您一步一步构造汇编器的产生式。</p>
-<h2 id="汇编代码中的换行"><a href="#汇编代码中的换行" class="headerlink" title="汇编代码中的换行"></a>汇编代码中的换行</h2><p>在汇编语言中，<strong>换行（newline）本身通常没有语义含义</strong>，它主要起到<strong>分隔语句</strong>的作用，类似于高级语言中的分号<code>;</code> </p>
+<h2 id="汇编代码中的换行">汇编代码中的换行</h2>
+<p>在汇编语言中，<strong>换行（newline）本身通常没有语义含义</strong>，它主要起到<strong>分隔语句</strong>的作用，类似于高级语言中的分号<code>;</code></p>
 <p>C语言中，可以把多个语句写在一行，但是汇编语言不行。例如</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">push</span> <span class="hljs-built_in">ebp</span>  <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebp</span>, <span class="hljs-built_in">esp</span>   <span class="hljs-comment">; 不能这么写，会报错</span><br><br><span class="hljs-keyword">push</span> <span class="hljs-built_in">ebp</span>           <span class="hljs-comment">; 必须分成 2 行</span><br><span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebp</span>, <span class="hljs-built_in">esp</span>  <br></code></pre></td></tr></table></figure>
 <p>所以，一条指令的末尾，必须要有换行，有多个换行也可以。</p>
@@ -388,11 +390,11 @@
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">extern</span> langlangshan<br>my_list <span class="hljs-built_in">db</span> <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-number">0</span>  <span class="hljs-comment">; 这里要换行</span><br>    <span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, langlangshan, -<span class="hljs-number">24</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span> <br></code></pre></td></tr></table></figure>
 <p>对于标号，可以没有换行，也可以有一个到多个换行。</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">@L16_for:<br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">ebp</span>+<span class="hljs-number">12</span>]	<br>	<br>@L16_for: 	 <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">ebp</span>+<span class="hljs-number">12</span>]	 <span class="hljs-comment">; 这样写也可以</span><br></code></pre></td></tr></table></figure>
-<h2 id="EBNF"><a href="#EBNF" class="headerlink" title="EBNF"></a>EBNF</h2><p>之前我们定义 csub 的文法，用的是<strong>教科书式 CFG 写法</strong></p>
+<h2 id="EBNF">EBNF</h2>
+<p>之前我们定义 csub 的文法，用的是<strong>教科书式 CFG 写法</strong></p>
 <p>这里为大家介绍一种新的写法：<strong>EBNF（Extended Backus-Naur Form，扩展巴科斯-诺尔范式）</strong> 是 <strong>BNF（Backus-Naur Form）</strong> 的增强版本，用于<strong>更简洁、清晰地描述上下文无关文法（Context-Free Grammar, CFG）</strong>，广泛应用于编程语言规范、协议定义和编译器设计中。</p>
 <p><strong>EBNF 引入了语法糖（syntactic sugar），让文法更简洁、易读、易写，而传统写法严格依赖递归和选择，形式更基础但冗长。</strong></p>
 <p>区别如下表</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -404,14 +406,12 @@
 <tbody>
 <tr>
 <td><strong>0 或多次</strong></td>
-<td>需递归定义： XList → ε \</td>
-<td>X XList</td>
+<td>需递归定义： XList → ε | X XList</td>
 <td>直接写： { X }</td>
 </tr>
 <tr>
 <td><strong>可选（0 或 1 次）</strong></td>
-<td>需额外规则： OptX → ε \</td>
-<td>X</td>
+<td>需额外规则： OptX → ε | X</td>
 <td>直接写：[ X ]</td>
 </tr>
 <tr>
@@ -421,8 +421,7 @@
 </tr>
 <tr>
 <td><strong>1 或多次</strong></td>
-<td>XPlus → X \</td>
-<td>X XPlus</td>
+<td>XPlus → X | X XPlus</td>
 <td>X {X} 或 X+</td>
 </tr>
 <tr>
@@ -437,20 +436,20 @@
 </tr>
 </tbody>
 </table>
-</div>
-<p>举个例子：如果用非终结符 <0orMoreNL> 表示 0 个或多个换行，nl 表示终结符换行(newline)</p>
+<p>举个例子：如果用非终结符 &lt;0orMoreNL&gt; 表示 0 个或多个换行，nl 表示终结符换行(newline)</p>
 <p>0 个或多个换行，用教科书式 CFG 写法：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml">&lt;0orMoreNL&gt; -&gt; ε <br>             | nl &lt;0orMoreNL&gt;<br></code></pre></td></tr></table></figure>
 <p>用 EBNF 写法：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml">&lt;0orMoreNL&gt; ::= &#123;nl&#125;<br></code></pre></td></tr></table></figure>
 <p>{} 表示零次或多次</p>
-<p>如果用非终结符 <1orMoreNL> 表示 1 个或多个换行，<1orMoreNL> 的产生式是：</p>
+<p>如果用非终结符 &lt;1orMoreNL&gt; 表示 1 个或多个换行，&lt;1orMoreNL&gt; 的产生式是：</p>
 <p>用教科书式 CFG 写法：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml">&lt;1orMoreNL&gt; -&gt; nl <br>             | nl &lt;1orMoreNL&gt;<br></code></pre></td></tr></table></figure>
 <p>用 EBNF 写法:</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml">&lt;1orMoreNL&gt; ::= nl &#123;nl&#125;<br></code></pre></td></tr></table></figure>
 <p>可以看到，EBNF 写法更简洁，也更容易理解。后文中若采用 EBNF 写法，我们用“::=” 代替 -&gt;，以和教科书式 CFG 写法区分开。</p>
-<h2 id="起始符号"><a href="#起始符号" class="headerlink" title="起始符号"></a>起始符号</h2><p>如果起始符号叫 <code>&lt;ass_program&gt;</code>，该怎么分解呢？</p>
+<h2 id="起始符号">起始符号</h2>
+<p>如果起始符号叫 <code>&lt;ass_program&gt;</code>，该怎么分解呢？</p>
 <p>汇编代码肯定不是一大疙瘩，是一条一条的。</p>
 <p>如果用 <code>&lt;segment&gt;</code> 表示代码片段，那么 <code>&lt;ass_program&gt;</code> 可以推导出 0 个或多个 <code>&lt;segment&gt;</code></p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;ass_program&gt; ::=  &#123;&lt;segment&gt;&#125;<br><br></code></pre></td></tr></table></figure>
@@ -458,7 +457,8 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;segment&gt; -&gt; &lt;decl&gt; |  &lt;ass_inst&gt;<br></code></pre></td></tr></table></figure>
 <p><code>&lt;decl&gt;</code> 表示一条声明</p>
 <p><code>&lt;ass_inst&gt;</code> 表示一条指令</p>
-<h2 id="声明"><a href="#声明" class="headerlink" title="声明"></a>声明</h2><p>下面的代码包括了各种声明。</p>
+<h2 id="声明">声明</h2>
+<p>下面的代码包括了各种声明。</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">section</span> .data<br><span class="hljs-meta">global</span> list<br>	list <span class="hljs-built_in">dd</span> <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, <span class="hljs-number">1000</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>, -<span class="hljs-number">200</span>, <span class="hljs-number">100</span><br>	<span class="hljs-built_in">times</span> <span class="hljs-number">12</span> <span class="hljs-built_in">dd</span> <span class="hljs-number">0</span><br>	<br><span class="hljs-meta">section</span> .text<br><span class="hljs-meta">global</span> <span class="hljs-keyword">test</span><br><span class="hljs-symbol">test:</span><br>	<span class="hljs-keyword">push</span> <span class="hljs-built_in">ebp</span><br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebp</span>, <span class="hljs-built_in">esp</span><br>	<span class="hljs-keyword">sub</span> <span class="hljs-built_in">esp</span>, <span class="hljs-number">4</span><br>	...<br>@L68_return:<br>	<span class="hljs-keyword">mov</span> <span class="hljs-built_in">esp</span>, <span class="hljs-built_in">ebp</span><br>	<span class="hljs-keyword">pop</span> <span class="hljs-built_in">ebp</span><br>	<span class="hljs-keyword">ret</span><br><br><span class="hljs-meta">extern</span> print_int_arr<br></code></pre></td></tr></table></figure>
 <p>如果把指令以外的语法单元都当作声明，那么声明可以分为以下记类：</p>
 <p>1、section .data； section .text 等对段的声明；</p>
@@ -471,12 +471,12 @@
 <p>对于 5，有点麻烦，不过也是以标识符开头。</p>
 <p>所以，<code>&lt;decl&gt;</code> 可以分解为</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">decl</span>&gt;</span>   -&gt; KW_SEC ASS_ID &lt;1orMoreNL&gt;<br>          | KW_GLB ASS_ID &lt;1orMoreNL&gt;<br>          | KW_EXT ASS_ID &lt;1orMoreNL&gt;<br>          | ASS_ID <span class="hljs-tag">&lt;<span class="hljs-name">decl_tail</span>&gt;</span>      <br></code></pre></td></tr></table></figure>
-<p>KW_SEC 表示终结符 section </p>
-<p>KW_GLB 表示终结符 global </p>
-<p>KW_EXT 表示终结符 extern </p>
+<p>KW_SEC 表示终结符 section</p>
+<p>KW_GLB 表示终结符 global</p>
+<p>KW_EXT 表示终结符 extern</p>
 <p>ASS_ID 表示标识符，也属于终结符</p>
-<p><1orMoreNL> 是前面讲过的 1 个或多个换行</p>
-<p>第 4 行，就是情况 4 和 5，以标识符开头，后面的冒号或者一串东西用<code>&lt;decl_tail&gt;</code>表示      </p>
+<p>&lt;1orMoreNL&gt; 是前面讲过的 1 个或多个换行</p>
+<p>第 4 行，就是情况 4 和 5，以标识符开头，后面的冒号或者一串东西用<code>&lt;decl_tail&gt;</code>表示</p>
 <p>下面，我们把注意力放在产生式 <code>&lt;decl&gt; -&gt; ASS_ID &lt;decl_tail&gt;</code>上，看看 <code>&lt;decl_tail&gt;</code> 如何分解</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">@L68_return:<br><br><span class="hljs-built_in">list</span> dd <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">9</span>, <span class="hljs-number">22</span>, <span class="hljs-number">1000</span>, <span class="hljs-number">7</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>, <span class="hljs-number">-200</span>, <span class="hljs-number">100</span><br><br>cat times <span class="hljs-number">20</span> dd <span class="hljs-number">0</span><br><br>hello db <span class="hljs-string">&#x27;C&#x27;</span>, <span class="hljs-string">&#x27;H&#x27;</span>, <span class="hljs-string">&#x27;I&#x27;</span>, <span class="hljs-string">&#x27;N&#x27;</span>, <span class="hljs-string">&#x27;A&#x27;</span><br>times <span class="hljs-number">25</span> db <span class="hljs-number">0</span>    <br>    <br>dog dd cat<br></code></pre></td></tr></table></figure>
 <p>这些声明确实都以 ASS_ID（标识符） 开头，但是后面跟着什么不能一概而论。</p>
@@ -486,20 +486,20 @@
 <p><code>times</code>是 NASM 汇编器中的一个<strong>重复伪指令</strong>，用于将一段代码或数据重复指定的次数。它主要用于初始化重复的数据模式或重复生成相同的指令序列。</p>
 <p>回忆一下，在把中间代码翻译成汇编代码的时候，在数据段的生成上，如果数组没有指定初始化值，或者提供的初始化值的个数少于数组元素个数，我们会使用<code>times xx dd 0</code>或者<code>times xx db 0</code>来填充。</p>
 <p>看来<code>times xx</code>不是必须有的。</p>
-<p>我先把 <decl_tail> 拆成 2 大类</p>
+<p>我先把 &lt;decl_tail&gt; 拆成 2 大类</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">decl_tail</span>&gt;</span> -&gt; COLON &lt;0orMoreNL&gt;  // 标号<br> 		    | <span class="hljs-tag">&lt;<span class="hljs-name">init_value</span>&gt;</span>        // 数据定义的初始值<br></code></pre></td></tr></table></figure>
 <p>COLON 是终结符冒号，前文说过，它的后面可以有 0 或多个换行</p>
-<p><init_value> 表示标识符后面的那一大串，例如下图用粉色笔迹圈出来的，分别是每个标识符的 <init_value></p>
-<p><img src="image-20260112150355252.png" srcset="/img/loading.gif" lazyload alt="image-20260112150355252" style="zoom:50%;" /></p>
-<p>其实 <init_value> 还可以有更复杂的写法，例如：</p>
+<p>&lt;init_value&gt; 表示标识符后面的那一大串，例如下图用粉色笔迹圈出来的，分别是每个标识符的 &lt;init_value&gt;</p>
+<img src="image-20260112150355252.png" srcset="/img/loading.gif" lazyload alt="image-20260112150355252" style="zoom:50%;" />
+<p>其实 &lt;init_value&gt; 还可以有更复杂的写法，例如：</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">hello <span class="hljs-built_in">db</span> <span class="hljs-string">&#x27;C&#x27;</span>, <span class="hljs-string">&#x27;H&#x27;</span>, <span class="hljs-string">&#x27;I&#x27;</span>, <span class="hljs-string">&#x27;N&#x27;</span>, <span class="hljs-string">&#x27;A&#x27;</span><br><span class="hljs-built_in">times</span> <span class="hljs-number">25</span> <span class="hljs-built_in">db</span> <span class="hljs-number">0</span>  <br><span class="hljs-built_in">db</span> <span class="hljs-string">&#x27;G&#x27;</span>, <span class="hljs-string">&#x27;R&#x27;</span>, <span class="hljs-string">&#x27;E&#x27;</span>, <span class="hljs-string">&#x27;A&#x27;</span>, <span class="hljs-string">&#x27;T&#x27;</span><br><span class="hljs-built_in">db</span> <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span><br><span class="hljs-built_in">times</span> <span class="hljs-number">8</span> <span class="hljs-built_in">db</span> <span class="hljs-number">0</span> <br></code></pre></td></tr></table></figure>
 <p>以上代码的意思是，定义了一个数组，名字叫 hello，它的初始值是这样的：最开始 5 个字节是  ‘C’, ‘H’, ‘I’, ‘N’, ‘A’，然后是连续 25 字节的 0，再然后是 8 个字节： ‘G’, ‘R’, ‘E’, ‘A’, ‘T’，1，2，3，最后是连续 8 字节的 0；</p>
-<p>注意，每一行的末尾都要有 <1orMoreNL></p>
+<p>注意，每一行的末尾都要有 &lt;1orMoreNL&gt;</p>
 <p>如果把每一行的初始化值看成是一个 <code>&lt;item&gt;</code>，那么 <code>&lt;init_value&gt;</code> 可以分解为</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;init_value&gt; -&gt; &lt;item&gt; &lt;item_tail&gt;<br>       <br>&lt;item_tail&gt; -&gt;  &lt;item&gt; &lt;item_tail&gt;<br>             |  ε<br></code></pre></td></tr></table></figure>
 <p>或者用 EBNF 写法：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;init_value&gt; ::= &lt;item&gt; &#123;&lt;item&gt;&#125;<br></code></pre></td></tr></table></figure>
-<p>也就是说，<init_value> 有一个或多个 <code>&lt;item&gt;</code> 组成</p>
+<p>也就是说，&lt;init_value&gt; 有一个或多个 <code>&lt;item&gt;</code> 组成</p>
 <p><code>&lt;item&gt;</code> 如何分解呢？</p>
 <p>前文说过，“times xx” 的意思是重复多少次，且不是必须的。我们可以构造出</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">rept</span>&gt;</span> ::= KW_TIMES NUM <br></code></pre></td></tr></table></figure>
@@ -513,13 +513,14 @@
 <p>KW_DB,KW_DW,KW_DD 分别表示终结符 db,dw,dd</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;value_list&gt; ::= &lt;value&gt; &#123; COMMA &lt;value&gt; &#125;<br></code></pre></td></tr></table></figure>
 <p>COMMA 表示终结符逗号</p>
-<p><value_list> 可以推导出 <code>&lt;value&gt;</code>，后面可以跟着 0 次或多次 “COMMA <code>&lt;value&gt;</code>”</p>
+<p>&lt;value_list&gt; 可以推导出 <code>&lt;value&gt;</code>，后面可以跟着 0 次或多次 “COMMA <code>&lt;value&gt;</code>”</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;value&gt; ::= [&lt;sign&gt;] NUM | STR | ASS_ID <br>&lt;sign&gt;  ::= SUB | ADD<br></code></pre></td></tr></table></figure>
 <p><code>&lt;value&gt;</code> 可以是数字，字符串，标识符。如果是数字，也可能带负号/正号。</p>
 <p>至此，声明的产生式就构造完成了，下面看指令的产生式如何构造。</p>
-<h2 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h2><p>指令的构造比较简单，从操作数上分，有双操作数指令，单操作数指令和无操作数指令。</p>
-<p>用 <ass_inst> 表示一条指令，用 <code>&lt;oprand&gt;</code> 表示操作数；</p>
-<p><double_op> <single_op> <none_op> 分别表示带有双操作数的指令助记符，带有单操作数的指令助记符，不带操作数的指令助记符。</p>
+<h2 id="指令">指令</h2>
+<p>指令的构造比较简单，从操作数上分，有双操作数指令，单操作数指令和无操作数指令。</p>
+<p>用 &lt;ass_inst&gt; 表示一条指令，用 <code>&lt;oprand&gt;</code> 表示操作数；</p>
+<p>&lt;double_op&gt; &lt;single_op&gt; &lt;none_op&gt; 分别表示带有双操作数的指令助记符，带有单操作数的指令助记符，不带操作数的指令助记符。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;ass_inst&gt; -&gt; &lt;double_op&gt; &lt;oprand&gt; COMMA  &lt;oprand&gt; &lt;<span class="hljs-number">1</span>orMoreNL&gt;<br>            | &lt;single_op&gt; &lt;oprand&gt; &lt;<span class="hljs-number">1</span>orMoreNL&gt;<br>            | &lt;none_op&gt; &lt;<span class="hljs-number">1</span>orMoreNL&gt;<br></code></pre></td></tr></table></figure>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;double_op&gt; -&gt; I_MOV | I_MOVSX | I_MOVZX |<br>               I_ADD | I_SUB   | I_IMUL  |<br>               I_CMP | I_LEA <br>    <br>&lt;single_op&gt; -&gt; I_CALL | I_INT   | I_IDIV | I_NEG   |    <br>               I_JMP  | I_JE    | I_JNE  |    <br>               I_SETE | I_SETNE | I_SETG | I_SETGE | I_SETL | I_SETLE |  <br>               I_PUSH | I_POP    <br>               <br>&lt;none_op&gt; -&gt;   I_RET | I_CDQ        <br></code></pre></td></tr></table></figure>
 <p>以上是我们用到的指令助记符。</p>
@@ -535,9 +536,8 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt;mem&gt; ::= [&lt;op_size&gt;] ASS_LBRACKET &lt;addr&gt; ASS_RBRACKET<br>	<br>&lt;op_size&gt; ::=  KW_BYTE | KW_WORD | KW_DWORD <br></code></pre></td></tr></table></figure>
 <p>ASS_LBRACKET 和 ASS_RBRACKET 分别表示终结符 “[” 和 “]”</p>
 <p>“[” 和 “]” 是内存操作数的特征。</p>
-<p> <code>&lt;addr&gt;</code> 是什么呢？这取决于 x86-32 位 cpu 的寻址方式。</p>
+<p><code>&lt;addr&gt;</code> 是什么呢？这取决于 x86-32 位 cpu 的寻址方式。</p>
 <p>x86-32 寻址方式如下表：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -592,7 +592,6 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>我们生成的汇编代码只用到了前 5 种，1 和 2 不需要访问内存，3、4、5 需要访问内存；</p>
 <p>序号 3 的例子中，my_var 是一个标识符，它的本质是一个地址，和 mov eax, [0x1234] 没有区别；</p>
 <p>根据序号 3-5，我们可以构造如下产生式；</p>

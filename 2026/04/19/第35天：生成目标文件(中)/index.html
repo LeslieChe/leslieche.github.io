@@ -23,7 +23,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="第35天：生成目标文件(中)">
 <meta property="og:url" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC35%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6(%E4%B8%AD)/index.html">
-<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:site_name" content="自制编译器">
 <meta property="og:description" content="本文包括生成字符串表、段表字符串表、重定位表和文件头。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://leslieche.github.io/2026/04/19/%E7%AC%AC35%E5%A4%A9%EF%BC%9A%E7%94%9F%E6%88%90%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6(%E4%B8%AD)/image-20260419203402823.png">
@@ -53,7 +53,7 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>第35天：生成目标文件(中) - 49天自制编译器</title>
+  <title>第35天：生成目标文件(中) - 自制编译器</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -137,7 +137,7 @@
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>49 天自制编译器</strong>
+      <strong>四十天自制编译器</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -394,78 +394,202 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第35天：生成目标文件-中"><a href="#第35天：生成目标文件-中" class="headerlink" title="第35天：生成目标文件(中)"></a>第35天：生成目标文件(中)</h1><p>接上一篇文章。</p>
-<h2 id="字符串表"><a href="#字符串表" class="headerlink" title="字符串表"></a>字符串表</h2><p>符号有名字，段也有名字，而且它们的名字长度不定，如何存储呢？前面已经提过，就是把它们的名字挨个排列，弄成一个表（其实就是一个大数组）；<br>假设一个符号的 st_name 字段是 8，那就从这个数组的第 8 个元素开始，一直读，直到遇到 \0；读出来的字符串就是这个符号的名字。<br>我们举个例子。<br>段表举例图第 5 个条目是字符串表的表项<br><code>[ 5] .strtab    STRTAB   00000000 00a4d0 00016c 00   0  0  1</code><br>文件偏移为 00a4d0<br><code>hexdump -C -s 0x00a4d0 test_nasm.o</code><br>只列举结果的一部分</p>
-<p><img src="image-20260419203402823.png" srcset="/img/loading.gif" lazyload alt="image-20260419203402823" style="zoom:50%;" /></p>
-<p>在 ELF 规范中，字符串表（.strtab 或 .shstrtab）的第一个字节（索引为 0）必须是空字符（\0）。<br>如果一个符号或一个节（Section）没有名字，它的 st_name 或 sh_name 字段会被设为 0。<br>所以，0xa4d0 位置是 0，然后是 74 65 73 74 2e 61 73 6d；<br>对应 “text.asm”<br>再然后，是 0，表示结束，这个 0 是非常必要的，作用类似于C语言中字符串结尾的 0，表示字符串结束。<br>字符串表最重要的用途是为符号表服务，符号表表项第一个字段就是 st_name，占 4 个字节，表示符号名字的索引。<br>下面举例说明</p>
-<p><img src="image-20260419203432703.png" srcset="/img/loading.gif" lazyload alt="image-20260419203432703" style="zoom:50%;" /></p>
+                <h1 id="第35天：生成目标文件(中)">第35天：生成目标文件(中)</h1>
+<p>接上一篇文章。</p>
+<h2 id="字符串表">字符串表</h2>
+<p>符号有名字，段也有名字，而且它们的名字长度不定，如何存储呢？前面已经提过，就是把它们的名字挨个排列，弄成一个表（其实就是一个大数组）；<br>
+假设一个符号的 st_name 字段是 8，那就从这个数组的第 8 个元素开始，一直读，直到遇到 \0；读出来的字符串就是这个符号的名字。<br>
+我们举个例子。<br>
+段表举例图第 5 个条目是字符串表的表项<br>
+<code>[ 5] .strtab    STRTAB   00000000 00a4d0 00016c 00   0  0  1</code><br>
+文件偏移为 00a4d0<br>
+<code>hexdump -C -s 0x00a4d0 test_nasm.o</code><br>
+只列举结果的一部分</p>
+<img src="image-20260419203402823.png" srcset="/img/loading.gif" lazyload alt="image-20260419203402823" style="zoom:50%;" />
+<p>在 ELF 规范中，字符串表（.strtab 或 .shstrtab）的第一个字节（索引为 0）必须是空字符（\0）。<br>
+如果一个符号或一个节（Section）没有名字，它的 st_name 或 sh_name 字段会被设为 0。<br>
+所以，0xa4d0 位置是 0，然后是 74 65 73 74 2e 61 73 6d；<br>
+对应 “text.asm”<br>
+再然后，是 0，表示结束，这个 0 是非常必要的，作用类似于C语言中字符串结尾的 0，表示字符串结束。<br>
+字符串表最重要的用途是为符号表服务，符号表表项第一个字段就是 st_name，占 4 个字节，表示符号名字的索引。<br>
+下面举例说明</p>
+<img src="image-20260419203432703.png" srcset="/img/loading.gif" lazyload alt="image-20260419203432703" style="zoom:50%;" />
 <p>[4] 这是符号表的段表项。</p>
 <p>我们查看一下符号表的原始数据</p>
 <p><code>hexdump -C -s 0x00a1f0 test_nasm.o</code></p>
 <p>符号表的表项大小是 sizeof(Elf32_Sym) = 16 字节；上面的 “ES” 字段（0x10）也说明了这一点。</p>
-<p><img src="image-20260419203501276.png" srcset="/img/loading.gif" lazyload alt="image-20260419203501276" style="zoom:50%;" /></p>
-<p>上图就是符号表数据的一部分。<br>我在右侧标注了 0~5，分别对应第 0~5 个条目。<br>条目 0 全是 0，这是一个空的符号表项。<br>条目 1，前四个字节是 1，指明了此符号名字的索引，对应 “text.asm”;<br>st_info 是倒数第 4 个字节，值是 4，低 4 位表示符号类型，高 4 位表示绑定信息;<br>elf.h 中有</p>
+<img src="image-20260419203501276.png" srcset="/img/loading.gif" lazyload alt="image-20260419203501276" style="zoom:50%;" />
+<p>上图就是符号表数据的一部分。<br>
+我在右侧标注了 0~5，分别对应第 0~5 个条目。<br>
+条目 0 全是 0，这是一个空的符号表项。<br>
+条目 1，前四个字节是 1，指明了此符号名字的索引，对应 “text.asm”;<br>
+st_info 是倒数第 4 个字节，值是 4，低 4 位表示符号类型，高 4 位表示绑定信息;<br>
+elf.h 中有</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> STT_FILE 4  <span class="hljs-comment">/* Symbol&#x27;s name is file name */</span></span><br></code></pre></td></tr></table></figure>
-<p>说明 text.asm 是一个文件<br>我们再看条目 4，前四个字节是 0xf，也就是 15，从字符串表里面查，是 @L3_return;<br>再看条目 5，前四个字节是 0x20,从符号表里面查，是 @L51_for;<br>下面我们看条目 2 和 3，发现前四个字节都是 0，也就是偏移为 0，表示空字符。这就有点奇怪了，空符号表项的名字是空，这不稀奇，怎么条目 2 和 3 也没有名字？<br>我们看看条目 2 和 3 的 st_info ，倒数第 4 个字节的低 4 位是 3;</p>
+<p>说明 text.asm 是一个文件<br>
+我们再看条目 4，前四个字节是 0xf，也就是 15，从字符串表里面查，是 @L3_return;<br>
+再看条目 5，前四个字节是 0x20,从符号表里面查，是 @L51_for;<br>
+下面我们看条目 2 和 3，发现前四个字节都是 0，也就是偏移为 0，表示空字符。这就有点奇怪了，空符号表项的名字是空，这不稀奇，怎么条目 2 和 3 也没有名字？<br>
+我们看看条目 2 和 3 的 st_info ，倒数第 4 个字节的低 4 位是 3;</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> STT_SECTION 3 <span class="hljs-comment">/* Symbol associated with a section */</span></span><br></code></pre></td></tr></table></figure>
-<p><strong>STT_SECTION（值为 3）</strong>表示该符号<strong>代表一个节（section）本身</strong>，而不是函数、变量等用户定义的实体。</p>
-<p>这类符号的主要作用是：<br><strong>为节提供一个可被重定位引用的“标签”</strong>，以便其他重定位条目（relocation entries）可以引用该节的地址。<br>节符号由链接器内部使用，不在源代码中出现。它们没有名字（即 st_name = 0），其节索引（st_shndx）标识其所代表的节。<br>另外，字符串表（.strtab）中不需要为每个段存储冗余的名字，因为段表字符串表中有每个段的名字。<br><strong>所以，代表节的符号是不需要名字的。</strong><br>前面说了，对于符号表，sh_link 指向与之关联的字符串表 (STRTAB) 的索引。这个关联就是说符号表表项中的符号名是由 st_name 指示，st_name 仅仅是偏移，相对于什么的偏移呢，那就看 sh_link 的值，它指向段表的某个条目，前文的例子是 5，索引是 5 的段表项是字符串表 “.strtab”，所以， st_name 就是相对于这个字符串表起始位置的偏移。</p>
+<p><strong>STT_SECTION（值为 3）<strong>表示该符号</strong>代表一个节（section）本身</strong>，而不是函数、变量等用户定义的实体。</p>
+<p>这类符号的主要作用是：<br>
+<strong>为节提供一个可被重定位引用的“标签”</strong>，以便其他重定位条目（relocation entries）可以引用该节的地址。<br>
+节符号由链接器内部使用，不在源代码中出现。它们没有名字（即 st_name = 0），其节索引（st_shndx）标识其所代表的节。<br>
+另外，字符串表（.strtab）中不需要为每个段存储冗余的名字，因为段表字符串表中有每个段的名字。<br>
+<strong>所以，代表节的符号是不需要名字的。</strong><br>
+前面说了，对于符号表，sh_link 指向与之关联的字符串表 (STRTAB) 的索引。这个关联就是说符号表表项中的符号名是由 st_name 指示，st_name 仅仅是偏移，相对于什么的偏移呢，那就看 sh_link 的值，它指向段表的某个条目，前文的例子是 5，索引是 5 的段表项是字符串表 “.strtab”，所以， st_name 就是相对于这个字符串表起始位置的偏移。</p>
 <p>现在我们可以看构造符号表的代码了</p>
-<p><img src="image-20260419203729841.png" srcset="/img/loading.gif" lazyload alt="image-20260419203729841" style="zoom:50%;" /></p>
-<p>第 243 行，构造符号表的内容，就是分配一片内存，把用到的符号名字拼在一起，起始地址赋值给 strtab, tab_len 是一个输出型参数，表示分配的内存的大小;<br>第 244 行，填写字符串的总长度;<br>第 245 行，添加字符串表项;<br>第 243 行， __make_strtab 的代码如下：</p>
-<p><img src="image-20260419203801866.png" srcset="/img/loading.gif" lazyload alt="image-20260419203801866" style="zoom:50%;" /></p>
-<p>第 154 行，遍历符号表，如果发现类型是表示段的符号，则 continue,因为前面说了，这种符号的名字是空;<br>第 158 行，求每个符号名字的长度，再加 1，这是因为名字后面还有一个 0，再累加到 tab_len 上;<br>第 160 行，分配 tab_len 字节的内存;<br>第 163 行，填写输出型参数，out_len;</p>
-<p><img src="image-20260419203825255.png" srcset="/img/loading.gif" lazyload alt="image-20260419203825255" style="zoom:50%;" /></p>
-<p>第 164 行，让指针 pos 指向所分配内存的开始。<br>第 165 行，再次遍历符号表，跳过 STT_SECTION 类型的符号。<br>第 170 行，第一次执行的时候， pos - strtab 是 0，所以 st_name 就是 0，这个刚好是空符号的名字。<br>第 171 行，复制当前符号的名字到  pos 指向的内存，因为空符号的 sym-&gt;name[0] 是 0，所以 strcpy 要做的就是把 0 拷贝到 strtab[0];<br>第 173 行，更新 pos 的位置;<br>再次执行到第 170 行， pos - strtab 表示 strtab 数组已经有的字符串长度，也就是符号名字在 strtab 数组中的偏移;<br>第 171 行，把符号的名字追加到已有字符串的后面;</p>
-<h2 id="段表字符串表"><a href="#段表字符串表" class="headerlink" title="段表字符串表"></a>段表字符串表</h2><p>我们趁热打铁，看看段表字符串表的构造。<br>段表字符串表，顾名思义，就是把段表中所有段的名字收集起来，构成一个字符数组；<br>符号表中符号的名字靠查字符串表，段表中段的名字靠查段表字符串表。</p>
-<p><img src="image-20260419203852248.png" srcset="/img/loading.gif" lazyload alt="image-20260419203852248" style="zoom:50%;" /></p>
-<p>第 1 个参数，应该传入全局变量 my_elf_g 的地址。<br>有读者纳闷，都是全局变量了，还传参数干什么？想用就直接用啊。道理没有错，但是这个函数在后面的链接器中也要用到，那时候就是别的 elf 了，所以专门设计成参数。<br>第 2 个参数是指向 <code>const char *</code> 的指针，因为 names 对应的实际参数是一个数组，它的元素是 <code>const char *</code> 类型，数组名作为参数会自动转换成指向第一个元素的指针，所以是 <code>const char **</code> 类型。<br>第 3 个参数是数组的长度。<br>数组的名字和长度都传给了第 254 行的 <code>__make_shstrtab</code> 函数，<br><code>__make_shstrtab</code> 函数还有一个输出型参数，表示分配了多少字节的空间。<br>我在文件作用域定义了数组</p>
+<img src="image-20260419203729841.png" srcset="/img/loading.gif" lazyload alt="image-20260419203729841" style="zoom:50%;" />
+<p>第 243 行，构造符号表的内容，就是分配一片内存，把用到的符号名字拼在一起，起始地址赋值给 strtab, tab_len 是一个输出型参数，表示分配的内存的大小;<br>
+第 244 行，填写字符串的总长度;<br>
+第 245 行，添加字符串表项;<br>
+第 243 行， __make_strtab 的代码如下：</p>
+<img src="image-20260419203801866.png" srcset="/img/loading.gif" lazyload alt="image-20260419203801866" style="zoom:50%;" />
+<p>第 154 行，遍历符号表，如果发现类型是表示段的符号，则 continue,因为前面说了，这种符号的名字是空;<br>
+第 158 行，求每个符号名字的长度，再加 1，这是因为名字后面还有一个 0，再累加到 tab_len 上;<br>
+第 160 行，分配 tab_len 字节的内存;<br>
+第 163 行，填写输出型参数，out_len;</p>
+<img src="image-20260419203825255.png" srcset="/img/loading.gif" lazyload alt="image-20260419203825255" style="zoom:50%;" />
+<p>第 164 行，让指针 pos 指向所分配内存的开始。<br>
+第 165 行，再次遍历符号表，跳过 STT_SECTION 类型的符号。<br>
+第 170 行，第一次执行的时候， pos - strtab 是 0，所以 st_name 就是 0，这个刚好是空符号的名字。<br>
+第 171 行，复制当前符号的名字到  pos 指向的内存，因为空符号的 sym-&gt;name[0] 是 0，所以 strcpy 要做的就是把 0 拷贝到 strtab[0];<br>
+第 173 行，更新 pos 的位置;<br>
+再次执行到第 170 行， pos - strtab 表示 strtab 数组已经有的字符串长度，也就是符号名字在 strtab 数组中的偏移;<br>
+第 171 行，把符号的名字追加到已有字符串的后面;</p>
+<h2 id="段表字符串表">段表字符串表</h2>
+<p>我们趁热打铁，看看段表字符串表的构造。<br>
+段表字符串表，顾名思义，就是把段表中所有段的名字收集起来，构成一个字符数组；<br>
+符号表中符号的名字靠查字符串表，段表中段的名字靠查段表字符串表。</p>
+<img src="image-20260419203852248.png" srcset="/img/loading.gif" lazyload alt="image-20260419203852248" style="zoom:50%;" />
+<p>第 1 个参数，应该传入全局变量 my_elf_g 的地址。<br>
+有读者纳闷，都是全局变量了，还传参数干什么？想用就直接用啊。道理没有错，但是这个函数在后面的链接器中也要用到，那时候就是别的 elf 了，所以专门设计成参数。<br>
+第 2 个参数是指向 <code>const char *</code> 的指针，因为 names 对应的实际参数是一个数组，它的元素是 <code>const char *</code> 类型，数组名作为参数会自动转换成指向第一个元素的指针，所以是 <code>const char **</code> 类型。<br>
+第 3 个参数是数组的长度。<br>
+数组的名字和长度都传给了第 254 行的 <code>__make_shstrtab</code> 函数，<br>
+<code>__make_shstrtab</code> 函数还有一个输出型参数，表示分配了多少字节的空间。<br>
+我在文件作用域定义了数组</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 用于生成 shdrstr 表</span><br><span class="hljs-type">static</span> <span class="hljs-type">const</span> <span class="hljs-type">char</span> *shstrtab_names[] = &#123;<br>    <span class="hljs-string">&quot;&quot;</span>, <span class="hljs-string">&quot;.symtab&quot;</span>, <span class="hljs-string">&quot;.strtab&quot;</span>, <span class="hljs-string">&quot;.shstrtab&quot;</span>, <span class="hljs-string">&quot;.rel.text&quot;</span>,<br>     <span class="hljs-string">&quot;.rel.data&quot;</span>, <br>&#125;;<br></code></pre></td></tr></table></figure>
 <p>这些字符串来自各个段的段名。</p>
 <p>有读者说为什么没有 .text 和 .data 呢？</p>
 <p>这是因为有 “.rel.text” 和 “.rel.data”了，这里面就有 “.text ” 和 “.data”;</p>
-<p><img src="image-20260419204029206.png" srcset="/img/loading.gif" lazyload alt="image-20260419204029206" style="zoom:50%;" /></p>
+<img src="image-20260419204029206.png" srcset="/img/loading.gif" lazyload alt="image-20260419204029206" style="zoom:50%;" />
 <p>204~206，计算数组中所有的字符串长度，注意要 + 1，表示字符串结尾的 \0。</p>
 <p>第 207 行分配内存，第210 行填写长度。</p>
 <p>第 213~216，把数组里面的字符串拷贝到分配的内存里。</p>
 <p>和前面的字符串表不一样，这里面只有拷贝字符串，没有给段表项的 sh_name 赋值。给 sh_name 赋值是在另一个函数。</p>
-<h2 id="重定位表"><a href="#重定位表" class="headerlink" title="重定位表"></a><strong>重定位表</strong></h2><p><img src="image-20260419204110785.png" srcset="/img/loading.gif" lazyload alt="image-20260419204110785" style="zoom:50%;" /></p>
+<h2 id="重定位表"><strong>重定位表</strong></h2>
+<img src="image-20260419204110785.png" srcset="/img/loading.gif" lazyload alt="image-20260419204110785" style="zoom:50%;" />
 <p>在原有结构体 Elf32_Rel 的基础上，我增加了偏移、符号名、类型这几个字段。</p>
 <p>第 70 行的 Elf32_Rel，其定义在 elf.h 中，我们用的是不带加数的形式。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Relocation table entry without addend (in section of type SHT_REL).  */</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  Elf32_Addr	r_offset;		<span class="hljs-comment">/* Address */</span><br>  Elf32_Word	r_info;			<span class="hljs-comment">/* Relocation type and symbol index */</span><br>&#125; Elf32_Rel;<br></code></pre></td></tr></table></figure>
-<p>r_info 的低 8 位表示重定位的类型；高 24 位表示要重定位的符号的索引；<br>有人会问，你这个 my_rel_info_t 里面的 offset 、rel_type 这 2 个字段和 Elf32_Rel 中的重复了。<br>是的，确实重复了。我打算先把信息收集到 my_rel_info_t 中的 offset、sym_name、rel_type 字段，等到了构造重定位表项的时候，再把信息拷贝或组合到 Elf32_Rel 中；<br>之前在生成指令编码的时候，我们花了很多力气讨论重定位，已经生成了重定位的所有信息。</p>
-<p><img src="image-20260419204206915.png" srcset="/img/loading.gif" lazyload alt="image-20260419204206915" style="zoom:50%;" /></p>
-<p>从第 37 到 49 是原来的代码。<br>现在加上了 50 行及后面的代码。<br>第 52 行，如果是绝对重定位且是内部的符号，则用 “.data” 作为符号名字，原因之前讲过了。<br>第 55 行，add_rel_to_elf_list 的代码是</p>
-<p><img src="image-20260419204230873.png" srcset="/img/loading.gif" lazyload alt="image-20260419204230873" style="zoom:50%;" /></p>
-<p>第 509 到 516 分配内存；<br>第 517 到 519 填写 my_rel_info_t 中的 offset、sym_name、rel_type 字段；<br>第 521 到 525，根据重定位作用的段（就是要打补丁的段）加入到不同的链表。<br>当汇编器完成了第二次扫描后，重定位信息就收集完毕了，全部信息都在链表上。<br>前文已经展示了 make_elf 函数,此函数会调用<br><code>make_rel_shdr(SECTION_REL_TEXT);</code><br><code>make_rel_shdr(SECTION_REL_DATA);</code></p>
-<p><img src="image-20260419204306277.png" srcset="/img/loading.gif" lazyload alt="image-20260419204306277" style="zoom:50%;" /></p>
-<p>make_rel_shdr() 函数用来构造重定位表的表项，根据参数来判断是代码段的重定位表项还是数据段的重定位表项。<br>第 263 行，对于重定位表表项，sh_link 指向关联的符号表索引。<br>第 269 ，如果是代码段的重定位，则让 rel_head 等于 &amp;my_elf_g.text_rel_head; 这是要加入的链表的头节点。<br>第 271 行设置段的名字。<br>第 272 行填写 sh_info, 对于重定位表，sh_info 指向被修补的节的索引。<br>第 274 行，如果是数据段的重定位，相似的操作，不再赘述。</p>
-<p><img src="image-20260419204328962.png" srcset="/img/loading.gif" lazyload alt="image-20260419204328962" style="zoom:50%;" /></p>
+<p>r_info 的低 8 位表示重定位的类型；高 24 位表示要重定位的符号的索引；<br>
+有人会问，你这个 my_rel_info_t 里面的 offset 、rel_type 这 2 个字段和 Elf32_Rel 中的重复了。<br>
+是的，确实重复了。我打算先把信息收集到 my_rel_info_t 中的 offset、sym_name、rel_type 字段，等到了构造重定位表项的时候，再把信息拷贝或组合到 Elf32_Rel 中；<br>
+之前在生成指令编码的时候，我们花了很多力气讨论重定位，已经生成了重定位的所有信息。</p>
+<img src="image-20260419204206915.png" srcset="/img/loading.gif" lazyload alt="image-20260419204206915" style="zoom:50%;" />
+<p>从第 37 到 49 是原来的代码。<br>
+现在加上了 50 行及后面的代码。<br>
+第 52 行，如果是绝对重定位且是内部的符号，则用 “.data” 作为符号名字，原因之前讲过了。<br>
+第 55 行，add_rel_to_elf_list 的代码是</p>
+<img src="image-20260419204230873.png" srcset="/img/loading.gif" lazyload alt="image-20260419204230873" style="zoom:50%;" />
+<p>第 509 到 516 分配内存；<br>
+第 517 到 519 填写 my_rel_info_t 中的 offset、sym_name、rel_type 字段；<br>
+第 521 到 525，根据重定位作用的段（就是要打补丁的段）加入到不同的链表。<br>
+当汇编器完成了第二次扫描后，重定位信息就收集完毕了，全部信息都在链表上。<br>
+前文已经展示了 make_elf 函数,此函数会调用<br>
+<code>make_rel_shdr(SECTION_REL_TEXT);</code><br>
+<code>make_rel_shdr(SECTION_REL_DATA);</code></p>
+<img src="image-20260419204306277.png" srcset="/img/loading.gif" lazyload alt="image-20260419204306277" style="zoom:50%;" />
+<p>make_rel_shdr() 函数用来构造重定位表的表项，根据参数来判断是代码段的重定位表项还是数据段的重定位表项。<br>
+第 263 行，对于重定位表表项，sh_link 指向关联的符号表索引。<br>
+第 269 ，如果是代码段的重定位，则让 rel_head 等于 &amp;my_elf_g.text_rel_head; 这是要加入的链表的头节点。<br>
+第 271 行设置段的名字。<br>
+第 272 行填写 sh_info, 对于重定位表，sh_info 指向被修补的节的索引。<br>
+第 274 行，如果是数据段的重定位，相似的操作，不再赘述。</p>
+<img src="image-20260419204328962.png" srcset="/img/loading.gif" lazyload alt="image-20260419204328962" style="zoom:50%;" />
 <p>第 280 行，获得链表上节点的数目。</p>
 <p>第 282 行，遍历链表，取出 offset，赋值给 Elf32_Rel 的 r_offset;</p>
 <p>第 284 行，根据符号的名字，得到它在符号表中的索引我们举个例子;</p>
-<p><img src="image-20260419204353082.png" srcset="/img/loading.gif" lazyload alt="image-20260419204353082" style="zoom:50%;" /></p>
-<p>这是 text 段的重定位表。<br>看黄色的条目，Offset 是 0x158，表示要修正的地址在 .text 段 0x158 处；<br>info 低 8 位标识重定位的类型；也就是 2， 表示相对重定位；<br>高 24 位表示要重定位的符号在符号表中的索引，是 0x28，十进制是 40；</p>
-<p><img src="image-20260419204418167.png" srcset="/img/loading.gif" lazyload alt="image-20260419204418167" style="zoom:50%;" /></p>
-<p>可以看到，符号表第 40 个条目，就是符号 my_printf;<br>以上，重定位表项也构造完成。<br>make_elf() 函数还有 2 项非常重要的工作；<br>fill_shdr_offset 和 fill_shdr_name；<br>一个用来确定每个段的偏移，一个用来填写段表项的 sh_name；<br>先看 fill_shdr_offset 函数</p>
+<img src="image-20260419204353082.png" srcset="/img/loading.gif" lazyload alt="image-20260419204353082" style="zoom:50%;" />
+<p>这是 text 段的重定位表。<br>
+看黄色的条目，Offset 是 0x158，表示要修正的地址在 .text 段 0x158 处；<br>
+info 低 8 位标识重定位的类型；也就是 2， 表示相对重定位；<br>
+高 24 位表示要重定位的符号在符号表中的索引，是 0x28，十进制是 40；</p>
+<img src="image-20260419204418167.png" srcset="/img/loading.gif" lazyload alt="image-20260419204418167" style="zoom:50%;" />
+<p>可以看到，符号表第 40 个条目，就是符号 my_printf;<br>
+以上，重定位表项也构造完成。<br>
+make_elf() 函数还有 2 项非常重要的工作；<br>
+fill_shdr_offset 和 fill_shdr_name；<br>
+一个用来确定每个段的偏移，一个用来填写段表项的 sh_name；<br>
+先看 fill_shdr_offset 函数</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span>  EHDR_E_SHOFF 64  <span class="hljs-comment">/* 段表的偏移 */</span> </span><br><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">fill_shdr_offset</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    my_elf_g.ehdr.e_shoff = EHDR_E_SHOFF;<br>    my_elf_g.ehdr.e_shnum =<br>        get_list_len(&amp;my_elf_g.shdr_head);  <span class="hljs-comment">// 段表项的个数</span><br>    my_elf_g.ehdr.e_shentsize = <span class="hljs-keyword">sizeof</span>(Elf32_Shdr);<br>    Elf32_Word shdrtab_size =<br>        my_elf_g.ehdr.e_shnum * my_elf_g.ehdr.e_shentsize;<br>    Elf32_Off cur_addr = EHDR_E_SHOFF + shdrtab_size;<br><br>    Elf32_Off sec_offset = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">my_shdr_t</span> *shdr = <span class="hljs-literal">NULL</span>;<br><br>    list_for_each_entry (shdr, &amp;my_elf_g.shdr_head, entry) &#123;<br>        <span class="hljs-keyword">if</span> (shdr-&gt;e_name == SECTION_NULL)<br>            <span class="hljs-keyword">continue</span>;<br>        Elf32_Word align = shdr-&gt;sh.sh_addralign;<br>        sec_offset = align_size(cur_addr, align);<br>        shdr-&gt;sh.sh_offset = sec_offset;<br>        cur_addr = sec_offset + shdr-&gt;sh.sh_size;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>模仿 nasm，我们把段表放在整个文件偏移 64 字节的地方。<br>也就是说前 52 字节是文件头，然后补 12 个字节的 0，再放段表；<br>第 6 行，e_shoff 是 64；<br>第 7 行，e_shnum 是段表项的个数；<br>第 9 行， e_shentsize 表示段表每个条目的大小；<br>第 10 行，求 shdrtab_size，就是段表的总大小；<br>想象文件头、段表和每个段都是一块拼图，我们要做的就是把它们按顺序拼接起来，还要考虑到对齐。<br>假设文件开始的位置是 0，先放文件头，占用 52 字节，再填充 12 字节，然后放段表；<br>64 加上段表总大小，就是当前的位置，代码第 12 行，cur_addr 表示当前的位置；<br>第 17 行，遍历链表 &amp;my_elf_g.shdr_head，拿出每个段表表项，如果是空的就跳过，因为空表项的 size 是 0；<br>第 20 行，取出表项 shdr 的 sh_addralign 字段，按照要求对齐；<br>align_size(cur_addr, align); 意思是把 cur_addr 对齐到 align 字节，例如当前是 181，如果是 4 字节对齐，那么对齐后就是 184；<br>对齐后，就可以放置 shdr 代表的段了。<br>此时可以确定这个段的偏移，填写 shdr-&gt;sh.sh_offset，值就是 align_size(cur_addr, align);<br>放置后，cur_addr 会更新，也就是加上这个段的长度。<br>现在，我们填写每个段表项的 sh_name 字段。</p>
-<p><img src="image-20260419204523046.png" srcset="/img/loading.gif" lazyload alt="image-20260419204523046" style="zoom:50%;" /></p>
+<p>模仿 nasm，我们把段表放在整个文件偏移 64 字节的地方。<br>
+也就是说前 52 字节是文件头，然后补 12 个字节的 0，再放段表；<br>
+第 6 行，e_shoff 是 64；<br>
+第 7 行，e_shnum 是段表项的个数；<br>
+第 9 行， e_shentsize 表示段表每个条目的大小；<br>
+第 10 行，求 shdrtab_size，就是段表的总大小；<br>
+想象文件头、段表和每个段都是一块拼图，我们要做的就是把它们按顺序拼接起来，还要考虑到对齐。<br>
+假设文件开始的位置是 0，先放文件头，占用 52 字节，再填充 12 字节，然后放段表；<br>
+64 加上段表总大小，就是当前的位置，代码第 12 行，cur_addr 表示当前的位置；<br>
+第 17 行，遍历链表 &amp;my_elf_g.shdr_head，拿出每个段表表项，如果是空的就跳过，因为空表项的 size 是 0；<br>
+第 20 行，取出表项 shdr 的 sh_addralign 字段，按照要求对齐；<br>
+align_size(cur_addr, align); 意思是把 cur_addr 对齐到 align 字节，例如当前是 181，如果是 4 字节对齐，那么对齐后就是 184；<br>
+对齐后，就可以放置 shdr 代表的段了。<br>
+此时可以确定这个段的偏移，填写 shdr-&gt;sh.sh_offset，值就是 align_size(cur_addr, align);<br>
+放置后，cur_addr 会更新，也就是加上这个段的长度。<br>
+现在，我们填写每个段表项的 sh_name 字段。</p>
+<img src="image-20260419204523046.png" srcset="/img/loading.gif" lazyload alt="image-20260419204523046" style="zoom:50%;" />
 <p>sh_name 表示段的名字在 .shstrtab 中的偏移。</p>
 <p>第 224 行，定义了一个数组;</p>
 <p>第 225~228，填充这个数组，逻辑是这样的：</p>
 <p>刚开始， cur_len 是 0；</p>
 <p>举个例子，字符串数组是</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">const</span> <span class="hljs-type">char</span> *shstrtab_names[] = &#123;<br>    <span class="hljs-string">&quot;&quot;</span>, <span class="hljs-string">&quot;.symtab&quot;</span>, <span class="hljs-string">&quot;.strtab&quot;</span>, <span class="hljs-string">&quot;.shstrtab&quot;</span>, <span class="hljs-string">&quot;.rel.text&quot;</span>, <span class="hljs-string">&quot;.rel.data&quot;</span>,<br>&#125;;<br></code></pre></td></tr></table></figure>
-<p>我们已经调用 <code>__make_shstrtab</code>  函数把这些字符串拼在一起了。<br>请问数组中每个字符串在 .shstrtab 中的偏移是多少？<br>任何一个字符串的偏移，都等于它之前的所有字符串的总长度，所以有代码 225 ~ 228；<br>offsets[i] 对应第 i 个字符串在 .shstrtab 中的偏移；<br>第 231 行，遍历所有段表项，调用 <code>__get_sh_name</code> 函数；<br>此函数第一个参数是是段名，例如 “.symtab”，”.rel.data” 等；<br>第二个参数是数组名，需要传入 shstrtab_names；<br>第三个参数是刚才填写好的 offsets 数组，第 4 个参数是 offsets  数组的长度，因为 shstrtab_names 数组和 offsets 数组的长度是一样的，所以用“一个”参数来表示长度就够了。<br><code>__get_sh_name</code> 函数代码如下：</p>
+<p>我们已经调用 <code>__make_shstrtab</code>  函数把这些字符串拼在一起了。<br>
+请问数组中每个字符串在 .shstrtab 中的偏移是多少？<br>
+任何一个字符串的偏移，都等于它之前的所有字符串的总长度，所以有代码 225 ~ 228；<br>
+offsets[i] 对应第 i 个字符串在 .shstrtab 中的偏移；<br>
+第 231 行，遍历所有段表项，调用 <code>__get_sh_name</code> 函数；<br>
+此函数第一个参数是是段名，例如 “.symtab”，“.rel.data” 等；<br>
+第二个参数是数组名，需要传入 shstrtab_names；<br>
+第三个参数是刚才填写好的 offsets 数组，第 4 个参数是 offsets  数组的长度，因为 shstrtab_names 数组和 offsets 数组的长度是一样的，所以用“一个”参数来表示长度就够了。<br>
+<code>__get_sh_name</code> 函数代码如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">int</span> __get_sh_name(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *target_name, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **names,<br>                         <span class="hljs-type">int</span> *offsets, <span class="hljs-type">int</span> arr_cnt)<br>&#123;<br>    <span class="hljs-type">char</span> *find_pos = <span class="hljs-literal">NULL</span>;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; arr_cnt; ++i) &#123;<br>        <span class="hljs-keyword">if</span> (find_pos = <span class="hljs-built_in">strstr</span>(names[i], target_name)) &#123;<br>            <span class="hljs-keyword">return</span> find_pos - names[i] + offsets[i];<br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>此函数的作用是计算 target_name 指向的字符串在 shstrtab 中的偏移。<br>因为偏移已经计算好了，就在 offsets 数组中。<br>但是第 6 ~7 行为什么不是 return offsets[i] 呢？<br>这是因为段名  “.text ” 和  “.data”，是 “.rel.text” 和 “.rel.data” 的子串，<br>“.text ” 的偏移，等于 “.rel.text” 的偏移加上  “.text ” 在 “.rel.text”中的偏移。<br>“.rel.text” 的偏移就在 offsets[4] 中， “.text ” 在 “.rel.text”中的偏移怎么求呢？</p>
-<p>可以用 strstr 函数。它是C标准库函数，定义在 <string.h> 头文件中。<br>函数原型是 <code>char *strstr(const char *haystack, const char *needle);</code><br>haystack 是“干草堆”的意思，needle 是“针”的意思，可以理解为大海捞针。<br>haystack：要在哪个字符串（“干草堆”）里面搜寻。<br>needle：要查找的子字符串（“针”）。<br>返回值：<br>如果找到 needle，返回 needle 第一次出现的起始地址;<br>如果没找到，返回 NULL；<br>特别地，如果 needle 是空字符串，则返回 haystack 字符串的地址（这是标准规定）。<br>举个例子，haystack 是 “hello,world!” ；needle 是 “world”;</p>
+<p>此函数的作用是计算 target_name 指向的字符串在 shstrtab 中的偏移。<br>
+因为偏移已经计算好了，就在 offsets 数组中。<br>
+但是第 6 ~7 行为什么不是 return offsets[i] 呢？<br>
+这是因为段名  “.text ” 和  “.data”，是 “.rel.text” 和 “.rel.data” 的子串，<br>
+“.text ” 的偏移，等于 “.rel.text” 的偏移加上  “.text ” 在 &quot;.rel.text&quot;中的偏移。<br>
+“.rel.text” 的偏移就在 offsets[4] 中， “.text ” 在 &quot;.rel.text&quot;中的偏移怎么求呢？</p>
+<p>可以用 strstr 函数。它是C标准库函数，定义在 &lt;string.h&gt; 头文件中。<br>
+函数原型是 <code>char *strstr(const char *haystack, const char *needle);</code><br>
+haystack 是“干草堆”的意思，needle 是“针”的意思，可以理解为大海捞针。<br>
+haystack：要在哪个字符串（“干草堆”）里面搜寻。<br>
+needle：要查找的子字符串（“针”）。<br>
+返回值：<br>
+如果找到 needle，返回 needle 第一次出现的起始地址;<br>
+如果没找到，返回 NULL；<br>
+特别地，如果 needle 是空字符串，则返回 haystack 字符串的地址（这是标准规定）。<br>
+举个例子，haystack 是 “hello,world!” ；needle 是 “world”;</p>
 <p>假设内存如下图：</p>
-<p><img src="image-20260419204815138.png" srcset="/img/loading.gif" lazyload alt="image-20260419204815138" style="zoom:50%;" /></p>
-<p>那么函数的返回值是 0x8006;<br>world 在 “hello,world!” 中的偏移等于 0x8006-0x8000 = 6;<br>代码第 7 行， find_pos - names[i] 就是求这个偏移量。<br>特别地，当 i = 0 的时候，要查找的子字符串是空串， 所以会返回 names[0] 代表的字符串的地址;<br>第 7 行实际是 names[0] - names[0] + offsets[0];<br>结果就是 0，没有问题。</p>
-<h2 id="文件头"><a href="#文件头" class="headerlink" title="文件头"></a>文件头</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">make_elf_hdr</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-built_in">memcpy</span>(my_elf_g.ehdr.e_ident, magic_nums, EI_NIDENT);<br>    my_elf_g.ehdr.e_type = ET_REL;  <span class="hljs-comment">// 可重定位目标文件</span><br>    my_elf_g.ehdr.e_machine = EM_386;<br>    my_elf_g.ehdr.e_version = EV_CURRENT;<br>    my_elf_g.ehdr.e_entry = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 程序的入口地址，对于可重定位文件，取值 0</span><br>    my_elf_g.ehdr.e_phoff = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 头表的偏移</span><br>     <span class="hljs-comment">// my_elf_g.ehdr.e_shoff = 已经填写</span><br><br>    my_elf_g.ehdr.e_flags = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 处理器相关标志，一般为 0</span><br>    my_elf_g.ehdr.e_ehsize =<br>        <span class="hljs-keyword">sizeof</span>(Elf32_Ehdr);         <span class="hljs-comment">// elf文件头的大小，一般是 52</span><br>    my_elf_g.ehdr.e_phentsize = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 头表项的大小</span><br>    my_elf_g.ehdr.e_phnum = <span class="hljs-number">0</span>;      <span class="hljs-comment">// 头表可选，我们没有头表</span><br>    my_elf_g.ehdr.e_shentsize = <span class="hljs-keyword">sizeof</span>(Elf32_Shdr);<br>    <span class="hljs-comment">// my_elf_g.ehdr.e_shnum =  已经填写</span><br>    <span class="hljs-comment">//     get_list_len(&amp;my_elf_g.shdr_head);  // 段表项的个数</span><br>    my_elf_g.ehdr.e_shstrndx = get_shdr_idx(SECTION_SHSTRTAB, shdr_order, ARR_ELEM_CNT(shdr_order));<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>现在该填写文件头了。<br>第 19 行，填写段表字符串表的索引。之所以在文件头中包含这个信息，是因为在分析段表项的时候，不仅仅需要段的偏移、大小等，还需要段的名字。不然的话不知道这是什么段。<br>为了得到段的名字，需要先找到段表字符串表，那就需要找到它对应的表项，如何找到段表字符串表对应的表项呢？需要段的名字。这不是死循环了吗？<br>所以，先获得段表字符串表的索引，再去段表项里面拿段表字符串表的偏移，这样就得到了“花名册”。解析段表项的时候，根据段的 sh_name 字段，在花名册里面一查，就知道这是哪个段。<br>其他字段之前已经介绍过，不赘述。<br>到了这里，make_elf 函数就都讲完了。</p>
+<img src="image-20260419204815138.png" srcset="/img/loading.gif" lazyload alt="image-20260419204815138" style="zoom:50%;" />
+<p>那么函数的返回值是 0x8006;<br>
+world 在 “hello,world!” 中的偏移等于 0x8006-0x8000 = 6;<br>
+代码第 7 行， find_pos - names[i] 就是求这个偏移量。<br>
+特别地，当 i = 0 的时候，要查找的子字符串是空串， 所以会返回 names[0] 代表的字符串的地址;<br>
+第 7 行实际是 names[0] - names[0] + offsets[0];<br>
+结果就是 0，没有问题。</p>
+<h2 id="文件头">文件头</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">make_elf_hdr</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-built_in">memcpy</span>(my_elf_g.ehdr.e_ident, magic_nums, EI_NIDENT);<br>    my_elf_g.ehdr.e_type = ET_REL;  <span class="hljs-comment">// 可重定位目标文件</span><br>    my_elf_g.ehdr.e_machine = EM_386;<br>    my_elf_g.ehdr.e_version = EV_CURRENT;<br>    my_elf_g.ehdr.e_entry = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 程序的入口地址，对于可重定位文件，取值 0</span><br>    my_elf_g.ehdr.e_phoff = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 头表的偏移</span><br>     <span class="hljs-comment">// my_elf_g.ehdr.e_shoff = 已经填写</span><br><br>    my_elf_g.ehdr.e_flags = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 处理器相关标志，一般为 0</span><br>    my_elf_g.ehdr.e_ehsize =<br>        <span class="hljs-keyword">sizeof</span>(Elf32_Ehdr);         <span class="hljs-comment">// elf文件头的大小，一般是 52</span><br>    my_elf_g.ehdr.e_phentsize = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 头表项的大小</span><br>    my_elf_g.ehdr.e_phnum = <span class="hljs-number">0</span>;      <span class="hljs-comment">// 头表可选，我们没有头表</span><br>    my_elf_g.ehdr.e_shentsize = <span class="hljs-keyword">sizeof</span>(Elf32_Shdr);<br>    <span class="hljs-comment">// my_elf_g.ehdr.e_shnum =  已经填写</span><br>    <span class="hljs-comment">//     get_list_len(&amp;my_elf_g.shdr_head);  // 段表项的个数</span><br>    my_elf_g.ehdr.e_shstrndx = get_shdr_idx(SECTION_SHSTRTAB, shdr_order, ARR_ELEM_CNT(shdr_order));<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>现在该填写文件头了。<br>
+第 19 行，填写段表字符串表的索引。之所以在文件头中包含这个信息，是因为在分析段表项的时候，不仅仅需要段的偏移、大小等，还需要段的名字。不然的话不知道这是什么段。<br>
+为了得到段的名字，需要先找到段表字符串表，那就需要找到它对应的表项，如何找到段表字符串表对应的表项呢？需要段的名字。这不是死循环了吗？<br>
+所以，先获得段表字符串表的索引，再去段表项里面拿段表字符串表的偏移，这样就得到了“花名册”。解析段表项的时候，根据段的 sh_name 字段，在花名册里面一查，就知道这是哪个段。<br>
+其他字段之前已经介绍过，不赘述。<br>
+到了这里，make_elf 函数就都讲完了。</p>
 
                 
               </div>

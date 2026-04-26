@@ -23,7 +23,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="第4天：语法分析之定义文法">
 <meta property="og:url" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC4%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E5%AE%9A%E4%B9%89%E6%96%87%E6%B3%95/index.html">
-<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:site_name" content="自制编译器">
 <meta property="og:description" content="定义文法（Grammar） 是语法分析的逻辑前提。没有文法，语法分析器（Parser）就失去了判断“对错”的标准。本文十分“硬核”，内容很多，建议读者分次服用。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://leslieche.github.io/2026/03/30/%E7%AC%AC4%E5%A4%A9%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B9%8B%E5%AE%9A%E4%B9%89%E6%96%87%E6%B3%95/image-20250904100908957.png">
@@ -40,7 +40,7 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>第4天：语法分析之定义文法 - 49天自制编译器</title>
+  <title>第4天：语法分析之定义文法 - 自制编译器</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -126,7 +126,7 @@
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>49 天自制编译器</strong>
+      <strong>四十天自制编译器</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -328,7 +328,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          18k 字
+          19k 字
         
       </span>
     
@@ -339,7 +339,7 @@
         
         
         
-          150 分钟
+          161 分钟
         
       </span>
     
@@ -383,7 +383,8 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第4天：语法分析之定义文法"><a href="#第4天：语法分析之定义文法" class="headerlink" title="第4天：语法分析之定义文法"></a>第4天：语法分析之定义文法</h1><p>经过前面的铺垫，我们终于可以为 csub 定义文法了。</p>
+                <h1 id="第4天：语法分析之定义文法">第4天：语法分析之定义文法</h1>
+<p>经过前面的铺垫，我们终于可以为 csub 定义文法了。</p>
 <p>首先，定义起始符号，也就是语法分析树的树根，就叫 <code>&lt;program&gt;</code> 吧 （当然，你可以换成自己喜欢的名字）。</p>
 <p>然后，回忆一下一般的 C 语言程序是由什么构成的。我们从头开始，首先是一些 #include “xxx.h”,因为我们的 csub 不具备预处理功能，所以这个语法要素可以忽略。接下来，可能是全局变量的定义或者声明，还可能有函数的声明；最后就是每个函数的定义。</p>
 <p>由此可以得出，一般的 C 语言程序包括变量声明、变量定义、函数声明、函数定义。</p>
@@ -396,9 +397,10 @@
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">program</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">global_decl</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">program</span>&gt;</span> <br></code></pre></td></tr></table></figure>
 <p>这是一个递归定义。当然，程序是由有限的声明构成的，所以还应该加上</p>
 <figure class="highlight xl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xl">&lt;<span class="hljs-function"><span class="hljs-title">program</span>&gt; -&gt;</span> ε<br></code></pre></td></tr></table></figure>
-<p>需要说明的是，<global_decl> 表示全局声明，也就是文件作用域的声明。因为我们知道，函数里面也可以有声明，这是后面的内容。</p>
+<p>需要说明的是，&lt;global_decl&gt; 表示全局声明，也就是文件作用域的声明。因为我们知道，函数里面也可以有声明，这是后面的内容。</p>
 <p>接下来，我们把注意力放在 <code>&lt;global_decl&gt;</code>上，看看这个非终结符怎么分解。</p>
-<h2 id="变量的声明与定义"><a href="#变量的声明与定义" class="headerlink" title="变量的声明与定义"></a>变量的声明与定义</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a; <span class="hljs-comment">// 变量定义</span><br><br><span class="hljs-type">int</span> a = <span class="hljs-number">10</span>; <span class="hljs-comment">// 变量定义</span><br><br><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> a; <span class="hljs-comment">// 变量声明</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">fun</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;  <span class="hljs-comment">// 函数声明</span><br><br><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title function_">fun</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>; <span class="hljs-comment">// 函数声明</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">fun</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> <span class="hljs-comment">// 函数定义</span><br>&#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="变量的声明与定义">变量的声明与定义</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a; <span class="hljs-comment">// 变量定义</span><br><br><span class="hljs-type">int</span> a = <span class="hljs-number">10</span>; <span class="hljs-comment">// 变量定义</span><br><br><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> a; <span class="hljs-comment">// 变量声明</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">fun</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;  <span class="hljs-comment">// 函数声明</span><br><br><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title function_">fun</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>; <span class="hljs-comment">// 函数声明</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">fun</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> <span class="hljs-comment">// 函数定义</span><br>&#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>需要说明的是，对于函数声明，加不加<code>extern</code>效果相同（因为函数默认是外部链接）；</p>
 <p>说句题外话，为增强代码的可读性，有人习惯这样用：如果这个函数定义在其他模块，当本模块要引用的时候，声明的时候加 extern；如果这个函数就在本模块定义，则声明的时候不加 extern。</p>
 <p>总体来看，<code>&lt;global_decl&gt;</code> 可能以 extern 开头，也可能不是。另外，除去 extern，都是以类型开头，所以</p>
@@ -406,7 +408,7 @@
 <p>“…” 这部分，就叫 <code>&lt;decl&gt;</code> 吧。</p>
 <p>接下来的任务是拆分 <code>&lt;decl&gt;</code></p>
 <p>从大类上说， <code>&lt;decl&gt;</code>可以分为变量（包括基本变量、指针变量、数组变量）和函数两大类。</p>
-<p>所以 <code>&lt;decl&gt; -&gt; &lt;var_decl&gt; | &lt;fun_decl&gt;</code></p>
+<p>所以 <code>&lt;decl&gt; -&gt; &lt;var_decl&gt; | &lt;fun_decl&gt; </code></p>
 <p>先不考虑函数，仅就变量的定义，就可以列出很多例子：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* 下面都是变量定义 */</span><br><br><span class="hljs-type">int</span> a; 		<span class="hljs-comment">// 未初始化</span><br><span class="hljs-type">int</span> a = <span class="hljs-number">10</span>; <span class="hljs-comment">// 用常量初始化</span><br><span class="hljs-type">int</span> a, b, c; <span class="hljs-comment">// 一次定义多个变量</span><br><span class="hljs-type">int</span> a = <span class="hljs-number">1</span>, b = <span class="hljs-number">2</span>; <span class="hljs-comment">// 一次定义多个变量，且带初始化</span><br><span class="hljs-type">int</span> a, b = <span class="hljs-number">3</span>, c;<br><span class="hljs-type">int</span> *p;       <span class="hljs-comment">// 定义指针</span><br><span class="hljs-type">int</span> *p = &amp;a; <span class="hljs-comment">// 定义指针，且带初始化</span><br><span class="hljs-type">int</span> arr[<span class="hljs-number">10</span>]; <span class="hljs-comment">// 定义数组</span><br><span class="hljs-type">int</span> arr[<span class="hljs-number">3</span>] = &#123;<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>&#125;; <span class="hljs-comment">// 定义数组，且带初始化</span><br><span class="hljs-type">int</span> a, *p, arr[<span class="hljs-number">10</span>]; <span class="hljs-comment">// 基本变量、指针、数组</span><br></code></pre></td></tr></table></figure>
 <p>需要说明的是， csub 仅支持一维数组，数组元素的类型只能是整形或者字符形； csub 仅支持一级指针，指针仅可以指向基本类型（整形、字符型）的变量。</p>
@@ -414,26 +416,26 @@
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">var_decl</span>&gt;</span>  -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">var_item</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_list</span>&gt;</span> <br><span class="hljs-tag">&lt;<span class="hljs-name">var_list</span>&gt;</span>  -&gt; comma <span class="hljs-tag">&lt;<span class="hljs-name">var_item</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_list</span>&gt;</span> | semico<br></code></pre></td></tr></table></figure>
 <p>comma 表示终结符 “,”</p>
 <p>semico 表示终结符 “;”</p>
-<p>现在尝试拆 <var_item></p>
+<p>现在尝试拆 &lt;var_item&gt;</p>
 <p>举两个例子：</p>
 <p>举两个例子（关注下面的 *p2 还有 b[3]）：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> *p1, *p2 = &amp;a;<br><span class="hljs-type">int</span>  a[<span class="hljs-number">10</span>], b[<span class="hljs-number">3</span>] = &#123;<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>&#125;;<br></code></pre></td></tr></table></figure>
-<p>规律就是， <var_item> 肯定含有标识符，也就是变量的名字；</p>
+<p>规律就是， &lt;var_item&gt; 肯定含有标识符，也就是变量的名字；</p>
 <p>如果是指针，标识符的前面会有“*”；如果是数组，标识符的后面会有“[…]”</p>
 <p>另外，变量还可以选择是否初始化，如果初始化，还会有 “= …”部分。</p>
 <p>所以得到：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">var_item</span>&gt;</span> -&gt;  ident <span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_init</span>&gt;</span> <br>            |  mul ident <span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_init</span>&gt;</span> <br></code></pre></td></tr></table></figure>
 <p>mul 是终结符，表示 *； ident 也是终结符，表示标识符；</p>
 <p>若是指针就用第二个产生式，否则用第一个产生式。</p>
-<p><arr_len> 表示 “[…]”部分;</p>
-<p> <var_init> 表示 “= …”部分；</p>
-<p>细心的读者会发现，按照第二个产生式<code>&lt;var_item&gt; -&gt; mul ident &lt;arr_len&gt; &lt;var_init&gt;</code> 可以推导出 <code>*p[10]</code></p>
+<p>&lt;arr_len&gt; 表示 “[…]”部分;</p>
+<p>&lt;var_init&gt; 表示 “= …”部分；</p>
+<p>细心的读者会发现，按照第二个产生式<code> &lt;var_item&gt; -&gt; mul ident &lt;arr_len&gt; &lt;var_init&gt;</code> 可以推导出 <code>*p[10]</code></p>
 <p>也就是说从语法上讲，csub 支持指针数组，即元素类型是指针的数组。</p>
-<p>如果不支持，<var_item> 的产生式应该这么写</p>
+<p>如果不支持，&lt;var_item&gt; 的产生式应该这么写</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">var_item</span>&gt;</span> -&gt;  ident <span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_init</span>&gt;</span> <br>            |  mul ident <span class="hljs-tag">&lt;<span class="hljs-name">var_init</span>&gt;</span> <br></code></pre></td></tr></table></figure>
 <p>考虑再三，我决定用前面的写法，因为以后很可能给 csub 增加这个功能。</p>
 <p>目前的做法是让 *p[10] 这种代码通过语法分析，但是在语义分析阶段报错“数组元素的类型只能是基本类型”。</p>
-<p>接下来看看 <arr_len> 、<var_init>  都是什么。</p>
+<p>接下来看看 &lt;arr_len&gt; 、&lt;var_init&gt;  都是什么。</p>
 <figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs gherkin"><span class="hljs-variable">&lt;arr_len&gt;</span> -&gt; lbracket num rbracket <br>           |<span class="hljs-string"> lbracket  rbracket </span><br><span class="hljs-string">           </span>|<span class="hljs-string"> ε</span><br></code></pre></td></tr></table></figure>
 <p><code>lbracket</code> <code>num</code> <code>rbracket</code> 是 3 个终结符，分别表示 “[”、 数字常量、“]”</p>
 <p>也可以省略元素个数，所以有第二个产生式。</p>
@@ -471,7 +473,7 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> a; <span class="hljs-comment">// 声明位置 1</span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">fun</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> a; <span class="hljs-comment">// 声明位置 2</span><br>    a++; <span class="hljs-comment">// 使用的地方</span><br>	...<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>如上面所示，变量 a 是在其他文件定义的，如果本文件要用，声明一般会放在本文件开头，也可以放在使用 a 的函数里面。</p>
 <p>根据前面三个代码片段可知，在产生式上，不管是文件作用域还是函数里面，变量的声明和定义是一样的。如果有区别，那是语义分析的事情，语法分析就不用操心了。</p>
-<p>用非终结符 <local_decl> 表示函数内部的变量定义或声明，有</p>
+<p>用非终结符 &lt;local_decl&gt; 表示函数内部的变量定义或声明，有</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">local_decl</span>&gt;</span> -&gt; extern <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_decl</span>&gt;</span><br>			 |  <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_decl</span>&gt;</span><br></code></pre></td></tr></table></figure>
 <p>现在，我们把已经构造好的产生式总结一下：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">program</span>&gt;</span>       -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">global_decl</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">program</span>&gt;</span> | ε<br><span class="hljs-tag">&lt;<span class="hljs-name">global_decl</span>&gt;</span>   -&gt; extern <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl</span>&gt;</span> | <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl</span>&gt;</span>        <br><span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span>          -&gt; int | char | void<br><span class="hljs-tag">&lt;<span class="hljs-name">decl</span>&gt;</span>          -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">var_decl</span>&gt;</span> <br>                 | <span class="hljs-tag">&lt;<span class="hljs-name">fun_decl</span>&gt;</span> // 待分解<br><span class="hljs-tag">&lt;<span class="hljs-name">var_decl</span>&gt;</span>      -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">var_item</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_list</span>&gt;</span> <br><span class="hljs-tag">&lt;<span class="hljs-name">var_list</span>&gt;</span>      -&gt; comma <span class="hljs-tag">&lt;<span class="hljs-name">var_item</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_list</span>&gt;</span> | semico<br><span class="hljs-tag">&lt;<span class="hljs-name">var_item</span>&gt;</span>      -&gt; ident <span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_init</span>&gt;</span> | mul ident <span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_init</span>&gt;</span> <br><span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span>       -&gt; lbracket num rbracket | lbracket rbracket | ε            <br><span class="hljs-tag">&lt;<span class="hljs-name">var_init</span>&gt;</span> 	    -&gt; assign <span class="hljs-tag">&lt;<span class="hljs-name">init_expr</span>&gt;</span>  | ε <br><span class="hljs-tag">&lt;<span class="hljs-name">init_expr</span>&gt;</span>     -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> | <span class="hljs-tag">&lt;<span class="hljs-name">arr_init_list</span>&gt;</span>    <br><span class="hljs-tag">&lt;<span class="hljs-name">arr_init_list</span>&gt;</span> -&gt; lbraces <span class="hljs-tag">&lt;<span class="hljs-name">elements</span>&gt;</span> rbraces | STRING                    <br><span class="hljs-tag">&lt;<span class="hljs-name">elements</span>&gt;</span>      -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">ele</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">elements_tail</span>&gt;</span> <br><span class="hljs-tag">&lt;<span class="hljs-name">elements_tail</span>&gt;</span> -&gt; comma <span class="hljs-tag">&lt;<span class="hljs-name">ele</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">elements_tail</span>&gt;</span> | ε<br><span class="hljs-tag">&lt;<span class="hljs-name">ele</span>&gt;</span>           -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span>  //  待分解<br><span class="hljs-tag">&lt;<span class="hljs-name">local_decl</span>&gt;</span> -&gt; extern <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_decl</span>&gt;</span> |  <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_decl</span>&gt;</span> // 待完善<br></code></pre></td></tr></table></figure>
@@ -479,11 +481,12 @@
 <p>例如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a, foo(<span class="hljs-type">int</span> b); <span class="hljs-comment">// 合法</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">bar1</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>, <span class="hljs-title function_">bar2</span><span class="hljs-params">(<span class="hljs-type">int</span> *p)</span>;  <span class="hljs-comment">// 合法</span><br></code></pre></td></tr></table></figure>
 <p>但是，很少有人这么写，而且写出来可读性很差。所以，我们的 csub 不支持类似的声明。</p>
-<h2 id="表达式"><a href="#表达式" class="headerlink" title="表达式"></a>表达式</h2><p>现在，需要讨论 <code>&lt;expr&gt;</code> 怎么分解。</p>
+<h2 id="表达式">表达式</h2>
+<p>现在，需要讨论 <code>&lt;expr&gt;</code> 怎么分解。</p>
 <p>对于表达式，首先要解决的是运算符的优先级问题。</p>
 <p>以“4 + 3 * 7”为例，如何构造语法分析树呢？</p>
 <p>下图有两种语法分析树，圆圈表示某个非终结符。</p>
-<p><img src="image-20250904100908957.png" srcset="/img/loading.gif" lazyload alt="image-20250904100908957" style="zoom:50%;" /></p>
+<img src="image-20250904100908957.png" srcset="/img/loading.gif" lazyload alt="image-20250904100908957" style="zoom:50%;" />
 <p>因为乘法的优先级高，所以应该先算 3 * 7。显而易见，左边的树是错误的，右边的树才正确。</p>
 <p>由此可以得出结论：<strong>越靠近底层的（离树根越远的）非终结符，优先级越高。</strong></p>
 <p>另外，如果是同一优先级，还需要考虑结合性。</p>
@@ -495,17 +498,17 @@
 <p>乘性表达式是指由乘法运算符 (<code>*</code>)、除法运算符 (<code>/</code>) 和取模运算符 (<code>%</code>) 组成的表达式。</p>
 <p>例如，<code>1+2+3+...+100</code> 是加性表达式;</p>
 <p>欧拉数（自然对数的底） e 也可以展开成加性表达式：</p>
-<p><img src="image-20250912174539629.png" srcset="/img/loading.gif" lazyload alt="image-20250912174539629" style="zoom:50%;" /></p>
+<img src="image-20250912174539629.png" srcset="/img/loading.gif" lazyload alt="image-20250912174539629" style="zoom:50%;" />
 <p>在 C 语言中，乘性表达式的优先级比加性表达式的优先级仅高一个级别。</p>
 <p>如果把前文图中的非终结符补全，应该是这样的：</p>
-<p><img src="image-20250904112031696.png" srcset="/img/loading.gif" lazyload alt="image-20250904112031696" style="zoom:50%;" /></p>
-<p><code>&lt;add_expr&gt;</code> 表示加性表达式（additive expression）. <code>&lt;mul_expr&gt;</code> 表示乘性表达式（multiplicative expression）.</p>
-<p>直观上看，<add_expr> 可以分解为 1 个 <mul_expr>，或者 2 个到多个  <mul_expr> 相加。为了叙述方便，咱们只考虑加法，不考虑减法。</p>
+<img src="image-20250904112031696.png" srcset="/img/loading.gif" lazyload alt="image-20250904112031696" style="zoom:50%;" />
+<p><code>&lt;add_expr&gt; </code> 表示加性表达式（additive expression）. <code>&lt;mul_expr&gt;</code> 表示乘性表达式（multiplicative expression）.</p>
+<p>直观上看，&lt;add_expr&gt; 可以分解为 1 个 &lt;mul_expr&gt;，或者 2 个到多个  &lt;mul_expr&gt; 相加。为了叙述方便，咱们只考虑加法，不考虑减法。</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">add_expr</span>&gt;</span> -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">mul_expr</span>&gt;</span> + <span class="hljs-tag">&lt;<span class="hljs-name">mul_expr</span>&gt;</span> + <span class="hljs-tag">&lt;<span class="hljs-name">mul_expr</span>&gt;</span> + ... + <span class="hljs-tag">&lt;<span class="hljs-name">mul_expr</span>&gt;</span> <br></code></pre></td></tr></table></figure>
 <p>采用递归定义，上面的产生式可以变形为：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">add_expr</span>&gt;</span>   -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">mul_expr</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">add_tail</span>&gt;</span> <br><span class="hljs-tag">&lt;<span class="hljs-name">add_tail</span>&gt;</span> -&gt;  + <span class="hljs-tag">&lt;<span class="hljs-name">mul_expr</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">add_tail</span>&gt;</span>                  <br>            |  ε                      <br></code></pre></td></tr></table></figure>
-<p><img src="image-20250918171825598.png" srcset="/img/loading.gif" lazyload alt="image-20250918171825598" style="zoom:50%;" /></p>
-<p>请看图中红色的 <mul_expr> ，如果它和上一层的 <mul_expr>（蓝色）结合，就是左结合；如果它和右边的 <add_tail>（黄色）结合，就是右结合；</p>
+<img src="image-20250918171825598.png" srcset="/img/loading.gif" lazyload alt="image-20250918171825598" style="zoom:50%;" />
+<p>请看图中红色的 &lt;mul_expr&gt; ，如果它和上一层的 &lt;mul_expr&gt;（蓝色）结合，就是左结合；如果它和右边的 &lt;add_tail&gt;（黄色）结合，就是右结合；</p>
 <p>所以，产生式并不影响结合性。结合性可以在语义分析的时候处理。</p>
 <p>如果这么说太抽象，我们看一个简单的例子。</p>
 <p>解析表达式“1+2+3+4”</p>
@@ -525,9 +528,9 @@
 <p>回到 2）计算 2 + 7 = 9；返回 9 给步骤 1）</p>
 <p>回到 1）计算 1 + 9 = 10；</p>
 <p>计算完毕。</p>
-<h3 id="csub-支持的运算符及优先级"><a href="#csub-支持的运算符及优先级" class="headerlink" title="csub 支持的运算符及优先级"></a>csub 支持的运算符及优先级</h3><p>到此，可以构造表达式的文法了，不过要做一个准备工作，就是把 csub 支持的运算符分类，排出优先级。</p>
+<h3 id="csub-支持的运算符及优先级">csub 支持的运算符及优先级</h3>
+<p>到此，可以构造表达式的文法了，不过要做一个准备工作，就是把 csub 支持的运算符分类，排出优先级。</p>
 <p>下表就是 csub 支持的运算符，优先级越高，数字越小。</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -545,13 +548,13 @@
 <td>括号；<strong>基本表达式</strong>（primary expression）</td>
 </tr>
 <tr>
-<td>++，—，[],()</td>
+<td>++，–，[],()</td>
 <td>2</td>
 <td>左</td>
 <td>后自增，后自减，数组下标，函数调用；<strong>后缀表达式</strong>（postfix_expression）</td>
 </tr>
 <tr>
-<td>++， —， +， -， ！， *， &amp;， sizeof</td>
+<td>++， --， +， -， ！， *， &amp;， sizeof</td>
 <td>3</td>
 <td>右</td>
 <td>前自增，前自减，取正，取负，逻辑非，解引用，取地址，求尺寸；<strong>一元表达式</strong>（unary expression）</td>
@@ -587,9 +590,7 @@
 <td>逻辑与表达式（logical and expression）</td>
 </tr>
 <tr>
-<td>\</td>
-<td>\</td>
-<td></td>
+<td>||</td>
 <td>9</td>
 <td>左</td>
 <td>逻辑或表达式（logical or expression）</td>
@@ -602,87 +603,101 @@
 </tr>
 </tbody>
 </table>
-</div>
-<h3 id="赋值表达式"><a href="#赋值表达式" class="headerlink" title="赋值表达式"></a>赋值表达式</h3><p>我们从赋值表达式开始构造。</p>
-<p>模仿前文构造 <add_expr>  的文法。</p>
+<h3 id="赋值表达式">赋值表达式</h3>
+<p>我们从赋值表达式开始构造。</p>
+<p>模仿前文构造 &lt;add_expr&gt;  的文法。</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">assign_expr</span>&gt;</span>	-&gt;	<span class="hljs-tag">&lt;<span class="hljs-name">logical_or_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">assign_tail</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">assign_tail</span>&gt;</span>	-&gt;	assign <span class="hljs-tag">&lt;<span class="hljs-name">logical_or_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">assign_tail</span>&gt;</span> <br>                 |  ε     <br></code></pre></td></tr></table></figure>
-<p><assign_expr> 表示赋值表达式，它可以推导出比它高一个优先级的逻辑或表达式（用非终结符 <logical_or_expr> 表示）。</p>
+<p>&lt;assign_expr&gt; 表示赋值表达式，它可以推导出比它高一个优先级的逻辑或表达式（用非终结符 &lt;logical_or_expr&gt; 表示）。</p>
 <p>也可以推出类似于 “a = b = c = d = … = z” 这样的表达式。</p>
 <p>assign 表示终结符“=”；</p>
 <p>相信有的读者会问，难道说类似于  <code>a || b = c</code>的表达式也合法吗？</p>
 <p>从语法角度讲，合法，因为符合我们的产生式。但是从语义角度讲不合法，因为赋值表达式的左操作数必须是一个左值，而这里的 <code>a || b</code> 是一个右值。没有关系，在语义分析的时候，编译器会报错。</p>
-<h3 id="逻辑或表达式"><a href="#逻辑或表达式" class="headerlink" title="逻辑或表达式"></a>逻辑或表达式</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">logical_or_expr</span>&gt;</span>  -&gt; 	<span class="hljs-tag">&lt;<span class="hljs-name">logical_and_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">logical_or_tail</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">logical_or_tail</span>&gt;</span>  -&gt; 	or <span class="hljs-tag">&lt;<span class="hljs-name">logical_and_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">logical_or_tail</span>&gt;</span> <br>                    |    ε    <br></code></pre></td></tr></table></figure>
+<h3 id="逻辑或表达式">逻辑或表达式</h3>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">logical_or_expr</span>&gt;</span>  -&gt; 	<span class="hljs-tag">&lt;<span class="hljs-name">logical_and_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">logical_or_tail</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">logical_or_tail</span>&gt;</span>  -&gt; 	or <span class="hljs-tag">&lt;<span class="hljs-name">logical_and_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">logical_or_tail</span>&gt;</span> <br>                    |    ε    <br></code></pre></td></tr></table></figure>
 <p>or 表示终结符 “||”;</p>
-<p>相信读者都观察出来了，二元操作符构成的表达式都是这个套路：先分解出一个更高优先级的表达式 <xxx_expr>，再分解出 0 个到多个 <code>&lt;op&gt; &lt;xxx_expr&gt;</code> 连接在  <xxx_expr> 后面。 这里的<code>&lt;op&gt;</code>表示某种二元操作符。</p>
-<h3 id="逻辑与表达式"><a href="#逻辑与表达式" class="headerlink" title="逻辑与表达式"></a>逻辑与表达式</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">logical_and_expr</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">equ_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">logical_and_tail</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">logical_and_tail</span>&gt;</span> -&gt; and <span class="hljs-tag">&lt;<span class="hljs-name">equ_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">logical_and_tail</span>&gt;</span><br>                   |    ε   <br></code></pre></td></tr></table></figure>
+<p>相信读者都观察出来了，二元操作符构成的表达式都是这个套路：先分解出一个更高优先级的表达式 &lt;xxx_expr&gt;，再分解出 0 个到多个 <code>&lt;op&gt; &lt;xxx_expr&gt;</code> 连接在  &lt;xxx_expr&gt; 后面。 这里的<code>&lt;op&gt;</code>表示某种二元操作符。</p>
+<h3 id="逻辑与表达式">逻辑与表达式</h3>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">logical_and_expr</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">equ_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">logical_and_tail</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">logical_and_tail</span>&gt;</span> -&gt; and <span class="hljs-tag">&lt;<span class="hljs-name">equ_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">logical_and_tail</span>&gt;</span><br>                   |    ε   <br></code></pre></td></tr></table></figure>
 <p>“and” 表示终结符 “&amp;&amp;”</p>
-<p> <equ_expr> 表示等性表达式。等性表达式是编程语言中用于比较两个操作数的值是否相等或不相等的一种表达式，例如 <code>a == 1</code> 或者 <code>x &gt;= 0</code>;</p>
-<h3 id="等性表达式"><a href="#等性表达式" class="headerlink" title="等性表达式"></a>等性表达式</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">equ_expr</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">relation_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">equ_tail</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">equ_tail</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">equality_op</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">relation_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">equ_tail</span>&gt;</span>    <br>           |    ε   <br><span class="hljs-tag">&lt;<span class="hljs-name">equality_op</span>&gt;</span> -&gt; equ | nequ           <br></code></pre></td></tr></table></figure>
+<p>&lt;equ_expr&gt; 表示等性表达式。等性表达式是编程语言中用于比较两个操作数的值是否相等或不相等的一种表达式，例如 <code>a == 1</code> 或者 <code>x &gt;= 0</code>;</p>
+<h3 id="等性表达式">等性表达式</h3>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">equ_expr</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">relation_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">equ_tail</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">equ_tail</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">equality_op</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">relation_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">equ_tail</span>&gt;</span>    <br>           |    ε   <br><span class="hljs-tag">&lt;<span class="hljs-name">equality_op</span>&gt;</span> -&gt; equ | nequ           <br></code></pre></td></tr></table></figure>
 <p>equ 表示终结符 “==”； nequ 表示终结符 “!=”</p>
-<p><relation_expr> 表示关系表达式，例如 <code>a &gt;= 5</code> <code>m &lt; 3</code></p>
-<h3 id="关系表达式"><a href="#关系表达式" class="headerlink" title="关系表达式"></a>关系表达式</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">relation_expr</span>&gt;</span> -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">add_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">relation_tail</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">relation_tail</span>&gt;</span> -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">relation_op</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">add_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">relation_tail</span>&gt;</span><br>                 |    ε   <br><span class="hljs-tag">&lt;<span class="hljs-name">relation_op</span>&gt;</span> -&gt; gt | ge | lt | le              <br></code></pre></td></tr></table></figure>
+<p>&lt;relation_expr&gt; 表示关系表达式，例如 <code>a &gt;= 5</code> <code>m &lt; 3</code></p>
+<h3 id="关系表达式">关系表达式</h3>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">relation_expr</span>&gt;</span> -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">add_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">relation_tail</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">relation_tail</span>&gt;</span> -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">relation_op</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">add_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">relation_tail</span>&gt;</span><br>                 |    ε   <br><span class="hljs-tag">&lt;<span class="hljs-name">relation_op</span>&gt;</span> -&gt; gt | ge | lt | le              <br></code></pre></td></tr></table></figure>
 <p>gt 表示终结符“&gt;”； ge 表示终结符“&gt;=”； lt 表示终结符“&lt;”； le 表示终结符“&lt;=”</p>
-<h3 id="加性表达式"><a href="#加性表达式" class="headerlink" title="加性表达式"></a>加性表达式</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">add_expr</span>&gt;</span>   -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">mul_expr</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">add_tail</span>&gt;</span> <br><span class="hljs-tag">&lt;<span class="hljs-name">add_tail</span>&gt;</span>   -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">additive_op</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">mul_expr</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">add_tail</span>&gt;</span>                  <br>              |  ε    <br><span class="hljs-tag">&lt;<span class="hljs-name">additive_op</span>&gt;</span> -&gt; add | sub    <br></code></pre></td></tr></table></figure>
+<h3 id="加性表达式">加性表达式</h3>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">add_expr</span>&gt;</span>   -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">mul_expr</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">add_tail</span>&gt;</span> <br><span class="hljs-tag">&lt;<span class="hljs-name">add_tail</span>&gt;</span>   -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">additive_op</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">mul_expr</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">add_tail</span>&gt;</span>                  <br>              |  ε    <br><span class="hljs-tag">&lt;<span class="hljs-name">additive_op</span>&gt;</span> -&gt; add | sub    <br></code></pre></td></tr></table></figure>
 <p>add 表示终结符“+”， sub 表示终结符“-”</p>
-<h3 id="乘性表达式"><a href="#乘性表达式" class="headerlink" title="乘性表达式"></a>乘性表达式</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">mul_expr</span>&gt;</span>   -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">unary_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">mul_tail</span>&gt;</span> <br><span class="hljs-tag">&lt;<span class="hljs-name">mul_tail</span>&gt;</span>   -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">multi_op</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">unary_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">mul_tail</span>&gt;</span>                  <br>              |  ε    <br><span class="hljs-tag">&lt;<span class="hljs-name">multi_op</span>&gt;</span> -&gt;  mul | div | mod<br></code></pre></td></tr></table></figure>
+<h3 id="乘性表达式">乘性表达式</h3>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">mul_expr</span>&gt;</span>   -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">unary_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">mul_tail</span>&gt;</span> <br><span class="hljs-tag">&lt;<span class="hljs-name">mul_tail</span>&gt;</span>   -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">multi_op</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">unary_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">mul_tail</span>&gt;</span>                  <br>              |  ε    <br><span class="hljs-tag">&lt;<span class="hljs-name">multi_op</span>&gt;</span> -&gt;  mul | div | mod<br></code></pre></td></tr></table></figure>
 <p>mul、div、mod 分别表示终结符“*”、“/”、“%”</p>
-<h3 id="一元表达式"><a href="#一元表达式" class="headerlink" title="一元表达式"></a>一元表达式</h3><p>一元表达式的操作数只有一个，且运算符在操作数的左边，结合性为右结合。 csub 支持的一元运算符包括前自增（++），前自减（—），取正（+），取负（-），逻辑非（！），解引用（*），取地址（&amp;），求尺寸（sizeof）。</p>
+<h3 id="一元表达式">一元表达式</h3>
+<p>一元表达式的操作数只有一个，且运算符在操作数的左边，结合性为右结合。 csub 支持的一元运算符包括前自增（++），前自减（–），取正（+），取负（-），逻辑非（！），解引用（*），取地址（&amp;），求尺寸（sizeof）。</p>
 <p>例如： <code>++a</code> <code>****p</code> <code>sizeof(m)</code> <code>-100</code> <code>&amp;i</code></p>
-<p>比一元表达式高一个优先级的是后缀表达式（用 <post_expr> 表示）。</p>
-<p><unary_op> 表示一元操作符，其产生式为：</p>
+<p>比一元表达式高一个优先级的是后缀表达式（用 &lt;post_expr&gt; 表示）。</p>
+<p>&lt;unary_op&gt; 表示一元操作符，其产生式为：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">unary_op</span>&gt;</span> -&gt; incr | decr | add | sub | not | mul | lea | sizeof			<br></code></pre></td></tr></table></figure>
 <p>依然类比加性表达式：</p>
 <ol>
-<li><p>加性表达式可以推导出比它高一个优先级的乘性表达式</p>
+<li>
+<p>加性表达式可以推导出比它高一个优先级的乘性表达式</p>
 </li>
-<li><p>用“+” 连接两个乘性表达式就得到加性表达式；</p>
+<li>
+<p>用“+” 连接两个乘性表达式就得到加性表达式；</p>
 </li>
-<li>在 2 的基础上，可以再往右边连接 “+ 乘性表达式”或者往左边连接 “乘性表达式 +”，结果还是加性表达式</li>
+<li>
+<p>在 2 的基础上，可以再往右边连接 “+ 乘性表达式”或者往左边连接 “乘性表达式 +”，结果还是加性表达式</p>
+</li>
 </ol>
 <p>把上面三点变换一下：</p>
 <ol>
 <li>一元表达式可以推导出比它高一个优先级的后缀表达式</li>
-<li>把 <unary_op> 放在后缀表达式左边，就得到一元表达式</li>
-<li>在 2 的基础上，再往左边放置  <unary_op>，结果还是一元表达式</li>
+<li>把 &lt;unary_op&gt; 放在后缀表达式左边，就得到一元表达式</li>
+<li>在 2 的基础上，再往左边放置  &lt;unary_op&gt;，结果还是一元表达式</li>
 </ol>
-<p>所以，<unary_expr> 可以推导出 0 到多个  <unary_op>，最右边是 <post_expr></p>
-<p><unary_expr> 的产生式为：</p>
+<p>所以，&lt;unary_expr&gt; 可以推导出 0 到多个  &lt;unary_op&gt;，最右边是 &lt;post_expr&gt;</p>
+<p>&lt;unary_expr&gt; 的产生式为：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">unary_expr</span>&gt;</span>  -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">unary_op</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">unary_expr</span>&gt;</span> | <span class="hljs-tag">&lt;<span class="hljs-name">post_expr</span>&gt;</span><br></code></pre></td></tr></table></figure>
-<p>换句话说，对于一元表达式，可以拆出来 0 个到多个 <unary_op>，直到没有  <unary_op>，剩下来的就是  <post_expr></p>
+<p>换句话说，对于一元表达式，可以拆出来 0 个到多个 &lt;unary_op&gt;，直到没有  &lt;unary_op&gt;，剩下来的就是  &lt;post_expr&gt;</p>
 <p>例如<code>-+-+*p++</code>,解析的时候，先拆出最左边的负号，再拆出正号，再拆出负号，再拆出正号，再拆出“*”，没有什么可以拆了，剩下的<code>p++</code>就按照后缀表达式解析。</p>
 <p>另外，++++p，虽然合乎产生式，但是有问题：++ 的操作数必须是左值，++p 没有问题，但是它的结果不是左值，所以 ++++p 是错误的。这个我们放到语义分析的时候处理。</p>
-<h3 id="后缀表达式"><a href="#后缀表达式" class="headerlink" title="后缀表达式"></a>后缀表达式</h3><p>后缀运算符有后自增，后自减，数组下标，函数调用。</p>
+<h3 id="后缀表达式">后缀表达式</h3>
+<p>后缀运算符有后自增，后自减，数组下标，函数调用。</p>
 <p>模仿一元表达式，可以写出后缀表达式的产生式</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">post_expr</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">post_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">post_op</span>&gt;</span> | <span class="hljs-tag">&lt;<span class="hljs-name">primary_expr</span>&gt;</span> <br><span class="hljs-tag">&lt;<span class="hljs-name">post_op</span>&gt;</span> -&gt; incr | decr | lbracket <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> rbracket | lparen <span class="hljs-tag">&lt;<span class="hljs-name">realarg</span>&gt;</span> rparen   <br></code></pre></td></tr></table></figure>
 <p>细心的读者发现，这不是左递归了吗？没错。</p>
-<p>前面的章节讲过，对于左递归产生式 $A \rightarrow A \alpha\ | \ \beta$</p>
-<p>可以改写为： </p>
-<p>$A \rightarrow  \beta R$</p>
-<p>$R \rightarrow  \alpha R \ | \ \epsilon$</p>
-<p>$A$ 就是 <post_expr>， $\alpha$ 是 <post_op>， $\beta$ 是 <primary_expr> ，所以后缀表达式的产生式可以改写为：</p>
+<p>前面的章节讲过，对于左递归产生式 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>→</mo><mi>A</mi><mi>α</mi><mtext> </mtext><mi mathvariant="normal">∣</mi><mtext> </mtext><mi>β</mi></mrow><annotation encoding="application/x-tex">A \rightarrow A \alpha\ | \ \beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">A</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace"> </span><span class="mord">∣</span><span class="mspace"> </span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span></span></span></span></p>
+<p>可以改写为：</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>→</mo><mi>β</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">A \rightarrow  \beta R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span></span></p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>→</mo><mi>α</mi><mi>R</mi><mtext> </mtext><mi mathvariant="normal">∣</mi><mtext> </mtext><mi>ϵ</mi></mrow><annotation encoding="application/x-tex">R \rightarrow  \alpha R \ | \ \epsilon</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace"> </span><span class="mord">∣</span><span class="mspace"> </span><span class="mord mathnormal">ϵ</span></span></span></span></p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span> 就是 &lt;post_expr&gt;， <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span> 是 &lt;post_op&gt;， <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span></span></span></span> 是 &lt;primary_expr&gt; ，所以后缀表达式的产生式可以改写为：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">post_expr</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">primary_expr</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">R</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">R</span>&gt;</span> -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">post_op</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">R</span>&gt;</span> | ε <br></code></pre></td></tr></table></figure>
 <p>改写后，左递归没有了。</p>
-<p><code>lparen &lt;realarg&gt; rparen</code> 表示函数调用的参数列表； </p>
+<p><code>lparen &lt;realarg&gt; rparen</code> 表示函数调用的参数列表；</p>
 <p>lparen 和 rparen 分别表示终结符 “(” 和 “)”</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">realarg</span>&gt;</span>	-&gt;	<span class="hljs-tag">&lt;<span class="hljs-name">arg</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">arglist</span>&gt;</span> | ε  <br><span class="hljs-tag">&lt;<span class="hljs-name">arglist</span>&gt;</span>	-&gt;	comma <span class="hljs-tag">&lt;<span class="hljs-name">arg</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">arglist</span>&gt;</span> | ε<br></code></pre></td></tr></table></figure>
 <p><code>&lt;realarg&gt;</code> 可以为空，也可以由 1 到多个参数组成，之间用逗号分隔。</p>
 <p><code>&lt;arg&gt;</code> 又是什么呢？往高优先级说，可以是标识符、常量、函数的返回值等，往低优先级说，可以是任何表达式。所以有：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">arg</span>&gt;</span> 	-&gt; 	<span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span><br></code></pre></td></tr></table></figure>
-<h3 id="基本表达式"><a href="#基本表达式" class="headerlink" title="基本表达式"></a>基本表达式</h3><p>基本表达式通常作为其他表达式的基本构件而存在。基本表达式包括标识符、各种常量和括号括住的表达式。</p>
+<h3 id="基本表达式">基本表达式</h3>
+<p>基本表达式通常作为其他表达式的基本构件而存在。基本表达式包括标识符、各种常量和括号括住的表达式。</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">primary_expr</span>&gt;</span> -&gt;  ident | lparen <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> rparen | <span class="hljs-tag">&lt;<span class="hljs-name">literal</span>&gt;</span> <br>    <br><span class="hljs-tag">&lt;<span class="hljs-name">literal</span>&gt;</span>	-&gt;	num | string | chara<br></code></pre></td></tr></table></figure>
 <p><code>&lt;literal&gt;</code> 是字面量，包括十进制整数、字符串常量、字符常量。</p>
 <p>到了这里，可以讨论<code>&lt;expr&gt;</code> 的产生式了。因为<code>&lt;expr&gt;</code> 代表任何表达式，所以</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">assign_expr</span>&gt;</span><br></code></pre></td></tr></table></figure>
 <p>赋值表达式的优先级最低，它可以推导出任何表达式；而<code>&lt;expr&gt;</code>又可以推导出赋值表达式，所以<code>&lt;expr&gt;</code>代表任何表达式。</p>
-<h2 id="函数声明与定义"><a href="#函数声明与定义" class="headerlink" title="函数声明与定义"></a>函数声明与定义</h2><p>前文已经有了产生式</p>
+<h2 id="函数声明与定义">函数声明与定义</h2>
+<p>前文已经有了产生式</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">global_decl</span>&gt;</span>   -&gt; extern <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl</span>&gt;</span> | <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl</span>&gt;</span>               <br><span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span>          -&gt; int | char | void<br><span class="hljs-tag">&lt;<span class="hljs-name">decl</span>&gt;</span>          -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">var_decl</span>&gt;</span> | <span class="hljs-tag">&lt;<span class="hljs-name">fun_decl</span>&gt;</span><br></code></pre></td></tr></table></figure>
 <p>现在看看 <code>&lt;fun_decl&gt;</code>  怎么拆解。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;  <span class="hljs-comment">// 函数声明</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;...&#125; <span class="hljs-comment">// 函数定义</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">()</span>; <span class="hljs-comment">// 函数声明; csub 认为参数是 void</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">bar</span><span class="hljs-params">(<span class="hljs-type">int</span>, <span class="hljs-type">int</span>)</span>; <span class="hljs-comment">// csub 不支持</span><br><br><span class="hljs-type">int</span> *<span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">char</span> b, <span class="hljs-type">int</span> c[])</span>;  <br><span class="hljs-type">int</span> *<span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">int</span> *a, <span class="hljs-type">char</span> *b)</span>; <br></code></pre></td></tr></table></figure>
 <p>最左边的 “int” 是由<code>&lt;type&gt;</code>推导出来的，<code>&lt;fun_decl&gt;</code> 以标识符或者 * 开头。</p>
 <p>不管是函数声明还是函数定义，特征都是标识符后面接<code>()</code>，然后是<code>;</code>（对于声明）或者<code>{…}</code>（对于定义）。</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">fun_decl</span>&gt;</span> -&gt; ident lparen <span class="hljs-tag">&lt;<span class="hljs-name">para_decl</span>&gt;</span> rparen <span class="hljs-tag">&lt;<span class="hljs-name">fun_body</span>&gt;</span><br>            |  mul ident lparen <span class="hljs-tag">&lt;<span class="hljs-name">para_decl</span>&gt;</span> rparen <span class="hljs-tag">&lt;<span class="hljs-name">fun_body</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">fun_body</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">block</span>&gt;</span> | semico            <br></code></pre></td></tr></table></figure>
-<p>先看 <fun_body>，如果是函数定义，就用产生式  <code>&lt;fun_body&gt; -&gt; &lt;block&gt;</code>, <code>&lt;block&gt;</code>表示花括号及里面的语句；</p>
-<p>如果是函数声明就用  <code>&lt;fun_body&gt; -&gt;  semico</code> </p>
+<p>先看 &lt;fun_body&gt;，如果是函数定义，就用产生式  <code>&lt;fun_body&gt; -&gt; &lt;block&gt;</code>, <code>&lt;block&gt;</code>表示花括号及里面的语句；</p>
+<p>如果是函数声明就用  <code>&lt;fun_body&gt; -&gt;  semico</code></p>
 <p><code>&lt;para_decl&gt;</code> 表示形式参数列表。为了降低难度，我们规定，形式参数名字不能省略；</p>
 <p>如果参数是数组，可以用 <code>int *a</code> 或者<code>int a[10]</code>或者<code>int a[]</code>；</p>
 <p>需要注意，在 C 语言的早期版本（如 K&amp;R C）中：<code>void foo();</code>仅表示函数返回 <code>void</code>类型，但是参数列表未指定（可能接受任意数量和类型的参数）。</p>
@@ -692,17 +707,17 @@
 <p>对于 <code>&lt;para_item&gt;</code> 的分解，比较简单</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">para_item</span>&gt;</span> -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> ident <span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span> <br>             |  <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> mul ident <span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span>   <br></code></pre></td></tr></table></figure>
 <p>前面的章节说过，针对 LL（1) 文法构造的分析器，在每一步分析时，只需要向前查看 1 个输入符号就可以判断使用哪条产生式规则。</p>
-<p>如果把 <fun_decl>  和 <var_decl> 的产生式放在一起，就会发现问题。</p>
+<p>如果把 &lt;fun_decl&gt;  和 &lt;var_decl&gt; 的产生式放在一起，就会发现问题。</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">decl</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">fun_decl</span>&gt;</span> | <span class="hljs-tag">&lt;<span class="hljs-name">var_decl</span>&gt;</span><br><br><span class="hljs-tag">&lt;<span class="hljs-name">fun_decl</span>&gt;</span> -&gt; ident lparen <span class="hljs-tag">&lt;<span class="hljs-name">para_decl</span>&gt;</span> rparen <span class="hljs-tag">&lt;<span class="hljs-name">fun_body</span>&gt;</span><br>            |  mul ident lparen <span class="hljs-tag">&lt;<span class="hljs-name">para_decl</span>&gt;</span> rparen <span class="hljs-tag">&lt;<span class="hljs-name">fun_body</span>&gt;</span><br><br>因为 <span class="hljs-tag">&lt;<span class="hljs-name">var_decl</span>&gt;</span>  -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">var_item</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_list</span>&gt;</span> <br>又因为 <span class="hljs-tag">&lt;<span class="hljs-name">var_item</span>&gt;</span> -&gt;  ident <span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_init</span>&gt;</span> <br>                  |  mul ident <span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_init</span>&gt;</span>     <br>            <br>所以 <br><span class="hljs-tag">&lt;<span class="hljs-name">var_decl</span>&gt;</span> -&gt; ident <span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_init</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_list</span>&gt;</span> <br>            | mul ident <span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_init</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_list</span>&gt;</span>   <br></code></pre></td></tr></table></figure>
-<p>我们发现，<fun_decl> 的开头是<code>ident</code>或者<code>mul ident</code> ，<var_decl> 的开头也是这样。</p>
-<p>问题来了，当读入的符号是标识符或者 “*” 的时候，应该用哪个产生式呢？是 <fun_decl> 还是 <var_decl>？</p>
+<p>我们发现，&lt;fun_decl&gt; 的开头是<code>ident</code>或者<code>mul ident</code> ，&lt;var_decl&gt; 的开头也是这样。</p>
+<p>问题来了，当读入的符号是标识符或者 “*” 的时候，应该用哪个产生式呢？是 &lt;fun_decl&gt; 还是 &lt;var_decl&gt;？</p>
 <p>此时，就需要用之前讲的“提取左公因子”的方法来改写产生式。</p>
-<p>用 <decl_head> 表示左公因子 “ident |  mul ident” </p>
+<p>用 &lt;decl_head&gt; 表示左公因子 “ident |  mul ident”</p>
 <p>有  <code>&lt;decl_head&gt; -&gt; ident | mul ident</code></p>
-<p>把 <fun_decl> 除去  <decl_head>  的部分叫做 <fun_decl_tail> ,那么有</p>
+<p>把 &lt;fun_decl&gt; 除去  &lt;decl_head&gt;  的部分叫做 &lt;fun_decl_tail&gt; ,那么有</p>
 <p><code>&lt;fun_decl_tail&gt; -&gt; lparen &lt;para_decl&gt; rparen &lt;fun_body&gt;</code></p>
-<p>同理，把 <var_decl> 除去  <decl_head>  的部分叫做 <var_decl_tail>，那么有</p>
-<p><code>&lt;var_decl_tail&gt; -&gt; &lt;arr_len&gt; &lt;var_init&gt; &lt;var_list&gt;</code></p>
+<p>同理，把 &lt;var_decl&gt; 除去  &lt;decl_head&gt;  的部分叫做 &lt;var_decl_tail&gt;，那么有</p>
+<p><code>&lt;var_decl_tail&gt; -&gt; &lt;arr_len&gt; &lt;var_init&gt; &lt;var_list&gt; </code></p>
 <p>把这些产生式写在一起：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">decl</span>&gt;</span> -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">decl_tail</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span> -&gt; ident <br>             | mul ident<br><span class="hljs-tag">&lt;<span class="hljs-name">decl_tail</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">var_decl_tail</span>&gt;</span> <br>             | <span class="hljs-tag">&lt;<span class="hljs-name">fun_decl_tail</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">var_decl_tail</span>&gt;</span> -&gt; <span class="hljs-tag">&lt;<span class="hljs-name">arr_len</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_init</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_list</span>&gt;</span> <br><span class="hljs-tag">&lt;<span class="hljs-name">fun_decl_tail</span>&gt;</span> -&gt; lparen <span class="hljs-tag">&lt;<span class="hljs-name">para_decl</span>&gt;</span> rparen <span class="hljs-tag">&lt;<span class="hljs-name">fun_body</span>&gt;</span><br></code></pre></td></tr></table></figure>
 <p>改写之后，展开<code>&lt;decl&gt;</code> 的时候，先处理 <code>&lt;decl_head&gt;</code>，再判断下一个符号，如果是 “(” 就用 <code>&lt;fun_decl_tail&gt;</code>，如果不是，就用 <code>&lt;var_decl_tail&gt;</code></p>
@@ -710,45 +725,47 @@
 <p>要修改为：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">local_decl</span>&gt;</span> -&gt; extern <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_decl_tail</span>&gt;</span><br>             |  <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_decl_tail</span>&gt;</span><br></code></pre></td></tr></table></figure>
 <p>现在，我们考虑函数里面的函数声明和定义，因为 C 语言不支持函数的嵌套定义，所以，函数定义里面只能声明函数，不能再定义函数。</p>
-<p>如果照猫画虎，根据上面的式子得出 <local_decl> 还可以推导出：</p>
+<p>如果照猫画虎，根据上面的式子得出 &lt;local_decl&gt; 还可以推导出：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">local_decl</span>&gt;</span> -&gt; extern <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">fun_decl_tail</span>&gt;</span><br>              | <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">fun_decl_tail</span>&gt;</span><br></code></pre></td></tr></table></figure>
 <p>这就不对了。因为</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">fun_decl_tail</span>&gt;</span> -&gt; lparen <span class="hljs-tag">&lt;<span class="hljs-name">para_decl</span>&gt;</span> rparen semico  <br>                 | lparen <span class="hljs-tag">&lt;<span class="hljs-name">para_decl</span>&gt;</span> rparen <span class="hljs-tag">&lt;<span class="hljs-name">block</span>&gt;</span> <br></code></pre></td></tr></table></figure>
-<p>由此可见， 这种情况下 <fun_body> 不能推导出 <code>&lt;block&gt;</code>；</p>
-<p>所以, 只能用 <code>lparen &lt;para_decl&gt; rparen semico</code>代替上面的 <fun_decl_tail>，<local_decl> 应该写成：</p>
+<p>由此可见， 这种情况下 &lt;fun_body&gt; 不能推导出 <code>&lt;block&gt;</code>；</p>
+<p>所以, 只能用 <code>lparen &lt;para_decl&gt; rparen semico</code>代替上面的 &lt;fun_decl_tail&gt;，&lt;local_decl&gt; 应该写成：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">local_decl</span>&gt;</span> -&gt; extern <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span>  lparen <span class="hljs-tag">&lt;<span class="hljs-name">para_decl</span>&gt;</span> rparen semico<br>              | <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span>  lparen <span class="hljs-tag">&lt;<span class="hljs-name">para_decl</span>&gt;</span> rparen semico<br></code></pre></td></tr></table></figure>
-<p>再加上前面推出的， <local_decl> 的产生式为：</p>
+<p>再加上前面推出的， &lt;local_decl&gt; 的产生式为：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">local_decl</span>&gt;</span> -&gt; extern <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_decl_tail</span>&gt;</span> <br>			  | extern <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span>  lparen <span class="hljs-tag">&lt;<span class="hljs-name">para_decl</span>&gt;</span> rparen semico <br>			  | <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_decl_tail</span>&gt;</span> <br>			  | <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span>  lparen <span class="hljs-tag">&lt;<span class="hljs-name">para_decl</span>&gt;</span> rparen semico <br></code></pre></td></tr></table></figure>
-<h2 id="语句"><a href="#语句" class="headerlink" title="语句"></a>语句</h2><p>csub 的语句包括表达式语句，if-else、switch-case 分支语句，while、for、do-while 循环语句，以及 break、continue 和 return 语句。</p>
+<h2 id="语句">语句</h2>
+<p>csub 的语句包括表达式语句，if-else、switch-case 分支语句，while、for、do-while 循环语句，以及 break、continue 和 return 语句。</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">statement</span>&gt;</span> -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">expr_stat</span>&gt;</span><br>    		 |  <span class="hljs-tag">&lt;<span class="hljs-name">while_stat</span>&gt;</span> <br>    		 |  <span class="hljs-tag">&lt;<span class="hljs-name">for_stat</span>&gt;</span> <br>    		 |  <span class="hljs-tag">&lt;<span class="hljs-name">do_while_stat</span>&gt;</span><br>    		 |  <span class="hljs-tag">&lt;<span class="hljs-name">if_stat</span>&gt;</span> <br>    		 |  <span class="hljs-tag">&lt;<span class="hljs-name">switch_stat</span>&gt;</span><br>    		 |  <span class="hljs-tag">&lt;<span class="hljs-name">break_stat</span>&gt;</span><br>    		 |  <span class="hljs-tag">&lt;<span class="hljs-name">continue_stat</span>&gt;</span><br>    		 |  <span class="hljs-tag">&lt;<span class="hljs-name">return_stat</span>&gt;</span><br></code></pre></td></tr></table></figure>
-<p><break_stat> 和 <continue_stat> 很简单，后面只能是分号；</p>
+<p>&lt;break_stat&gt; 和 &lt;continue_stat&gt; 很简单，后面只能是分号；</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">break_stat</span>&gt;</span>    -&gt; break semico<br><span class="hljs-tag">&lt;<span class="hljs-name">continue_stat</span>&gt;</span> -&gt; continue semico <br></code></pre></td></tr></table></figure>
 <p>return 后面应该是表达式，然后是分号。</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">return_stat</span>&gt;</span>  -&gt; return <span class="hljs-tag">&lt;<span class="hljs-name">expr_stat</span>&gt;</span><br></code></pre></td></tr></table></figure>
-<p><expr_stat> 代表表达式语句。表达式语句可以是空语句（仅有一个分号）。例如：</p>
+<p>&lt;expr_stat&gt; 代表表达式语句。表达式语句可以是空语句（仅有一个分号）。例如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">while</span>(<span class="hljs-number">1</span>)<br>    ;  <span class="hljs-comment">// 空语句</span><br></code></pre></td></tr></table></figure>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">return_stat</span>&gt;</span>  -&gt;  return <span class="hljs-tag">&lt;<span class="hljs-name">expr_stat</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">expr_stat</span>&gt;</span>    -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> semico<br>                |  semico<br></code></pre></td></tr></table></figure>
-<p>下面分解 <while_stat> </p>
+<p>下面分解 &lt;while_stat&gt;</p>
 <p>while 后面接 ()，() 里面必须是表达式。</p>
 <p>下面的写法都不对，用 gcc 编译会报错。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">while</span>() &#123; <span class="hljs-comment">//  error: expected expression before ‘)’ token</span><br>    ...<br>&#125;<br><br><span class="hljs-keyword">while</span>(;) &#123; <span class="hljs-comment">// error: expected expression before ‘;’ token</span><br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>所以， <code>&lt;while_stat&gt;</code> 的产生式为：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">while_stat</span>&gt;</span> -&gt; while lparen <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> rparen <span class="hljs-tag">&lt;<span class="hljs-name">block</span>&gt;</span><br>              |  while lparen <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> rparen <span class="hljs-tag">&lt;<span class="hljs-name">statement</span>&gt;</span><br></code></pre></td></tr></table></figure></p>
+<p>所以， <code>&lt;while_stat&gt;</code> 的产生式为：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">while_stat</span>&gt;</span> -&gt; while lparen <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> rparen <span class="hljs-tag">&lt;<span class="hljs-name">block</span>&gt;</span><br>              |  while lparen <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> rparen <span class="hljs-tag">&lt;<span class="hljs-name">statement</span>&gt;</span><br></code></pre></td></tr></table></figure>
 <p><code>&lt;block&gt;</code> 表示花括号及里面的内容；</p>
 <p><code>&lt;do_while_stat&gt;</code> 的产生式为：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">do_while_stat</span>&gt;</span> -&gt; do <span class="hljs-tag">&lt;<span class="hljs-name">block</span>&gt;</span>  while lparen <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> rparen semico<br>                 | do <span class="hljs-tag">&lt;<span class="hljs-name">statement</span>&gt;</span> while lparen <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> rparen semico<br></code></pre></td></tr></table></figure>
 <p>现在看看<code>&lt;for_stat&gt;</code></p>
 <p>先举个例子：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">100</span>; ++i) &#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>把 <code>int i = 0;</code> 称为 <for_init></p>
-<p>把<code>i &lt; 100;</code> 称为 <for_cond>（取单词 condition 的前几个字母，意思是条件）</p>
-<p>把<code>++i</code> 称为 <for_iter>（取单词 iteration 的前几个字母，意思是迭代）</p>
+<p>把 <code>int i = 0;</code> 称为 &lt;for_init&gt;</p>
+<p>把<code>i &lt; 100;</code> 称为 &lt;for_cond&gt;（取单词 condition 的前几个字母，意思是条件）</p>
+<p>把<code>++i</code> 称为 &lt;for_iter&gt;（取单词 iteration 的前几个字母，意思是迭代）</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">for_stat</span>&gt;</span> 	-&gt; 	for lparen <span class="hljs-tag">&lt;<span class="hljs-name">for_init</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">for_cond</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">for_iter</span>&gt;</span> rparen  <span class="hljs-tag">&lt;<span class="hljs-name">block</span>&gt;</span>  <br>             |	for lparen <span class="hljs-tag">&lt;<span class="hljs-name">for_init</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">for_cond</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">for_iter</span>&gt;</span> rparen  <span class="hljs-tag">&lt;<span class="hljs-name">statement</span>&gt;</span> <br>                <br><span class="hljs-tag">&lt;<span class="hljs-name">for_init</span>&gt;</span> -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">decl_head</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">var_decl_tail</span>&gt;</span><br>            |  <span class="hljs-tag">&lt;<span class="hljs-name">expr_stat</span>&gt;</span><br>            <br><span class="hljs-tag">&lt;<span class="hljs-name">for_cond</span>&gt;</span> -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">expr_stat</span>&gt;</span>    <br><br><span class="hljs-tag">&lt;<span class="hljs-name">for_iter</span>&gt;</span> -&gt;  <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> | ε<br></code></pre></td></tr></table></figure>
-<p><for_init>  可以是局部变量定义，也可以是表达式语句；</p>
-<p><for_cond> 是表达式语句;</p>
-<p><for_iter> 是表达式或空；</p>
+<p>&lt;for_init&gt;  可以是局部变量定义，也可以是表达式语句；</p>
+<p>&lt;for_cond&gt; 是表达式语句;</p>
+<p>&lt;for_iter&gt; 是表达式或空；</p>
 <p>下面是 if-else 语句。</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">if_stat</span>&gt;</span> -&gt; if lparen <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> rparen <span class="hljs-tag">&lt;<span class="hljs-name">block</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">else_stat</span>&gt;</span><br>           | if lparen <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> rparen <span class="hljs-tag">&lt;<span class="hljs-name">statement</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">else_stat</span>&gt;</span><br>    <br><span class="hljs-tag">&lt;<span class="hljs-name">else_stat</span>&gt;</span> -&gt; else <span class="hljs-tag">&lt;<span class="hljs-name">block</span>&gt;</span><br>             | else <span class="hljs-tag">&lt;<span class="hljs-name">statement</span>&gt;</span><br>             | ε<br>                           <br></code></pre></td></tr></table></figure>
-<p>else 语句可以没有，所以 <else_stat> 可以推出 ε</p>
+<p>else 语句可以没有，所以 &lt;else_stat&gt; 可以推出 ε</p>
 <p>到此，<code>&lt;block&gt;</code> 还没有分解。</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">block</span>&gt;</span>	 -&gt;	lbraces <span class="hljs-tag">&lt;<span class="hljs-name">subprogram</span>&gt;</span> rbraces<br></code></pre></td></tr></table></figure>
 <p><code>&lt;subprogram&gt;</code> 是什么呢？</p>
@@ -759,9 +776,9 @@
 <p>先举个例子：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a;<br><span class="hljs-keyword">switch</span>(a) &#123;<br>    <span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:<br>    ...<br>    <span class="hljs-keyword">case</span> <span class="hljs-number">2</span>:<br>    ...<br>    <span class="hljs-keyword">default</span>:<br>    ...    <br>&#125;<br></code></pre></td></tr></table></figure>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">switch_stat</span>&gt;</span>	-&gt; 	switch lparen <span class="hljs-tag">&lt;<span class="hljs-name">expr</span>&gt;</span> rparen lbraces <span class="hljs-tag">&lt;<span class="hljs-name">case_stat</span>&gt;</span> rbraces<br><span class="hljs-tag">&lt;<span class="hljs-name">case_stat</span>&gt;</span> 	-&gt; 	case <span class="hljs-tag">&lt;<span class="hljs-name">case_label</span>&gt;</span> colon <span class="hljs-tag">&lt;<span class="hljs-name">subprogram</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">case_stat</span>&gt;</span> <br>                 |  default colon <span class="hljs-tag">&lt;<span class="hljs-name">subprogram</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">case_stat</span>&gt;</span><br>                 |  ε<br><span class="hljs-tag">&lt;<span class="hljs-name">case_label</span>&gt;</span>	-&gt;	-&gt;	num | chara<br></code></pre></td></tr></table></figure>
-<p><case_stat> 是递归定义。</p>
+<p>&lt;case_stat&gt; 是递归定义。</p>
 <p>colon 表示终结符 “:”</p>
-<p><case_label> 只能是整形常量或者字符常量。</p>
+<p>&lt;case_label&gt; 只能是整形常量或者字符常量。</p>
 <p>这样就可以了吗？</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a;<br><span class="hljs-keyword">switch</span>(a) &#123;<br>    <span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:<br>    	<span class="hljs-type">int</span> apple = <span class="hljs-number">0</span>;<br>        apple++;<br>        <span class="hljs-keyword">break</span>;<br>	...  <br>&#125;<br></code></pre></td></tr></table></figure>
 <p>请问这样的代码可以编译过吗？</p>
@@ -770,9 +787,9 @@
 <p>也就是说，case 语句不能是 declaration（包括定义和声明）；</p>
 <p>但是，如果这样写就是合法的：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a;<br><span class="hljs-keyword">switch</span>(a) &#123;<br>    <span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:<br>    &#123;<br>        <span class="hljs-type">int</span> apple = <span class="hljs-number">0</span>;<br>        apple++;     <br>    &#125;<br>    <span class="hljs-keyword">break</span>;<br>        <br>	...  <br>&#125;<br></code></pre></td></tr></table></figure>
-<p>所以，若是为了对标 C 语言标准，<case_stat> 的产生式要改一改。 把前面的 <code>&lt;subprogram&gt;</code> 替换成 <code>&lt;subprogram_in_switch&gt;</code></p>
+<p>所以，若是为了对标 C 语言标准，&lt;case_stat&gt; 的产生式要改一改。 把前面的 <code>&lt;subprogram&gt;</code> 替换成 <code>&lt;subprogram_in_switch&gt;</code></p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">case_stat</span>&gt;</span> -&gt; 	case <span class="hljs-tag">&lt;<span class="hljs-name">case_label</span>&gt;</span> colon <span class="hljs-tag">&lt;<span class="hljs-name">subprogram_in_switch</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">case_stat</span>&gt;</span> <br>             |  default colon <span class="hljs-tag">&lt;<span class="hljs-name">subprogram_in_switch</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">case_stat</span>&gt;</span><br>             |  ε<br>                 <br><span class="hljs-tag">&lt;<span class="hljs-name">subprogram_in_switch</span>&gt;</span>	-&gt;	<span class="hljs-tag">&lt;<span class="hljs-name">statement</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">subprogram_in_switch</span>&gt;</span><br>					    |   <span class="hljs-tag">&lt;<span class="hljs-name">block</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">subprogram_in_switch</span>&gt;</span>    <br>					    |   ε                                  <br></code></pre></td></tr></table></figure>
-<p><subprogram_in_switch> 里面不能有 <local_decl>，但是可以有 <code>&lt;block&gt;</code></p>
+<p>&lt;subprogram_in_switch&gt; 里面不能有 &lt;local_decl&gt;，但是可以有 <code>&lt;block&gt;</code></p>
 <p>至此，我们完成了 csub 所有文法的定义。接下来，就是把所有的产生式转换成代码，完成语法分析。</p>
 <p>需要说明的是，同一个语言完全可以拥有多套文法，只要它们最终能生成一致的语义结果。</p>
 <p>当你读完本书，入门编译原理后，相信你可以构造出更优雅的文法。</p>

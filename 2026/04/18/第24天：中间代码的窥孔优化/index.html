@@ -23,7 +23,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="第24天：中间代码的窥孔优化">
 <meta property="og:url" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC24%E5%A4%A9%EF%BC%9A%E4%B8%AD%E9%97%B4%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/index.html">
-<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:site_name" content="自制编译器">
 <meta property="og:description" content="脑洞大开，中间代码也可以做窥孔优化">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC24%E5%A4%A9%EF%BC%9A%E4%B8%AD%E9%97%B4%E4%BB%A3%E7%A0%81%E7%9A%84%E7%AA%A5%E5%AD%94%E4%BC%98%E5%8C%96/image-20260418161257544.png">
@@ -63,7 +63,7 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>第24天：中间代码的窥孔优化 - 49天自制编译器</title>
+  <title>第24天：中间代码的窥孔优化 - 自制编译器</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -147,7 +147,7 @@
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>49 天自制编译器</strong>
+      <strong>四十天自制编译器</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -404,16 +404,18 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第24天：中间代码的窥孔优化"><a href="#第24天：中间代码的窥孔优化" class="headerlink" title="第24天：中间代码的窥孔优化"></a>第24天：中间代码的窥孔优化</h1><h2 id="发现规律"><a href="#发现规律" class="headerlink" title="发现规律"></a>发现规律</h2><p>请看下面的代码</p>
-<p><img src="image-20260418161257544.png" srcset="/img/loading.gif" lazyload alt="image-20260418161257544" style="zoom:50%;" /></p>
+                <h1 id="第24天：中间代码的窥孔优化">第24天：中间代码的窥孔优化</h1>
+<h2 id="发现规律">发现规律</h2>
+<p>请看下面的代码</p>
+<img src="image-20260418161257544.png" srcset="/img/loading.gif" lazyload alt="image-20260418161257544" style="zoom:50%;" />
 <p>对于第 5 行的数组初始化，我们生成的汇编代码是这样的：</p>
-<p><img src="image-20260418161307805.png" srcset="/img/loading.gif" lazyload alt="image-20260418161307805" style="zoom:50%;" /></p>
+<img src="image-20260418161307805.png" srcset="/img/loading.gif" lazyload alt="image-20260418161307805" style="zoom:50%;" />
 <p>我先为读者分析这些代码是什么意思。</p>
 <p>幸亏插入了中间指令，不然看着这些汇编指令我也头晕。</p>
 <p>第 4 行的注释是 .t43 = arr</p>
 <p>提示我们第 5~6 行是把数组 arr 的首元素的地址赋值给 .t43</p>
 <p>第 5 行的 ebp-84，是为数组 arr 分配的栈偏移，也是数组 arr 首元素的地址；我是怎么知道的？因为第 5 行后面有注释，对应的代码是 <code>__load_var_to_reg</code> 函数。</p>
-<p><img src="image-20260418161332690.png" srcset="/img/loading.gif" lazyload alt="image-20260418161332690" style="zoom:50%;" /></p>
+<img src="image-20260418161332690.png" srcset="/img/loading.gif" lazyload alt="image-20260418161332690" style="zoom:50%;" />
 <p>第 618 行，我把局部变量的注释加到了 lea 或者 mov 指令的后面，这个 insert… 函数就不介绍了。</p>
 <p>继续看汇编代码，第 5 行，把 ebp-84 的值（数组 arr 首元素的地址）给了 eax;</p>
 <p>第 6 行，把 eax 的值写入内存 [ebp-88];</p>
@@ -428,15 +430,15 @@
 <p>所以这 5 行汇编指令，完成了“ arr[0] = 1 ” 这句 C 代码所做的工作。</p>
 <p>先不问您听着累不累，我讲得都累了，实在是绕啊。</p>
 <p>同理,</p>
-<p><img src="image-20260418161523947.png" srcset="/img/loading.gif" lazyload alt="image-20260418161523947" style="zoom:50%;" /></p>
+<img src="image-20260418161523947.png" srcset="/img/loading.gif" lazyload alt="image-20260418161523947" style="zoom:50%;" />
 <p>上面一共 6 行汇编指令，完成了 “ arr[1] = 3 ” 这句 C 代码所做的工作。</p>
 <p>分析起来和上面的长篇大论差不多，唯一不同的是第 4 行，给 eax 增加了 4，因为要访问下一个元素，所以偏移增加 4 个字节。</p>
 <p>我就琢磨类似的汇编指令能不能精简一下，不但能给 CPU 省点事，关键是我们读起来也轻松啊。</p>
-<p><img src="image-20260418161554202.png" srcset="/img/loading.gif" lazyload alt="image-20260418161554202" style="zoom:50%;" /></p>
+<img src="image-20260418161554202.png" srcset="/img/loading.gif" lazyload alt="image-20260418161554202" style="zoom:50%;" />
 <p>仔细看这 5 条指令，用窥孔优化好像不合适，似乎没有什么显而易见的特征。</p>
 <p>那怎么办？</p>
 <p>我们把 test.asm 中的注释，也就是中间指令抽取出来。</p>
-<p><img src="image-20260418161626187.png" srcset="/img/loading.gif" lazyload alt="image-20260418161626187" style="zoom:50%;" /></p>
+<img src="image-20260418161626187.png" srcset="/img/loading.gif" lazyload alt="image-20260418161626187" style="zoom:50%;" />
 <p>上图第 1~3 行，意思很明显，因为 arr 是 int 类型的数组，所以就是给 arr 代表的地址（连续4个字节）写 1；</p>
 <p>我们简写为 arr[0] = 1;</p>
 <p>同理，上图第 6~7 行，就是给 arr+4 代表的地址（连续4个字节）写 3；</p>
@@ -449,32 +451,32 @@
 <p>arr 代表的地址是多少呢？</p>
 <p>查符号表，arr 的 offset 是 -84，所以 arr 这个数组的起始地址就是 ebp - 84；</p>
 <p>所以中间指令 arr[0] = 1; 翻译成汇编就是 mov [ebp-84], 1；</p>
-<p>同理，对于中间指令 arr[4] = 3; </p>
+<p>同理，对于中间指令 arr[4] = 3;</p>
 <p>先计算 ebp - 84 + 4 = ebp-80；</p>
-<p>所以翻译成汇编就是 mov [ebp-80] , 3； </p>
+<p>所以翻译成汇编就是 mov [ebp-80] , 3；</p>
 <p>总结一下：对于下面的汇编指令，读起来非常费劲，且不容易优化</p>
-<p><img src="image-20260418164118185.png" srcset="/img/loading.gif" lazyload alt="image-20260418164118185" style="zoom:50%;" /></p>
+<img src="image-20260418164118185.png" srcset="/img/loading.gif" lazyload alt="image-20260418164118185" style="zoom:50%;" />
 <p>但是，生成这 6 条指令的中间指令是有明显规律的</p>
-<p><img src="image-20260418164134615.png" srcset="/img/loading.gif" lazyload alt="image-20260418164134615" style="zoom:50%;" /></p>
+<img src="image-20260418164134615.png" srcset="/img/loading.gif" lazyload alt="image-20260418164134615" style="zoom:50%;" />
 <p>这三条中间指令，如果直接翻译，就会得到上面的 6 条汇编指令；</p>
 <p>现在把这三条中间指令，优化为 arr[4] = 3；这是一条新的中间指令；</p>
 <p>在生成汇编代码阶段，根据 arr 的栈偏移，我们把它翻译成 mov dword [ebp-80] , 3</p>
 <p>等于说原来 6 条汇编指令，现在一条就搞定！</p>
 <p>既然有写数组，那就有读数组。</p>
 <p>请看下面的代码</p>
-<p><img src="image-20260418164226670.png" srcset="/img/loading.gif" lazyload alt="image-20260418164226670" style="zoom:50%;" /></p>
+<img src="image-20260418164226670.png" srcset="/img/loading.gif" lazyload alt="image-20260418164226670" style="zoom:50%;" />
 <p>以上 C 代码翻译成汇编是</p>
-<p><img src="image-20260418164251779.png" srcset="/img/loading.gif" lazyload alt="image-20260418164251779" style="zoom:50%;" /></p>
+<img src="image-20260418164251779.png" srcset="/img/loading.gif" lazyload alt="image-20260418164251779" style="zoom:50%;" />
 <p>第 3 行，ebp-32 是数组 fish 的起始地址；</p>
 <p>第 4 行，把起始地址加 8，也就是要访问 fish[2]，此时 eax 就是 fish + 8；</p>
 <p>因为 fish 的偏移地址是 ebp-32，所以 eax 的值是 ebp - 24；</p>
 <p>第 7 行，读出 fish[2]，存入 eax；</p>
 <p>第 8 行，把 eax 的值存入 cat 变量；</p>
 <p>同样，提取上图汇编代码的中间代码</p>
-<p><img src="image-20260418164406525.png" srcset="/img/loading.gif" lazyload alt="image-20260418164406525" style="zoom:50%;" /></p>
+<img src="image-20260418164406525.png" srcset="/img/loading.gif" lazyload alt="image-20260418164406525" style="zoom:50%;" />
 <p>可以化简为中间指令 cat = fish[8]</p>
 <p>在生成汇编代码的时候，这条中间指令被翻译为</p>
-<p><img src="image-20260418164455507.png" srcset="/img/loading.gif" lazyload alt="image-20260418164455507" style="zoom:50%;" /></p>
+<img src="image-20260418164455507.png" srcset="/img/loading.gif" lazyload alt="image-20260418164455507" style="zoom:50%;" />
 <p>ebp-24 是因为 ebp-32 是数组 fish 的起始地址， ebp-32+8 = ebp-24</p>
 <p>之前的 5 条汇编指令，变成了 2 条汇编指令。</p>
 <p>到此，目标已经明确。我们要做的是：</p>
@@ -483,7 +485,8 @@
 <li>对中间代码做窥孔优化，识别上面的模式，优化为新的中间指令</li>
 <li>修改 to_intel_32_asm 函数，把新的中间指令翻译为汇编代码</li>
 </ol>
-<h2 id="增加中间指令"><a href="#增加中间指令" class="headerlink" title="增加中间指令"></a>增加中间指令</h2><p><img src="image-20260418164737683.png" srcset="/img/loading.gif" lazyload alt="image-20260418164737683" style="zoom:50%;" /></p>
+<h2 id="增加中间指令">增加中间指令</h2>
+<img src="image-20260418164737683.png" srcset="/img/loading.gif" lazyload alt="image-20260418164737683" style="zoom:50%;" />
 <p>增加 IR_OP_RD_ARR 和 IR_OP_WR_ARR 这 2 个运算符。</p>
 <p>IR_OP_RD_ARR，读数组元素，用到 arg1 和 result，可能用到 arg2</p>
 <p>执行的操作是 result = *(arg1 + arg2);</p>
@@ -493,8 +496,9 @@
 <p>执行的操作是 *(arg1 + arg2) = result；</p>
 <p>arg1 是数组的名字，arg2 是偏移；</p>
 <p>当 arg2 为 NULL 时，执行的操作是 *(arg1) = result；</p>
-<h2 id="窥孔优化"><a href="#窥孔优化" class="headerlink" title="窥孔优化"></a>窥孔优化</h2><p>需要优化的中间指令形如：</p>
-<p><img src="image-20260418165052125.png" srcset="/img/loading.gif" lazyload alt="image-20260418165052125" style="zoom:50%;" /></p>
+<h2 id="窥孔优化">窥孔优化</h2>
+<p>需要优化的中间指令形如：</p>
+<img src="image-20260418165052125.png" srcset="/img/loading.gif" lazyload alt="image-20260418165052125" style="zoom:50%;" />
 <p>特征总结：</p>
 <p>inst1 中 是 IR_OP_DECL 运算，假设 arg1 是 elemt；</p>
 <p>inst2 满足下面其中 1 个条件就行；</p>
@@ -504,42 +508,43 @@
 </ol>
 <p>inst3 中， arg1 是 elemt；是 IR_OP_LOAD 或者 IR_OP_STORE 操作</p>
 <p>以上特征，我们列一个表格，这样看代码方便一些</p>
-<p><img src="image-20260418165135421.png" srcset="/img/loading.gif" lazyload alt="image-20260418165135421" style="zoom:50%;" /></p>
+<img src="image-20260418165135421.png" srcset="/img/loading.gif" lazyload alt="image-20260418165135421" style="zoom:50%;" />
 <p>必须满足特征 1，2，3，5；或者 1，2，4，5</p>
 <p>下面我们看特征识别的代码。</p>
-<p><img src="image-20260418165208191.png" srcset="/img/loading.gif" lazyload alt="image-20260418165208191" style="zoom:50%;" /></p>
+<img src="image-20260418165208191.png" srcset="/img/loading.gif" lazyload alt="image-20260418165208191" style="zoom:50%;" />
 <p>第 341~342 行，表示已经满足特征 1 和 2；</p>
 <p>第 343 行，表示满足特征 5；</p>
 <p>第 344 行，会调用 is_arr_offset 做进一步的判断，看是否满足 3 或者 4.</p>
-<p><img src="image-20260418165238182.png" srcset="/img/loading.gif" lazyload alt="image-20260418165238182" style="zoom:50%;" /></p>
+<img src="image-20260418165238182.png" srcset="/img/loading.gif" lazyload alt="image-20260418165238182" style="zoom:50%;" />
 <p>第 296~299 行根据参数判断是读数组还是写数组；</p>
 <p>第 301 行处理没有偏移（arg2 等于 NULL）的情况，也就是满足特征 3；</p>
 <p>第 303 行生成指令；</p>
 <p>我们复习一下 new_general_inst 函数的参数</p>
-<p><img src="image-20260418165322564.png" srcset="/img/loading.gif" lazyload alt="image-20260418165322564" style="zoom:50%;" /></p>
+<img src="image-20260418165322564.png" srcset="/img/loading.gif" lazyload alt="image-20260418165322564" style="zoom:50%;" />
 <p>第 1 个参数是 IR_OP_RD_ARR 或 IR_OP_WR_ARR；</p>
 <p>第 2 个参数是 result,先设置为 NULL，后面再填充；</p>
 <p>第 3 个参数来自 inst2-&gt;arg1，表示某个数组；</p>
 <p>第 4 个参数不需要；</p>
 <p>展开第 307 行</p>
-<p><img src="image-20260418165359640.png" srcset="/img/loading.gif" lazyload alt="image-20260418165359640" style="zoom:50%;" /></p>
+<img src="image-20260418165359640.png" srcset="/img/loading.gif" lazyload alt="image-20260418165359640" style="zoom:50%;" />
 <p>第 307 要求必须是加法或者减法；</p>
 <p>第 308 和 313 要求 arg1 和 arg2 中一个是数组，一个是常量，也就是满足特征 4；</p>
 <p>和上面不一样的是第四个参数不是 NULL，而是一个常量，表示偏移；</p>
 <p>再回到刚才的代码。</p>
-<p><img src="image-20260418165432060.png" srcset="/img/loading.gif" lazyload alt="image-20260418165432060" style="zoom:50%;" /></p>
+<img src="image-20260418165432060.png" srcset="/img/loading.gif" lazyload alt="image-20260418165432060" style="zoom:50%;" />
 <p>第 344 行，如果 is_arr_offset 函数的返回值不是 NULL，说明满足优化的特征。</p>
 <p>第 346，设置 result 参数，result 来自 inst3-&gt;result，就是下面例子中的 “…”</p>
-<p><img src="image-20260418165459324.png" srcset="/img/loading.gif" lazyload alt="image-20260418165459324" style="zoom:50%;" /></p>
+<img src="image-20260418165459324.png" srcset="/img/loading.gif" lazyload alt="image-20260418165459324" style="zoom:50%;" />
 <p>第 347，把 inst1 替换为 new_inst；</p>
 <p>第 349~350，把 inst2、inst3 都标记为死指令。</p>
 <p>不需要调整 begin 的位置，inter_code_move_and_fill_window(win, 1) 会把 begin 移动到下一个有效位置，因为 inst2、inst3 都标记为死指令了，所以下一个有效位置是 inst4。</p>
-<h2 id="把新的中间指令翻译为汇编代码"><a href="#把新的中间指令翻译为汇编代码" class="headerlink" title="把新的中间指令翻译为汇编代码"></a>把新的中间指令翻译为汇编代码</h2><p>打印中间指令的函数也要增加以下代码：</p>
-<p><img src="image-20260418165549122.png" srcset="/img/loading.gif" lazyload alt="image-20260418165549122" style="zoom:50%;" /></p>
+<h2 id="把新的中间指令翻译为汇编代码">把新的中间指令翻译为汇编代码</h2>
+<p>打印中间指令的函数也要增加以下代码：</p>
+<img src="image-20260418165549122.png" srcset="/img/loading.gif" lazyload alt="image-20260418165549122" style="zoom:50%;" />
 <p>第 393 ~ 396，如果没有偏移（arg2 == NULL），则显示[0]；</p>
 <p>下面的代码是对中间指令 IR_OP_WR_ARR 的翻译：</p>
 <p>把 arg1[arg2] = res 翻译成汇编指令。</p>
-<p><img src="image-20260418165634618.png" srcset="/img/loading.gif" lazyload alt="image-20260418165634618" style="zoom:50%;" /></p>
+<img src="image-20260418165634618.png" srcset="/img/loading.gif" lazyload alt="image-20260418165634618" style="zoom:50%;" />
 <p>第 511 行，加载 res 到寄存器；</p>
 <p>注意，如果 res 是常量，对汇编指令做窥孔优化的时候，就会删除这条指令（形如 mov eax, 100）；</p>
 <p>如果 arg1 是全局变量，那么翻译成汇编指令形如</p>
@@ -553,40 +558,53 @@
 <p>2）若 arg2 == NULL，说明偏于为 0，[ ] 内是数组的起始地址</p>
 <p>不管哪一种请看，翻译后形如 <code>mov [ebp - ??], …</code></p>
 <p>代码还没有完:</p>
-<p><img src="image-20260418165741553.png" srcset="/img/loading.gif" lazyload alt="image-20260418165741553" style="zoom:50%;" /></p>
+<img src="image-20260418165741553.png" srcset="/img/loading.gif" lazyload alt="image-20260418165741553" style="zoom:50%;" />
 <p>因为 arg1 是指针，还需要考虑它的类型和 res 的类型;</p>
 <p>分成四种情况</p>
 <ol>
-<li><p>res 是字符类型，arg1 是 <code>int *</code></p>
-<p> 那就把 al 做带符号扩展；再写入 arg1[arg2]，对应 529~530</p>
+<li>
+<p>res 是字符类型，arg1 是 <code>int *</code></p>
+<p>那就把 al 做带符号扩展；再写入 arg1[arg2]，对应 529~530</p>
 </li>
-<li><p>res 是字符类型，arg1 是 <code>char *</code></p>
-<p> 直接把 al 写入 arg1[arg2]，对应 532 行</p>
+<li>
+<p>res 是字符类型，arg1 是 <code>char *</code></p>
+<p>直接把 al 写入 arg1[arg2]，对应 532 行</p>
 </li>
-<li><p>res 是 int，arg1 是 <code>int *</code>,把 eax 写入 arg1[arg2]，对应 536 行</p>
+<li>
+<p>res 是 int，arg1 是 <code>int *</code>,把 eax 写入 arg1[arg2]，对应 536 行</p>
 </li>
-<li><p>res 是 int, arg1 是 <code>char *</code>, 把 al 写入 arg1[arg2]，对应 538 行</p>
+<li>
+<p>res 是 int, arg1 是 <code>char *</code>, 把 al 写入 arg1[arg2]，对应 538 行</p>
 </li>
 </ol>
 <p>下面看读数组的代码</p>
-<p><img src="image-20260418170021765.png" srcset="/img/loading.gif" lazyload alt="image-20260418170021765" style="zoom:50%;" /></p>
+<img src="image-20260418170021765.png" srcset="/img/loading.gif" lazyload alt="image-20260418170021765" style="zoom:50%;" />
 <p>544 ~ 557 是为了生成 […]（作为源操作数），和上面代码类似，不用解释。</p>
 <p>同理，因为 arg1 是指针，需要考虑它的类型和 res 的类型也是分成 4 种情况。</p>
 <ol>
-<li><p>res 是 char, arg1 是 <code>int*</code><br>先把 arg1[arg2] 读到 eax,再把 al 写入 res； 对应代码第 560 和 572；</p>
+<li>
+<p>res 是 char, arg1 是 <code>int*</code><br>
+先把 arg1[arg2] 读到 eax,再把 al 写入 res； 对应代码第 560 和 572；</p>
 </li>
-<li><p>res 是 char， arg1 是 <code>char *</code><br>把 arg1[arg2] 读到 al，再把 al 写入 res； 对应代码第 562 和 572；</p>
+<li>
+<p>res 是 char， arg1 是 <code>char *</code><br>
+把 arg1[arg2] 读到 al，再把 al 写入 res； 对应代码第 562 和 572；</p>
 </li>
-<li><p>res 是 int, arg1 是 <code>int*</code><br>把 arg1[arg2] 读到 eax，再把 eax 写入 res；对应代码第 566 和 572；</p>
+<li>
+<p>res 是 int, arg1 是 <code>int*</code><br>
+把 arg1[arg2] 读到 eax，再把 eax 写入 res；对应代码第 566 和 572；</p>
 </li>
-<li><p>res 是 int, arg1 是 <code>char*</code><br>把 arg1[arg2] 读到 al，再把 al 带符号扩展到 eax,最后把 eax 写入 res；对应代码第 568、569 和 572；</p>
+<li>
+<p>res 是 int, arg1 是 <code>char*</code><br>
+把 arg1[arg2] 读到 al，再把 al 带符号扩展到 eax,最后把 eax 写入 res；对应代码第 568、569 和 572；</p>
 </li>
 </ol>
-<h2 id="成果展示"><a href="#成果展示" class="headerlink" title="成果展示"></a>成果展示</h2><p>测试代码如下：</p>
-<p><img src="image-20260418170353433.png" srcset="/img/loading.gif" lazyload alt="image-20260418170353433" style="zoom:50%;" /></p>
+<h2 id="成果展示">成果展示</h2>
+<p>测试代码如下：</p>
+<img src="image-20260418170353433.png" srcset="/img/loading.gif" lazyload alt="image-20260418170353433" style="zoom:50%;" />
 <p>以上 C 代码，针对中间指令做与不做窥孔优化，生成的汇编指令差异很大。</p>
 <p>直接上图。</p>
-<p><img src="image-20260418170414838.png" srcset="/img/loading.gif" lazyload alt="image-20260418170414838" style="zoom:50%;" /></p>
+<img src="image-20260418170414838.png" srcset="/img/loading.gif" lazyload alt="image-20260418170414838" style="zoom:50%;" />
 <p>可以发现，左边的代码冗长无比，右边的代码十分清爽。</p>
 <p>本文到这里就结束了。下节课我们学习针对汇编语言的词法分析。</p>
 

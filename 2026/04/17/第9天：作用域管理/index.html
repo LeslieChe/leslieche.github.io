@@ -23,7 +23,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="第9天：作用域管理">
 <meta property="og:url" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%AE%A1%E7%90%86/index.html">
-<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:site_name" content="自制编译器">
 <meta property="og:description" content="你是否好奇过，编译器是如何把不同作用域的同名变量区分开的？">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://leslieche.github.io/2026/04/17/%E7%AC%AC9%E5%A4%A9%EF%BC%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%AE%A1%E7%90%86/image-20251015154952002.png">
@@ -43,7 +43,7 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>第9天：作用域管理 - 49天自制编译器</title>
+  <title>第9天：作用域管理 - 自制编译器</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -127,7 +127,7 @@
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>49 天自制编译器</strong>
+      <strong>四十天自制编译器</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -384,7 +384,8 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第9天：作用域管理"><a href="#第9天：作用域管理" class="headerlink" title="第9天：作用域管理"></a>第9天：作用域管理</h1><p>为了语义分析，我们要做符号表管理。符号表管理又离不开作用域管理，所以我们先要解决作用域的问题。</p>
+                <h1 id="第9天：作用域管理">第9天：作用域管理</h1>
+<p>为了语义分析，我们要做符号表管理。符号表管理又离不开作用域管理，所以我们先要解决作用域的问题。</p>
 <p>举个简单的例子：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> hello = <span class="hljs-number">0</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> hello = <span class="hljs-number">1</span>;<br>    &#123;<br>        <span class="hljs-type">int</span> hello = <span class="hljs-number">2</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>上面的代码一共定义了 3 个 hello, 它们属于不同的作用域。</p>
@@ -397,7 +398,7 @@
 <p>例如第 5 行的 hello，它在 1 这个括号里面，所以它的作用域是 0/1</p>
 <p>再比如第 7 行的 hello,从最外面到达它需要穿越括号 1 和括号 2，所以它的作用域是 0/1/2</p>
 <p>再看看第 24 行的函数声明 foo,从最外面到达它需要穿越括号 5 和括号 6，所以它的作用域是 0/5/6</p>
-<p><img src="image-20251015154952002.png" srcset="/img/loading.gif" lazyload alt="image-20251015154952002" style="zoom:50%;" /></p>
+<img src="image-20251015154952002.png" srcset="/img/loading.gif" lazyload alt="image-20251015154952002" style="zoom:50%;" />
 <p>不过有个问题。请看下面的代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b)</span><br>&#123;<br>    <span class="hljs-keyword">return</span> a + b;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>请问参数 a 和 b 的作用域是什么？</p>
@@ -406,7 +407,7 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> a;<br>    <span class="hljs-type">int</span> b;<br>    foo(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b);<br>    foo(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>显然第 5 行的声明中的 a 和 b 和第 3、4 行的 a 和 b 是不同的变量。</p>
 <p>所以，遇到函数声明，要把左小括号编号。</p>
-<p><img src="image-20251015164005198.png" srcset="/img/loading.gif" lazyload alt="image-20251015164005198" style="zoom:50%;" /></p>
+<img src="image-20251015164005198.png" srcset="/img/loading.gif" lazyload alt="image-20251015164005198" style="zoom:50%;" />
 <p>接下来的内容比较烧脑，请读者集中注意力。</p>
 <p>为了跟踪当前解析的代码属于哪个作用域，我们需要栈这种数据结构，还需要一个变量（假设名字叫 scope_id）用来表示括号的值递增到哪里了。</p>
 <p>初始状态，scope_id = 0，表示全局作用域。编译器做初始化工作，把 0 入栈。</p>
@@ -434,7 +435,8 @@
 <p>在整个代码的分析过程中，这个栈是动态变化的。只要读取栈中的数据（从栈底到栈顶），就可以获得当前符号的作用域。</p>
 <p>讲了这么多原理，下来该代码实现了。</p>
 <p>我们已经学了链表，就不用再手写栈了。可以把链表当成栈使用，只操作链表的尾巴。入栈就用 list_add_tail ，出栈就根据头节点找到最后一个节点，然后把它删除。读取栈中的数据也不难，从头到尾遍历链表。</p>
-<h2 id="基本数据结构介绍"><a href="#基本数据结构介绍" class="headerlink" title="基本数据结构介绍"></a>基本数据结构介绍</h2><p>首先，看 sym_table_t 这个结构体</p>
+<h2 id="基本数据结构介绍">基本数据结构介绍</h2>
+<p>首先，看 sym_table_t 这个结构体</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">sym_table</span>&#123;</span><br>	<span class="hljs-comment">// ...</span><br>	<span class="hljs-type">scope_info_t</span> scope;<br>&#125;<span class="hljs-type">sym_table_t</span>;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">scope_info</span> &#123;</span><br>	<span class="hljs-type">int</span> scope_id;<br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">head</span>;</span><br>	<span class="hljs-type">int</span> list_len;<br>&#125;<span class="hljs-type">scope_info_t</span>;<br><br><span class="hljs-type">sym_table_t</span> sym_tab_g;<br></code></pre></td></tr></table></figure>
 <p>sym_table_t 这里面有很多东西，但是这节课只用看第 6~10 行定义的  scope_info_t scope;</p>
 <p>第 7 行 scope_id 和前文中的含义一样，用来表示大括号的值递增到哪里了。</p>
@@ -444,24 +446,28 @@
 <p>链表有了，用户节点呢？</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">scope_node</span>&#123;</span> <br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span> <span class="hljs-title">entry</span>;</span><br>	<span class="hljs-type">int</span> id; <br>&#125;<span class="hljs-type">scope_node_t</span>;<br></code></pre></td></tr></table></figure>
 <p>很简单，一个 struct list_head 结构，一个 id， 这个 id 可以看成是大括号的编号。</p>
-<h2 id="作用域的初始化"><a href="#作用域的初始化" class="headerlink" title="作用域的初始化"></a>作用域的初始化</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">sym_table_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	<span class="hljs-built_in">memset</span>(&amp;sym_tab_g, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">sym_table_t</span>));<br>	INIT_LIST_HEAD(&amp;sym_tab_g.scope.head);<br>	scope_enter(); <span class="hljs-comment">// 进入全局作用域</span><br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;	<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="作用域的初始化">作用域的初始化</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">sym_table_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	<span class="hljs-built_in">memset</span>(&amp;sym_tab_g, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">sym_table_t</span>));<br>	INIT_LIST_HEAD(&amp;sym_tab_g.scope.head);<br>	scope_enter(); <span class="hljs-comment">// 进入全局作用域</span><br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;	<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>第 3 行，把结构体 sym_tab_g 的所有字段都清零。于是 sym_tab_g.scope.scope_id 等于 0；sym_tab_g.scope.list_len 也等于 0；</p>
 <p>第 4 行，初始化链表，此时链表是空的。</p>
 <p>sym_tab_g.scope.scope_id 等于 0；</p>
-<h2 id="进入作用域"><a href="#进入作用域" class="headerlink" title="进入作用域"></a>进入作用域</h2><p>第 5 行的代码是：</p>
+<h2 id="进入作用域">进入作用域</h2>
+<p>第 5 行的代码是：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">scope_enter</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	<span class="hljs-type">scope_node_t</span> *node = <span class="hljs-built_in">malloc</span>(<span class="hljs-keyword">sizeof</span>(<span class="hljs-type">scope_node_t</span>));<br>	<span class="hljs-keyword">if</span>(!node) &#123;<br>		SYSTEM_FATAL_ERR(MEM_ALLOC_FAILED);<br>		<span class="hljs-keyword">return</span>;<br>	&#125;<br>    <br>	node-&gt;id = sym_tab_g.scope.scope_id++;<br>	list_add_tail(&amp;node-&gt;entry, &amp;sym_tab_g.scope.head);<br>	++sym_tab_g.scope.list_len;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>每次进入新的作用域，都会调用这个函数。</p>
 <p>分配内存就不多说了。第 9 行，获取编号，注意，先返回sym_tab_g.scope.scope_id 的值，然后 sym_tab_g.scope.scope_id 再增加 1</p>
 <p>第 10 行，把节点插入到链表的末尾，相当于入栈。</p>
 <p>第 11 行，因为插入了一个节点，链表长度增加 1</p>
 <p>有进入作用域就有退出作用域，其实这两个函数是成对使用的。</p>
-<h2 id="退出作用域"><a href="#退出作用域" class="headerlink" title="退出作用域"></a>退出作用域</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">scope_leave</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	<span class="hljs-keyword">if</span>(list_empty(&amp;sym_tab_g.scope.head))<br>		<span class="hljs-keyword">return</span>;<br>	<br>	<span class="hljs-type">scope_node_t</span> *last_node = container_of(sym_tab_g.scope.head.prev, <span class="hljs-type">scope_node_t</span>, entry);<br>	list_del_init(&amp;last_node-&gt;entry);<br>	<span class="hljs-built_in">free</span>(last_node);<br>	--sym_tab_g.scope.list_len;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="退出作用域">退出作用域</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">scope_leave</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	<span class="hljs-keyword">if</span>(list_empty(&amp;sym_tab_g.scope.head))<br>		<span class="hljs-keyword">return</span>;<br>	<br>	<span class="hljs-type">scope_node_t</span> *last_node = container_of(sym_tab_g.scope.head.prev, <span class="hljs-type">scope_node_t</span>, entry);<br>	list_del_init(&amp;last_node-&gt;entry);<br>	<span class="hljs-built_in">free</span>(last_node);<br>	--sym_tab_g.scope.list_len;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>第 6 行，sym_tab_g.scope.head.prev 表示链表最后一个节点的 struct list_head entry 的地址（头节点的前面那个，因为是循环链表，所以就是最后一个）</p>
 <p>然后利用 container_of 宏得到用户节点的地址，也就是 last_node</p>
 <p>第 7 行，删除这个节点，相当于出栈。</p>
 <p>第 8 行，别忘了释放内存</p>
 <p>第 9 行，链表长度减去 1</p>
-<h2 id="获得作用域"><a href="#获得作用域" class="headerlink" title="获得作用域"></a>获得作用域</h2><p>比如代码某个地方定义了一个变量，当我们记录这个变量到符号表的时候，也要保存它的作用域，这时候需要获得作用域，其实就是读取此时栈中的数据。</p>
+<h2 id="获得作用域">获得作用域</h2>
+<p>比如代码某个地方定义了一个变量，当我们记录这个变量到符号表的时候，也要保存它的作用域，这时候需要获得作用域，其实就是读取此时栈中的数据。</p>
 <p>栈中的数据构成了作用域路径，我们用数组来存储变量或者函数声明所在的作用域。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">scope_path</span> &#123;</span><br>    <span class="hljs-type">int</span> *path;    <span class="hljs-comment">// 数组</span><br>    <span class="hljs-type">int</span> path_len; <span class="hljs-comment">// 数组长度 </span><br>&#125;<span class="hljs-type">scope_path_t</span>;<br></code></pre></td></tr></table></figure>
 <p>第 2 行的 path 是一个指针，根据栈中数据的个数为其分配内存。</p>
@@ -469,28 +475,28 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> SYMBOL_TYPE_VAR  1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> SYMBOL_TYPE_FUN  2</span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">get_cur_scope</span><span class="hljs-params">(<span class="hljs-type">scope_path_t</span> *scope_path, <span class="hljs-type">int</span> symbol_type)</span><br>&#123;<br>	assert(scope_path);<br>	assert(symbol_type == SYMBOL_TYPE_VAR || symbol_type == SYMBOL_TYPE_FUN);<br><br>	<span class="hljs-type">int</span> path_len;<br>	<span class="hljs-keyword">if</span>(symbol_type == SYMBOL_TYPE_VAR) &#123;<br>		path_len = sym_tab_g.scope.list_len;<br>	&#125; <span class="hljs-keyword">else</span> &#123;<br>		<span class="hljs-comment">// 函数声明或者定义的作用域要去掉最后一个数字</span><br>		<span class="hljs-comment">// 因为不去掉的话表示的是函数参数的作用域</span><br>		path_len = sym_tab_g.scope.list_len - <span class="hljs-number">1</span>; <br>	&#125;<br>	...<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>get_cur_scope 这个函数要 2 个参数，参数 1 是  scope_path_t 类型的指针，这是个输出型参数，参数 2 是一个宏，只有两种取值，一个是 SYMBOL_TYPE_VAR，用于获得变量的作用域，另一个是 SYMBOL_TYPE_FUN，用于获得函数声明或者定义的作用域。</p>
 <p>这两种情况有何区别呢？</p>
-<p><img src="image-20251015200713680.png" srcset="/img/loading.gif" lazyload alt="image-20251015200713680" style="zoom:50%;" /></p>
+<img src="image-20251015200713680.png" srcset="/img/loading.gif" lazyload alt="image-20251015200713680" style="zoom:50%;" />
 <p>请看上面的代码，第 410 行，当遇到左小括号的时候，调用 scope_enter();</p>
 <p>第 411 行是函数参数的解析。</p>
 <p>第 416 行是 fun_body 函数。它会调用 new_fun()，此函数下节课讲，总之现在知道这是创建函数符号的操作就可以了。</p>
 <p>在创建函数符号的时候，会记录此函数的作用域；如果是定义，其作用域肯定是 0，如果是声明，那就根据实际情况。</p>
 <p>但是问题来了，执行完第 410 行后，此时是函数参数所在的作用域。</p>
 <p>执行 416 行的时候，依然在这个作用域里面。所以 new_fun()里面获取的也是这个作用域。</p>
-<p><img src="image-20251015201744610.png" srcset="/img/loading.gif" lazyload alt="image-20251015201744610" style="zoom:67%;" /></p>
+<img src="image-20251015201744610.png" srcset="/img/loading.gif" lazyload alt="image-20251015201744610" style="zoom:67%;" />
 <p>用这张图来解释，第 24 行是 foo(void)</p>
 <p>当解析到它的参数的时候，当前作用域已经是 0-1-2-3 了</p>
 <p>但是我们创建 foo 这个函数符号的时候，需要的是本声明的作用域，应该是 0-1-2，也就是说和第 23 行的 hello 是同一个作用域</p>
 <p>也就是说要把当前的作用域修正一下，去掉最后一个数字。</p>
 <p>如果是获取变量的作用域，不用修正；如果是函数定义或者声明，就需要修正。</p>
-<p><img src="image-20251015202553347.png" srcset="/img/loading.gif" lazyload alt="image-20251015202553347" style="zoom:50%;" /></p>
+<img src="image-20251015202553347.png" srcset="/img/loading.gif" lazyload alt="image-20251015202553347" style="zoom:50%;" />
 <p>所以才有代码 102，如果是函数就把链表长度减一。</p>
-<p><img src="image-20251015202709771.png" srcset="/img/loading.gif" lazyload alt="image-20251015202709771" style="zoom:50%;" /></p>
+<img src="image-20251015202709771.png" srcset="/img/loading.gif" lazyload alt="image-20251015202709771" style="zoom:50%;" />
 <p>剩下的代码就比较简单了。</p>
 <p>第 106 行，根据实际长度分配数组的内存</p>
 <p>第 114 行遍历链表，把每个节点的编号记录到数组里面。一旦长度攒够，就 break</p>
 <p>最后两行填写数组的地址和长度。</p>
 <p>为了把变量和函数加入符号表，我设计了结构体 struct var_info 来保存变量符号；如下图，scope_path 这个字段用来记录变量所在的作用域。同理，函数符号也有这个字段。当需要获取变量或者函数的作用域的时候，就把这个字段的地址和符号类型（变量/函数）传递给 get_cur_scope 函数，get_cur_scope 函数会根据栈的内容填好作用域。</p>
-<p><img src="image-20260417184533642.png" srcset="/img/loading.gif" lazyload alt="image-20260417184533642" style="zoom:50%;" /></p>
+<img src="image-20260417184533642.png" srcset="/img/loading.gif" lazyload alt="image-20260417184533642" style="zoom:50%;" />
 <p>本文内容到这里就结束了。等把后面的两节内容讲完（符号表和语义分析），会一并上传代码。</p>
 
                 

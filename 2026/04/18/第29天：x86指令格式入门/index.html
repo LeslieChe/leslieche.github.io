@@ -23,7 +23,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="第29天：x86指令格式入门">
 <meta property="og:url" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC29%E5%A4%A9%EF%BC%9Ax86%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/index.html">
-<meta property="og:site_name" content="49天自制编译器">
+<meta property="og:site_name" content="自制编译器">
 <meta property="og:description" content="了解一下就行，后面忘了再回来查。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://leslieche.github.io/2026/04/18/%E7%AC%AC29%E5%A4%A9%EF%BC%9Ax86%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E5%85%A5%E9%97%A8/image-20260119143710261.png">
@@ -39,7 +39,7 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>第29天：x86指令格式入门 - 49天自制编译器</title>
+  <title>第29天：x86指令格式入门 - 自制编译器</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -123,7 +123,7 @@
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>49 天自制编译器</strong>
+      <strong>四十天自制编译器</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -380,28 +380,36 @@
             
               <div class="markdown-body">
                 
-                <h1 id="第29天：x86指令格式入门"><a href="#第29天：x86指令格式入门" class="headerlink" title="第29天：x86指令格式入门"></a>第29天：x86指令格式入门</h1><h2 id="1-x86指令的一般格式"><a href="#1-x86指令的一般格式" class="headerlink" title="1 x86指令的一般格式"></a>1 x86指令的一般格式</h2><p><img src="image-20260119143710261.png" srcset="/img/loading.gif" lazyload alt="image-20260119143710261" style="zoom:100%;" /></p>
+                <h1 id="第29天：x86指令格式入门">第29天：x86指令格式入门</h1>
+<h2 id="1-x86指令的一般格式">1 x86指令的一般格式</h2>
+<img src="image-20260119143710261.png" srcset="/img/loading.gif" lazyload alt="image-20260119143710261" style="zoom:100%;" />
 <p>vol-2,P31</p>
 <p>根据官方的文档，指令格式分为 6 个部分。</p>
 <ol>
-<li><p><strong>前缀</strong>（Prefixes）— 可选（0~4 字节）</p>
+<li>
+<p><strong>前缀</strong>（Prefixes）— 可选（0~4 字节）</p>
 </li>
-<li><p><strong>操作码</strong>（Opcode）— 必需（1~3 字节）</p>
+<li>
+<p><strong>操作码</strong>（Opcode）— 必需（1~3 字节）</p>
 </li>
-<li><p><strong>ModR/M</strong> — 可选（1 字节）</p>
+<li>
+<p><strong>ModR/M</strong> — 可选（1 字节）</p>
 </li>
-<li><p><strong>SIB</strong>（Scale-Index-Base）— 可选（1 字节）</p>
+<li>
+<p><strong>SIB</strong>（Scale-Index-Base）— 可选（1 字节）</p>
 </li>
-<li><p><strong>偏移</strong>（Displacement）— 可选（0/1/4 字节）</p>
+<li>
+<p><strong>偏移</strong>（Displacement）— 可选（0/1/4 字节）</p>
 </li>
-<li><p><strong>立即数</strong>（Immediate）— 可选（1/2/4 字节）</p>
+<li>
+<p><strong>立即数</strong>（Immediate）— 可选（1/2/4 字节）</p>
 </li>
 </ol>
 <p>其中操作码必须有，它表示指令的功能；其他字段可选。</p>
 <p>x86 采用不定长指令编码，最短的 1 个字节，最长的可达 15 字节。</p>
 <p>下面为读者介绍每个部分。</p>
-<h2 id="2-前缀"><a href="#2-前缀" class="headerlink" title="2 前缀"></a>2 前缀</h2><p>用于修改指令行为，常见类型：</p>
-<div class="table-container">
+<h2 id="2-前缀">2 前缀</h2>
+<p>用于修改指令行为，常见类型：</p>
 <table>
 <thead>
 <tr>
@@ -433,16 +441,16 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>因为 cusb 生成的汇编代码用不到前缀，所以一笔带过。</p>
-<h2 id="3-操作码"><a href="#3-操作码" class="headerlink" title="3 操作码"></a>3 操作码</h2><p>操作码长度为 1~3 字节。</p>
+<h2 id="3-操作码">3 操作码</h2>
+<p>操作码长度为 1~3 字节。</p>
 <p>一字节操作码和指令前缀共享指令的第一个字节。CPU 的解码器根据第一个字节的值确定该字节是指令前缀还是操作码。例如碰到指令的第一个字节为 0x66，则识别出这是操作数大小重写前缀；若遇到的是 0xb8，则识别出这是 mov 指令。</p>
 <p>两字节操作码总是以 0x0f（转义前缀）开头，后面跟着另一个字节。例如 jne 指令的操作码为 0f,85</p>
 <p>三字节操作码的转义前缀有两种，一个是“0f,38”，一个是“0f,3a”，后面再跟一个字节。</p>
 <p>csub 生成的汇编指令仅用到 1~2 字节的操作码。</p>
 <p>根据编码特征，可以把常见的操作码分成四大类。</p>
-<h3 id="3-1-操作码独立表示指令功能"><a href="#3-1-操作码独立表示指令功能" class="headerlink" title="3.1 操作码独立表示指令功能"></a>3.1 操作码独立表示指令功能</h3><p>如下表，指令编码中仅有操作码。</p>
-<div class="table-container">
+<h3 id="3-1-操作码独立表示指令功能">3.1 操作码独立表示指令功能</h3>
+<p>如下表，指令编码中仅有操作码。</p>
 <table>
 <thead>
 <tr>
@@ -465,9 +473,7 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>还有一类指令，操作码后面跟着操作数；指令编码中先是操作码，然后跟着操作数。</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -510,10 +516,9 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>注意：imm8 和 imm32 分别表示 8 和 32 位立即数；rel32 表示 32 位相对地址。</p>
-<h3 id="3-2-ModR-M和SIB字段指定操作数的访问模式"><a href="#3-2-ModR-M和SIB字段指定操作数的访问模式" class="headerlink" title="3.2 ModR/M和SIB字段指定操作数的访问模式"></a>3.2 ModR/M和SIB字段指定操作数的访问模式</h3><p>这类操作码不足以表示指令的全部功能。</p>
-<div class="table-container">
+<h3 id="3-2-ModR-M和SIB字段指定操作数的访问模式">3.2 ModR/M和SIB字段指定操作数的访问模式</h3>
+<p>这类操作码不足以表示指令的全部功能。</p>
 <table>
 <thead>
 <tr>
@@ -535,15 +540,14 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>注：r32 表示一个 32 位寄存器，m32 表示一个 32 位的内存操作数，r/m32 表示 32 位寄存器或者 32 位的内存操作数；</p>
 <p>比如说，“mov r32, r/m32” 的操作码是 0x8b</p>
 <p>但是寄存器是哪个？内存地址是多少？</p>
 <p>仅靠 0x8b 不足以说明以上信息，所以需要 ModR/M 和 SIB 字段；</p>
 <p>类似这样的指令还有 add,sub,cmp 等。</p>
 <p>ModR/M 和 SIB 字段后文会详细解释。</p>
-<h3 id="3-3-ModR-M的reg字段对操作码作补充"><a href="#3-3-ModR-M的reg字段对操作码作补充" class="headerlink" title="3.3 ModR/M的reg字段对操作码作补充"></a>3.3 ModR/M的reg字段对操作码作补充</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">          ModR/M 字段<br>  <span class="hljs-number">7</span>                           <span class="hljs-number">0</span><br>+---+---+---+---+---+---+---+---+<br>|  mod  |    reg    |     r/m   |<br>+---+---+---+---+---+---+---+---+<br></code></pre></td></tr></table></figure>
-<div class="table-container">
+<h3 id="3-3-ModR-M的reg字段对操作码作补充">3.3 ModR/M的reg字段对操作码作补充</h3>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">          ModR/M 字段<br>  <span class="hljs-number">7</span>                           <span class="hljs-number">0</span><br>+---+---+---+---+---+---+---+---+<br>|  mod  |    reg    |     r/m   |<br>+---+---+---+---+---+---+---+---+<br></code></pre></td></tr></table></figure>
 <table>
 <thead>
 <tr>
@@ -574,11 +578,10 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>例如上表中的 imul 和 idiv 指令的操作码都是 f7,如何区分呢？</p>
 <p>“/” 后面有一个值，这个值在编码指令的时候会填充到 ModR/M 的 reg 字段。</p>
 <p>当 reg = 5 时表示 imul 指令，当 reg = 7 时表示 idiv 指令；此时 reg 字段相当于是对操作码的扩展。</p>
-<h3 id="3-4-寄存器编号补充操作码"><a href="#3-4-寄存器编号补充操作码" class="headerlink" title="3.4 寄存器编号补充操作码"></a>3.4 寄存器编号补充操作码</h3><div class="table-container">
+<h3 id="3-4-寄存器编号补充操作码">3.4 寄存器编号补充操作码</h3>
 <table>
 <thead>
 <tr>
@@ -615,10 +618,9 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>例如，“inc r32” 指令的操作码是 0x40，当指定了某个寄存器作为操作数后，需要把该寄存器的编号加到操作码中。与其说寄存器的编号补充操作码，不如说操作码里面包含着寄存器的编号。</p>
-<h3 id="3-5-寄存器的编号"><a href="#3-5-寄存器的编号" class="headerlink" title="3.5 寄存器的编号"></a>3.5 寄存器的编号</h3><p>Intel 指令集的寄存器编号是这样规定的：</p>
-<div class="table-container">
+<h3 id="3-5-寄存器的编号">3.5 寄存器的编号</h3>
+<p>Intel 指令集的寄存器编号是这样规定的：</p>
 <table>
 <thead>
 <tr>
@@ -688,8 +690,8 @@
 </tr>
 </tbody>
 </table>
-</div>
-<h2 id="4-ModR-M"><a href="#4-ModR-M" class="headerlink" title="4 ModR/M"></a>4 ModR/M</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">          ModR/M 字段<br>  <span class="hljs-number">7</span>                           <span class="hljs-number">0</span><br>+---+---+---+---+---+---+---+---+<br>|  mod  |    reg    |     r/m   |<br>+---+---+---+---+---+---+---+---+<br></code></pre></td></tr></table></figure>
+<h2 id="4-ModR-M">4 ModR/M</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">          ModR/M 字段<br>  <span class="hljs-number">7</span>                           <span class="hljs-number">0</span><br>+---+---+---+---+---+---+---+---+<br>|  mod  |    reg    |     r/m   |<br>+---+---+---+---+---+---+---+---+<br></code></pre></td></tr></table></figure>
 <p>ModR/M 字段长度是 1 字节，包括 mod,reg,r/m 三个字段。</p>
 <p>r/m 字段可以表示内存，也可以表示寄存器;</p>
 <p>reg 字段可以是 opcode 的扩展，也可以表示寄存器;</p>
@@ -698,7 +700,6 @@
 <p>还是 ecx 和 reg 对应，edx 和 r/m 对应？</p>
 <p>这个问题问得好！</p>
 <p>查一下 Intel 的指令手册，数据传送从 32 位寄存器到 32 位寄存器，只有下面 2 个格式。</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -717,7 +718,6 @@
 </tr>
 </tbody>
 </table>
-</div>
 <blockquote>
 <p>注意：</p>
 <p>opcode 中的 “/r” 表示 ModR/M 同时包含寄存器和 r/m 操作数。</p>
@@ -726,12 +726,12 @@
 </blockquote>
 <p>为什么这样说呢？</p>
 <p>查阅指令手册</p>
-<p><img src="image-20260418201524122.png" srcset="/img/loading.gif" lazyload alt="image-20260418201524122" style="zoom:50%;" /></p>
+<img src="image-20260418201524122.png" srcset="/img/loading.gif" lazyload alt="image-20260418201524122" style="zoom:50%;" />
 <p>注意 Op/En 这列，我用蓝色圆圈圈出来的。上面的表格后面，还有一个表格（Instruction Operand Encoding），是操作数的编码说明。</p>
-<p><img src="image-20260418201548404.png" srcset="/img/loading.gif" lazyload alt="image-20260418201548404" style="zoom:50%;" /></p>
+<img src="image-20260418201548404.png" srcset="/img/loading.gif" lazyload alt="image-20260418201548404" style="zoom:50%;" />
 <p>MR 的意思是，第一个操作数用 r/m 字段编码，第二个操作数用 reg 字段编码；</p>
 <p>RM 与之相反，第一个操作数用 reg 字段编码，第二个操作数用 r/m 字段编码；</p>
-<h3 id="4-1-mod字段的含义"><a href="#4-1-mod字段的含义" class="headerlink" title="4.1 mod字段的含义"></a>4.1 mod字段的含义</h3><div class="table-container">
+<h3 id="4-1-mod字段的含义">4.1 mod字段的含义</h3>
 <table>
 <thead>
 <tr>
@@ -763,7 +763,6 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>当 mod = 11b 时，r/m 字段表示寄存器操作数，保存了寄存器编号。</p>
 <p>当 mod 取其他值时，r/m 字段表示内存操作数，如上表的前三行。内存操作数中的寄存器（如 eax）依然用 r/m 字段编码，偏移跟在 ModR/M 后面。</p>
 <p>我们举例说明。</p>
@@ -777,14 +776,14 @@
 <p>另外，因为 eax 是寄存器，所以寻址模式是寄存器操作数，根据上面的表格得知 mod = 11b</p>
 <p>所以 ModR/M = 11 001 000 = 0xc8;</p>
 <p>所以完整的编码是 8b,c8;</p>
-<ol>
+<ol start="2">
 <li>对于 mov ecx, [eax + 4] 如何编码？</li>
 </ol>
 <p>因为偏移 4 用 8 位就足够表示，所以 ModR/M(mod) 就要改成 01b,其他字段不变；</p>
 <p>ModR/M = 01 001（ecx） 000(eax) = 0x48；</p>
 <p>还有一个偏移 4，跟在 ModR/M 后面；</p>
 <p>所以完整编码是 8b,48,04；</p>
-<ol>
+<ol start="3">
 <li>对于 mov ecx, [eax + 0x112288] 如何编码？</li>
 </ol>
 <p>因为 0x112288 用 8 位容纳不了，所以 ModR/M(mod) 就要改成 10b,其他字段不变；</p>
@@ -792,7 +791,6 @@
 <p>32 位的偏移跟在 ModR/M 后面；</p>
 <p>所以完整编码是 8b,88,88,22,11,00 (注意，最后的 00 是补齐 32 位)</p>
 <p>x86-32 寻址方式如下表：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -855,7 +853,6 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>mod 字段可以表示的寻址，仅包含上面表格的 2，4，5</p>
 <p>其他的寻址如何表示呢？</p>
 <p>对于序号 1 的立即数，Intel 指令集的立即数一般都是硬编码在指令里，不需要 ModR/M 字段。</p>
@@ -877,7 +874,8 @@
 <p>ModR/M = 0100 1101 = 0x4d；</p>
 <p>所以完整的编码是 8b,4d,00；</p>
 <p>对于表格中的序号 6 和 7，属于比较复杂的内存访问，ModR/M 靠一己之力搞不定，只能请 SIB 来帮忙了。</p>
-<h3 id="4-2-受委屈的esp"><a href="#4-2-受委屈的esp" class="headerlink" title="4.2 受委屈的esp"></a>4.2 受委屈的esp</h3><p>指令集规定，当 mod != 11b, r/m = 100b 的时候，表示引导 SIB 字段。</p>
+<h3 id="4-2-受委屈的esp">4.2 受委屈的esp</h3>
+<p>指令集规定，当 mod != 11b, r/m = 100b 的时候，表示引导 SIB 字段。</p>
 <p>此时，esp 不高兴了，说 mod != 11b 可以理解，因为 11b 表示寄存器操作数，访问内存当然不用考虑寄存器操作数。</p>
 <p>可是 r/m = 100b，这是什么规定？</p>
 <p>100b 是我 esp 的编码啊，要是把我的编码给占用了，那下面的指令怎么表示呢？</p>
@@ -888,7 +886,7 @@
 <p>这也太欺负人了吧？都说 ebp 运气不好，因为 [ebp] 无法表示了，只能用 [ebp + 0]</p>
 <p>可是我 esp 损失更大啊！我抗议！</p>
 <p>Intel 官方表示这个世界哪有公平可言？你 esp 就不要抱怨了。</p>
-<h3 id="4-3-特殊ModR-M字段"><a href="#4-3-特殊ModR-M字段" class="headerlink" title="4.3 特殊ModR/M字段"></a>4.3 特殊ModR/M字段</h3><div class="table-container">
+<h3 id="4-3-特殊ModR-M字段">4.3 特殊ModR/M字段</h3>
 <table>
 <thead>
 <tr>
@@ -925,12 +923,11 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>为了表扬 ebp 和 esp 的牺牲精神，我列出了这个表格；</p>
 <p>为了成全 32 位直接寻址，[ebp] 只好时刻抱着一个鸡蛋，变成 [ebp + 0] ；</p>
 <p>为了引导 SIB 字段，esp 做出了怎样的牺牲呢？后面会讲。</p>
-<h2 id="5-SIB字段"><a href="#5-SIB字段" class="headerlink" title="5 SIB字段"></a>5 SIB字段</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">          SIB 字段<br>  <span class="hljs-number">7</span>                           <span class="hljs-number">0</span><br>+---+---+---+---+---+---+---+---+<br>| scale |   index   |    base   |<br>+---+---+---+---+---+---+---+---+    <br></code></pre></td></tr></table></figure>
-<div class="table-container">
+<h2 id="5-SIB字段">5 SIB字段</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">          SIB 字段<br>  <span class="hljs-number">7</span>                           <span class="hljs-number">0</span><br>+---+---+---+---+---+---+---+---+<br>| scale |   index   |    base   |<br>+---+---+---+---+---+---+---+---+    <br></code></pre></td></tr></table></figure>
 <table>
 <thead>
 <tr>
@@ -957,7 +954,6 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>SIB 的名字就是 scale,index,base 这三个家伙的首字母。</p>
 <p>SIB 字段定义的寻址格式为：<strong>[base + index * 2^scale^]</strong></p>
 <p>当然，如果有偏移，那么寻址的时候也要加上去。</p>
@@ -987,7 +983,8 @@
 <p>SIB = 1101 1000 = 0xd8</p>
 <p>所以完整的编码是</p>
 <p>8b 4c d8 20 43 34 12</p>
-<h3 id="5-1-让Index消失"><a href="#5-1-让Index消失" class="headerlink" title="5.1 让Index消失"></a>5.1 让Index消失</h3><p>有的读者说，你这个寻址好复杂啊！<strong>[base + index * 2^scale^]</strong></p>
+<h3 id="5-1-让Index消失">5.1 让Index消失</h3>
+<p>有的读者说，你这个寻址好复杂啊！<strong>[base + index * 2^scale^]</strong></p>
 <p>我也用不上这么复杂的，能不能让 index 消失？</p>
 <p>可以，指令集规定，<strong>当 sib 的 index = 100b 时，不存在 index</strong></p>
 <p>例如 mov ecx, [eax + 0x11223344]</p>
@@ -1033,7 +1030,8 @@
 <p>所以 ModR/M = 10 000(eax) 100 = 0x84</p>
 <p>SIB 不变，依然是 0x24</p>
 <p>编码是 8B 84 24 78 56 34 12</p>
-<h3 id="5-2-让base消失"><a href="#5-2-让base消失" class="headerlink" title="5.2 让base消失"></a>5.2 让base消失</h3><p>Intel 规定，当 ModR/M 的 mod = 00b 且 SIB 的 base = 101b 的时候，不存在基址寄存器，这时候的寻址格式为</p>
+<h3 id="5-2-让base消失">5.2 让base消失</h3>
+<p>Intel 规定，当 ModR/M 的 mod = 00b 且 SIB 的 base = 101b 的时候，不存在基址寄存器，这时候的寻址格式为</p>
 <p><strong>[index * 2^scale^ + disp32(必须有)]</strong></p>
 <p>注意，必须有 disp32</p>
 <p>例如 mov ecx, [eax * 8 + 0x12345678]</p>
@@ -1062,12 +1060,13 @@
 <p>本来 mod = 00b 且 r/m = 100b 的时候，只有 SIB，但是没有偏移。</p>
 <p>现在我如何表示这种没有偏移的指令？</p>
 <p>intel 官方说：你忘了，之前你不是喜欢抱个鸡蛋吗？你继续抱啊！</p>
-<p><strong>mov ecx, [ebp + eax * 8 + 0]</strong> </p>
+<p><strong>mov ecx, [ebp + eax * 8 + 0]</strong></p>
 <p>这样不就可以了,指令编码是 8b 4c c5 00，就多了一个字节。</p>
-<h2 id="6-偏移和立即数"><a href="#6-偏移和立即数" class="headerlink" title="6 偏移和立即数"></a>6 偏移和立即数</h2><p>偏移在指令中如果存在，则紧跟 ModR/M、SIB 字段之后，且按照小端字节序方式存储；</p>
+<h2 id="6-偏移和立即数">6 偏移和立即数</h2>
+<p>偏移在指令中如果存在，则紧跟 ModR/M、SIB 字段之后，且按照小端字节序方式存储；</p>
 <p>立即数在指令中如果存在，则紧跟 ModR/M、SIB、偏移字段之后，且按照小端字节序方式存储。</p>
-<h2 id="附录：操作码常用符号说明"><a href="#附录：操作码常用符号说明" class="headerlink" title="附录：操作码常用符号说明"></a>附录：操作码常用符号说明</h2><p>指令手册的 opcode 列，除了主操作码，还可能用某些符号描述编码规则。</p>
-<div class="table-container">
+<h2 id="附录：操作码常用符号说明">附录：操作码常用符号说明</h2>
+<p>指令手册的 opcode 列，除了主操作码，还可能用某些符号描述编码规则。</p>
 <table>
 <thead>
 <tr>
@@ -1116,7 +1115,6 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>以上列出了 5 种符号，分别举例如下。</p>
 <p>例1：<strong>jmp eax</strong></p>
 <p>这是一条绝对跳转指令，目标地址就在 eax 中。</p>
@@ -1132,7 +1130,7 @@
 <p>Opcode = 8a</p>
 <p>ModR/M(rm) = cl = 001b</p>
 <p>ModR/M(reg) = dl = 010b</p>
-<p>mod = 11b </p>
+<p>mod = 11b</p>
 <p>所以，ModR/M = 11010001 = 0xD1</p>
 <p>所以 MOV dl, cl 的指令编码是 8A D1</p>
 <hr>
